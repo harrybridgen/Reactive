@@ -64,6 +64,15 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     panic!("Did not find matching '|' for Or '||'")
                 }
             }
+            '!' => {
+                if let Some('=') = chars.peek() {
+                    chars.next();
+                    tokens.push(Token::NotEqual);
+                } else {
+                    chars.next();
+                    tokens.push(Token::Not);
+                }
+            }
             '&' => {
                 if let Some('&') = chars.peek() {
                     chars.next();
@@ -72,10 +81,27 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     panic!("Did not find matching '&' for And '&&'")
                 }
             }
+            '>' => {
+                if let Some('=') = chars.peek() {
+                    chars.next();
+                    tokens.push(Token::GreaterEqual);
+                } else {
+                    chars.next();
+                    tokens.push(Token::Greater);
+                }
+            }
+            '<' => {
+                if let Some('=') = chars.peek() {
+                    chars.next();
+                    tokens.push(Token::LessEqual);
+                } else {
+                    chars.next();
+                    tokens.push(Token::Less);
+                }
+            }
             '{' => tokens.push(Token::LBrace),
             '}' => tokens.push(Token::RBrace),
-            '>' => tokens.push(Token::Greater),
-            '<' => tokens.push(Token::Less),
+            
             ';' => tokens.push(Token::Semicolon),
             '=' => {
                 if let Some('=') = chars.next() {

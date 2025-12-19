@@ -79,6 +79,9 @@ impl Parser {
                 Token::Greater => Operator::Greater,
                 Token::Less => Operator::Less,
                 Token::Equal => Operator::Equal,
+                Token::GreaterEqual => Operator::GreaterEqual,
+                Token::LessEqual => Operator::LessEqual,
+                Token::NotEqual => Operator::NotEqual,
                 _ => break,
             };
             self.next();
@@ -160,18 +163,25 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> AST {
+        if let Some(Token::Break) = self.peek() {
+            self.next();
+            return AST::Break;
+        }
+
         if let Some(Token::If) = self.peek() {
             return self.parse_if();
         }
+
         if let Some(Token::Print) = self.peek() {
             self.next();
             let expr = self.parse_or();
             return AST::Print(Box::new(expr));
         }
+
         if let Some(Token::Loop) = self.peek() {
             self.next();
             let loop_block = self.parse_block();
-            return AST::Loop(loop_block)
+            return AST::Loop(loop_block);
         }
 
         if let Some(Token::Ident(name)) = self.peek() {
@@ -183,7 +193,6 @@ impl Parser {
                     let expr = self.parse_or();
                     return AST::Assign(name, Box::new(expr));
                 }
-
                 Some(Token::LazyAssign) => {
                     let name = name.clone();
                     self.next();
@@ -191,13 +200,13 @@ impl Parser {
                     let expr = self.parse_or();
                     return AST::LazyAssign(name, Box::new(expr));
                 }
-
                 _ => {}
             }
         }
 
         self.parse_or()
     }
+
 
     fn parse_program(&mut self) -> AST {
         let mut statements = Vec::new();

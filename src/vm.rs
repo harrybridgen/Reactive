@@ -132,8 +132,35 @@ impl VM {
                         continue;
                     }
                 }
+                Instruction::GreaterEqual => {
+                    let a = self.stack.pop().unwrap();
+                    let b = self.stack.pop().unwrap();
+                    if b > a || a == b{
+                        self.stack.push(1);
+                    } else {
+                        self.stack.push(0);
+                    }
+                }
+                Instruction::LessEqual => {
+                    let a = self.stack.pop().unwrap();
+                    let b = self.stack.pop().unwrap();
+                    if b < a || a == b{
+                        self.stack.push(1);
+                    } else {
+                        self.stack.push(0);
+                    }
+                }
+                Instruction::NotEqual => {
+                    let a = self.stack.pop().unwrap();
+                    let b = self.stack.pop().unwrap();
+                    if  a != b{
+                        self.stack.push(1);
+                    } else {
+                        self.stack.push(0);
+                    }
+                }
             }
-            self.dump(instruction);
+            //self.dump(instruction);
             self.pointer += 1;
         }
     }
@@ -166,6 +193,27 @@ impl VM {
                     }
                     Operator::Less => {
                         if l < r {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    Operator::GreaterEqual => {
+                        if l > r || l == r {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    Operator::LessEqual => {
+                        if l < r || l == r  {
+                            1
+                        } else {
+                            0
+                        }
+                    }
+                    Operator::NotEqual => {
+                        if l != r {
                             1
                         } else {
                             0

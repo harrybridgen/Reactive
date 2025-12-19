@@ -11,7 +11,6 @@ fn main() {
     let file_path = String::from("programs/test.mt");
 
     let input = fs::read_to_string(file_path).expect("Could not read file");
-    //println!("{:?}", input);
 
     let tokens = tokenize(&input);
     println!("{:?}", tokens);
@@ -21,7 +20,10 @@ fn main() {
 
     let mut byte_code: Vec<Instruction> = Vec::new();
     let mut label_gen = LabelGenerator::new();
-    compile(ast, &mut byte_code, &mut label_gen);
+    let mut break_stack = Vec::new();
+
+    compile(ast, &mut byte_code, &mut label_gen, &mut break_stack);
+
     println!("{:?}", byte_code);
 
     let mut vm = VM::new(byte_code);

@@ -38,7 +38,11 @@ pub enum Token {
     LBrace,
     RBrace,
     Loop,
-    Break
+    Break,
+    LessEqual,
+    GreaterEqual,
+    NotEqual,
+    Not,
 }
 
 #[derive(Debug, Clone)]
@@ -57,7 +61,7 @@ pub enum AST {
     Program(Vec<AST>),
     Print(Box<AST>),
     IfElse(Box<AST>, Vec<AST>, Vec<AST>),
-    Loop(Vec<AST>)
+    Loop(Vec<AST>),Break
 }
 
 #[derive(Debug, Clone)]
@@ -68,6 +72,9 @@ pub enum Operator {
     Subtraction,
     Greater,
     Less,
+    GreaterEqual,
+    LessEqual,
+    NotEqual,
     Equal,
     Or,
     And,
@@ -86,7 +93,10 @@ pub enum Instruction {
     Print,
     Greater,
     Less,
+    GreaterEqual,
+    LessEqual,
     Equal,
+    NotEqual,
     Or,
     And,
     Label(String),

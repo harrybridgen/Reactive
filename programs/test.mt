@@ -1,11 +1,13 @@
-# EAGER ASSIGNMENTS # 
 x = 0;
-vx = 1; 
 
-# LAZY ASSIGNMENTS #
-dx := x + vx; 
+dx := x + 1;
 
 loop {
+    
     x = dx;
     print x;
+
+    if x == 10 {
+        break;
+    }
 }
