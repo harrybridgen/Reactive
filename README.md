@@ -52,12 +52,6 @@ println y;   # 2 #
 x = 10;
 println y;   # 11 #
 ```
-### Immutable bindings
-```haskell
-a := 5;
-a = 6;     # runtime error #
-println a;
-```
 
 ### Arrays and lazy elements
 ```haskell
