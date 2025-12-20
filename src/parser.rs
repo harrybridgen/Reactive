@@ -55,7 +55,7 @@ fn parse_postfix(&mut self) -> AST {
     let mut ast = self.parse_factor();
 
     while let Some(Token::LSquare) = self.peek() {
-        self.next(); // consume '['
+        self.next();
         let index_expr = self.parse_or();
         match self.next() {
             Some(Token::RSquare) => {
@@ -220,11 +220,10 @@ fn parse_summand(&mut self) -> AST {
         }
 
         if let Some(Token::Ident(name)) = self.peek() {
-    // assignment to variable: x = expr / x := expr
     if matches!(self.tokens.get(self.index + 1), Some(Token::Assign | Token::LazyAssign)) {
         let name = name.clone();
-        self.next(); // ident
-        let is_lazy = matches!(self.next(), Some(Token::LazyAssign)); // consumes Assign/LazyAssign
+        self.next(); 
+        let is_lazy = matches!(self.next(), Some(Token::LazyAssign));
         let expr = self.parse_or();
         return if is_lazy {
             AST::LazyAssign(name, Box::new(expr))
@@ -233,10 +232,9 @@ fn parse_summand(&mut self) -> AST {
         };
     }
 
-// assignment to array element: arr[expr] = value / arr[expr] := value
 if matches!(self.tokens.get(self.index + 1), Some(Token::LSquare)) {
     let arr_name = name.clone();
-    self.next(); // consume ident
+    self.next();
 
     match self.next() {
         Some(Token::LSquare) => {}

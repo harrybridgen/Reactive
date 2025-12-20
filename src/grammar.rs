@@ -66,10 +66,10 @@ pub enum AST {
     Loop(Vec<AST>),
     Break,
 
-    ArrayNew(Box<AST>),                  // [size_expr]
-    Index(Box<AST>, Box<AST>),           // base[index]
-    AssignIndex(String, Box<AST>, Box<AST>),     // name[index] = value
-    LazyAssignIndex(String, Box<AST>, Box<AST>), // name[index] := value
+    ArrayNew(Box<AST>),                  
+    Index(Box<AST>, Box<AST>),          
+    AssignIndex(String, Box<AST>, Box<AST>),    
+    LazyAssignIndex(String, Box<AST>, Box<AST>),
 }
 
 #[derive(Debug, Clone)]

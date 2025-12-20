@@ -53,9 +53,6 @@ impl VM {
                         .get(&name)
                         .unwrap_or_else(|| panic!("Undefined variable: {name}"))
                         .clone();
-
-                    // Do NOT coerce arrays here; preserve arrays as values.
-                    // Lazy integers evaluate on load (call-by-name semantics).
                     let loaded = self.load_value(value);
                     self.stack.push(loaded);
                 }
@@ -149,9 +146,7 @@ impl VM {
                     self.stack.push(Type::Integer(if b != a { 1 } else { 0 }));
                 }
 
-                Instruction::Label(_) => {
-                    // no-op
-                }
+                Instruction::Label(_) => {}
 
                 Instruction::Jump(label) => {
                     self.pointer = *self
@@ -202,8 +197,6 @@ impl VM {
                                 .get(idx as usize)
                                 .unwrap_or_else(|| panic!("Index out of bounds"))
                                 .clone();
-
-                            // If element is lazy, evaluate now when read.
                             let elem = self.load_value(elem);
                             self.stack.push(elem);
                         }
@@ -269,10 +262,6 @@ impl VM {
         }
     }
 
-    /// Evaluates an AST to an integer value (used for lazy integers).
-    /// NOTE: This currently does NOT support arrays in the lazy evaluator.
-    /// If you use Index(...) or ArrayNew(...) inside lazy expressions,
-    /// you should extend this evaluator (recommended).
     fn evaluate(&self, ast: AST) -> i32 {
         match ast {
             AST::Number(n) => n,
@@ -287,7 +276,7 @@ impl VM {
                 match var {
                     Type::Integer(n) => n,
                     Type::LazyInteger(ast) => self.evaluate(*ast),
-                    Type::Array(items) => items.len() as i32, // coercion rule for arrays
+                    Type::Array(items) => items.len() as i32, 
                 }
             }
 
@@ -352,7 +341,7 @@ impl VM {
                         match elem {
                             Type::Integer(n) => n,
                             Type::LazyInteger(ast) => self.evaluate(*ast),
-                            Type::Array(items) => items.len() as i32, // consistent coercion
+                            Type::Array(items) => items.len() as i32, 
                         }
                     }
                     other => panic!("Tried to index non-array value in lazy eval: {:?}", other),
@@ -372,10 +361,6 @@ impl VM {
         );
     }
 
-    /// Coerce a runtime value to an integer.
-    /// - Integer -> itself
-    /// - LazyInteger -> evaluated
-    /// - Array -> its length
     fn as_int(& self, v: Type) -> i32 {
         match v {
             Type::Integer(n) => n,
@@ -384,7 +369,6 @@ impl VM {
         }
     }
 
-    /// Force a value if it's a lazy integer; otherwise return as-is.
     fn load_value(& self, v: Type) -> Type {
         match v {
             Type::LazyInteger(ast) => Type::Integer(self.evaluate(*ast)),

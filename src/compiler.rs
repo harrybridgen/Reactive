@@ -29,7 +29,6 @@ pub fn compile(
     }
 
     AST::LazyAssignIndex(name, index_expr, value_expr) => {
-        // Evaluate index now; store value lazily as AST (do not compile value_expr here).
         compile(*index_expr, code, label_gen, break_stack);
         code.push(Instruction::StoreIndexLazy(name, value_expr));
     }
