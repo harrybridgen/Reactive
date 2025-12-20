@@ -8,7 +8,7 @@ use simple_parser::tokenizer::tokenize;
 use simple_parser::vm::VM;
 
 fn main() {
-    let file_path = String::from("programs/test.mt");
+    let file_path = String::from("programs/test.hs");
 
     let input = fs::read_to_string(file_path).expect("Could not read file");
 

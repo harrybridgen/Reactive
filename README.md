@@ -6,6 +6,8 @@ This is a small expression-oriented language compiled to bytecode and executed o
 - **Integers**: 32-bit signed integers
 - **Arrays**: Fixed-size, zero-initialized arrays of integers
 - **Lazy integers**: Expressions stored as ASTs and evaluated on access
+- **Structs**: Heap-allocated records with named fields
+- **Functions**: Callable units that may return integers, arrays, or structs
 
 Arrays evaluate to their length when used as integers.
 
@@ -21,6 +23,55 @@ Immutable variables are scoped and cannot be overwritten. Reactive variables re-
 - Indexed with `someArr[index] = 5;`
 - Support mutable (`=`) and reactive (`::=`) element assignment
 - Bounds are checked at runtime
+
+## Structs
+
+Structs define heap-allocated records with named fields.
+
+### Struct Definition
+```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+```
+### Field Kinds
+- = mutable field
+- := immutable field (cannot be modified)
+- ::= reactive field (re-evaluated on access)
+
+Reactive fields may depend on other fields in the same struct.
+
+### Creating Struct Instances
+```haskell
+c = struct Counter;
+```
+
+### Field Access and Assignment
+```haskell
+println c.x;
+c.x = 10;
+println c.next;
+```
+
+## Functions
+
+Functions encapsulate reusable logic and may return any value type.
+
+### Function Definition
+```haskell
+func makecounter(start) {
+    c = struct Counter;
+    c.x = start;
+    return c;
+}
+```
+### Function Calls
+```haskell
+counter = makecounter(10);
+println counter.x;
+```
 
 ## Expressions
 - Arithmetic: `+ - * /`
@@ -51,6 +102,55 @@ y ::= x + 1;
 println y;   # 2 #
 x = 10;
 println y;   # 11 #
+```
+### Struct with Reactive Fields
+```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
+c = struct Counter;
+
+println c.next; # 1 #
+c.x = 10;
+println c.next; # 11 #
+```
+### Factorial via Dependency Graph
+```haskell
+fact = [6];   # we want factorials up to 5 #
+
+fact[0] ::= 1;
+fact[1] ::= 1;
+
+x = 1;
+dx ::= x + 1;
+
+loop {
+    if x >= fact - 1 {
+        break;
+    }
+
+    i := x;
+    fact[i + 1] ::= fact[i] * (i + 1);
+    x = dx;
+}
+
+println fact[5];  # 120 #
+```
+
+### Functions Returning Structs
+```haskell
+func advance(c) {
+    c.x = c.next;
+    return c.x;
+}
+
+counter = makecounter(10);
+
+println advance(counter); # 11 #
+println counter.next;     # 12 #
 ```
 
 ### Arrays and lazy elements
@@ -163,6 +263,8 @@ statement      ::= assignment
                  | array_assignment
                  | reactive_assignment
                  | immutable_assignment
+                 | struct_definition
+                 | function_definition
                  | if_statement
                  | loop_statement
                  | break_statement
@@ -181,6 +283,14 @@ immutable_assignment
 array_assignment
                 ::= identifier "[" expression "]" "=" expression
                  | identifier "[" expression "]" "::=" expression
+
+struct_definition ::= "struct" identifier "{" field* "}"
+
+field              ::= identifier ("=" | ":=" | "::=") expression ";"
+
+function_definition ::= "func" identifier "(" params ")" block
+
+params             ::= identifier ("," identifier)*
 
 if_statement   ::= "if" expression block ("else" block)?
 
@@ -215,10 +325,11 @@ factor         ::= number
                  | identifier
                  | "-" factor
                  | "(" expression ")"
-                 | "[" expression "]"     // array creation
+                 | "[" expression "]"
 
 identifier     ::= [a-zA-Z][a-zA-Z0-9]*
 number         ::= [0-9]+
 
 comment        ::= "#" .* "#"
+
 ```

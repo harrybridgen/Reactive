@@ -64,7 +64,7 @@
 // comment        ::= "#" .* "#"
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum Token {
     Add,
     Mul,
@@ -94,15 +94,34 @@ pub enum Token {
     LessEqual,
     GreaterEqual,
     NotEqual,
-    Not,
+    Not,    
+    Func,
+    Return,
+    Struct,
+    Dot,
+    Comma,
 }
 
+use std::collections::HashMap;
+use std::collections::HashSet;
 #[derive(Debug, Clone)]
 pub enum Type {
     Integer(i32),
-    LazyInteger(Box<AST>),Array(Vec<Type>),
-}
+    LazyInteger(Box<AST>),
+    Array(Vec<Type>),
 
+    Function {
+        params: Vec<String>,
+        body: Vec<AST>,
+    },
+
+    StructRef(usize),
+}
+#[derive(Debug, Clone)]
+pub struct StructInstance {
+    pub fields: HashMap<String, Type>,
+    pub immutables: HashSet<String>,
+}
 #[derive(Debug, Clone)]
 pub enum AST {
     Number(i32),
@@ -122,6 +141,46 @@ pub enum AST {
     Index(Box<AST>, Box<AST>),          
     AssignIndex(String, Box<AST>, Box<AST>),    
     ReactiveAssignIndex(String, Box<AST>, Box<AST>),
+    FuncDef {
+        name: String,
+        params: Vec<String>,
+        body: Vec<AST>,
+    },
+
+    Return(Option<Box<AST>>),
+
+    Call {
+        name: String,
+        args: Vec<AST>,
+    },
+
+    StructDef {
+        name: String,
+        fields: Vec<(String, Option<StructFieldInit>)>,
+    },
+
+    StructNew(String),
+
+    FieldAccess(Box<AST>, String),
+    FieldAssign {
+    base: Box<AST>,
+    field: String,
+    value: Box<AST>,
+    kind: FieldAssignKind,
+},
+}
+#[derive(Debug, Clone)]
+pub enum FieldAssignKind {
+    Normal,
+    Reactive,
+    Immutable,
+}
+
+#[derive(Debug, Clone)]
+pub enum StructFieldInit {
+    Mutable(AST),
+    Immutable(AST),
+    Reactive(AST),
 }
 
 #[derive(Debug, Clone)]
@@ -165,11 +224,21 @@ pub enum Instruction {
     Jump(String),
     JumpIfZero(String),
     
-    ArrayNew, // pops Integer(size), pushes Array(len=size, init 0)
-    ArrayGet, // pops index(Integer) and array(Array), pushes element (evaluated to Integer if lazy)
-    StoreIndex(String),               // pops value, pops index(Integer); mutates env[name] as array
-    StoreIndexReactive(String, Box<AST>),// pops index(Integer); stores LazyInteger(ast) into env[name][index]
+    ArrayNew, 
+    ArrayGet,
+    StoreIndex(String),            
+    StoreIndexReactive(String, Box<AST>),
     PushImmutableContext,
     PopImmutableContext,
     ClearImmutableContext,
+
+    StoreFunction(String, Vec<String>, Vec<AST>),
+
+    StoreStruct(String, Vec<(String, Option<StructFieldInit>)>),
+    NewStruct(String),
+    FieldGet(String),
+    FieldSet(String),
+    FieldSetReactive(String, Box<AST>),
+
+    Call(String,usize)
 }

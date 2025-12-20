@@ -22,35 +22,35 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             }
 
             'a'..='z' | 'A'..='Z' => {
-                let mut str = String::new();
-                str.push(c);
+                let mut s = String::new();
+                s.push(c);
 
-                while let Some(char) = chars.peek() {
-                    if char.is_alphanumeric() {
-                        str.push(*char);
+                while let Some(ch) = chars.peek() {
+                    if ch.is_alphanumeric() {
+                        s.push(*ch);
                         chars.next();
                     } else {
                         break;
                     }
                 }
-                if str == "print" {
-                    tokens.push(Token::Print);
-                } 
-                else if str == "println" {
-                    tokens.push(Token::Println);
-                }else if str == "if" {
-                    tokens.push(Token::If);
-                } else if str == "else" {
-                    tokens.push(Token::Else);
-                }else if str == "loop"{
-                    tokens.push(Token::Loop);
-                }else if str == "break"{
-                    tokens.push(Token::Break);
-                
-                } else {
-                    tokens.push(Token::Ident(str));
-                }
+
+                let token = match s.as_str() {
+                    "print"   => Token::Print,
+                    "println" => Token::Println,
+                    "if"      => Token::If,
+                    "else"    => Token::Else,
+                    "loop"    => Token::Loop,
+                    "break"   => Token::Break,
+                    "func" =>   Token::Func,
+                    "return" => Token::Return,
+                    "struct" => Token::Struct,
+                    _         => Token::Ident(s),
+                };
+
+                tokens.push(token);
             }
+            '.' => tokens.push(Token::Dot),
+            ',' => tokens.push(Token::Comma),
             ':' => {
                 if let Some(':') = chars.peek() {
                     chars.next();
