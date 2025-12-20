@@ -1,61 +1,56 @@
-size = 31;
-grid = [size];
-next = [size];
-
-center = size / 2;
+datasize = 10;
+data = [datasize];
 
 i = 0;
 di ::= i + 1;
 
-# initialize grid #
 loop {
-    if i >= size {
+    if i >= datasize {
         break;
     }
 
-    if i == center {
-        grid[i] = 100;
-    } else {
-        grid[i] = 0;
-    }
-
+    data[i] = i;
     i = di;
 }
 
-# build reactive stencil #
-k = 1;
+winsize = 3;
+win = [winsize];
+
+offset = 0;
+doffset ::= offset + 1;
+
+k = 0;
 dk ::= k + 1;
 
 loop {
-    if k >= size - 1 {
+    if k >= winsize {
         break;
     }
 
-    idx := k;
-
-    next[idx] ::= (grid[idx - 1] + grid[idx] + grid[idx + 1]) / 3;
+    idx := k;                     
+    win[idx] ::= data[offset + idx];
 
     k = dk;
 }
 
-# simulation loop #
 loop {
 
     p = 0;
     dp ::= p + 1;
 
     loop {
-        if p >= size {
+        if p >= winsize {
             break;
         }
 
-        if p > 0 && p < size - 1 {
-            grid[p] = next[p];
-        }
-
-        print grid[p];
+        print win[p];
         p = dp;
     }
 
     println 0;
+    offset = doffset;
+
+    if offset > datasize - winsize {
+        break;
+    }
 }
