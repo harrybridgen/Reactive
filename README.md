@@ -17,8 +17,8 @@ Arrays evaluate to their length when used as integers.
 Immutable variables are scoped and cannot be overwritten. Reactive variables re-evaluate their expression each time they are accessed.
 
 ## Arrays
-- Created with `[size]`
-- Indexed with `array[index]`
+- Created with `someArr = [size];`
+- Indexed with `array[index] = 5;`
 - Support mutable (`=`) and reactive (`::=`) element assignment
 - Bounds are checked at runtime
 
@@ -95,7 +95,7 @@ println arr[4];   # 14 #
 # allocate array #
 fib = [10]; 
 
-## set up base cases
+# set up base cases #
 n0 = 0; 
 n1 = 1;
 fib[0] ::= n0;
@@ -105,7 +105,7 @@ fib[1] ::= n1;
 x = 0;
 dx ::= x + 1;
 
-## construct relational array
+# construct relational array #
 loop {
     if x >= fib - 2 {
         break;
@@ -116,7 +116,7 @@ loop {
     x = dx;
 }
 
-## print the array
+# print relational array #
 x = 0;
 loop{
     if x >= fib {
