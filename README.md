@@ -119,7 +119,8 @@ n1 = 1;
 fib[0] ::= n0; 
 fib[1] ::= n1;
 
-x = 0; # loop set up
+# loop set up #
+x = 0;
 dx ::= x + 1;
 
 # set up relations between array indexes #
