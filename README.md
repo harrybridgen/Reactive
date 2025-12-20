@@ -101,7 +101,7 @@ n1 = 1;
 fib[0] ::= n0;
 fib[1] ::= n1;
 
-## init loop
+# init loop #
 x = 0;
 dx ::= x + 1;
 
@@ -126,7 +126,7 @@ loop{
     x = dx;
 }
 
-## ! change the base values ! #
+# ! change the base values ! #
 n0 = 89;
 n1 = 144;
 
