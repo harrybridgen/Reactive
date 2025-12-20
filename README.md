@@ -92,8 +92,9 @@ arr = [5];
 
 base = 1;
 
+# relation between current and previous index is +1 #
 arr[0] ::= base;
-arr[1] ::= arr[0] + 1; # relation between current and previous index is +1 #
+arr[1] ::= arr[0] + 1; 
 arr[2] ::= arr[1] + 1;
 arr[3] ::= arr[2] + 1;
 arr[4] ::= arr[3] + 1;
@@ -107,45 +108,52 @@ println arr[4];   # 14 #
 
 ### Fibonacci-style dependency graph
 ```haskell
-fib = [10]; # allocate array #
+# allocate array #
+fib = [10]; 
 
-n0 = 0; # base cases #
+# base cases #
+n0 = 0; 
 n1 = 1;
 
-fib[0] ::= n0; # relation for base cases #
+# relation for base cases #
+fib[0] ::= n0; 
 fib[1] ::= n1;
 
 x = 0; # loop set up
 dx ::= x + 1;
 
+# set up relations between array indexes #
 loop {
     if x >= fib - 2 {
         break;
     }
 
     i := x;
-    fib[i + 2] ::= fib[i] + fib[i + 1]; # set up relations between array indexes #
+    fib[i + 2] ::= fib[i] + fib[i + 1]; 
     x = dx;
 }
 
+# print the array #
 x = 0;
 loop{
     if x >= fib {
         break;
     }
-    println fib[x]; # print the array #
+    println fib[x]; 
     x = dx;
 }
 
-n0 = 89; # change base values #
+# change base values #
+n0 = 89; 
 n1 = 144;
 
+# array prints differently due to relational indexes #
 x = 0;
 loop{
     if x >= fib {
         break;
     }
-    println fib[x]; # array prints differently due to relational indexes #
+    println fib[x]; 
     x = dx;
 }
 
