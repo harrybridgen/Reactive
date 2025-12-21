@@ -15,15 +15,20 @@ Arrays evaluate to their length when used as integers.
 
 The language has **three assignment forms**, each with a distinct meaning.
 
-### `=` Mutable Assignment (global locations)
+### `=` Mutable Assignment
 
-`=` creates or mutates a **global location**.
+`=` creates or mutates a **mutable location**.
+
+At the top level, mutable variables are stored in the global environment.
+
 ```haskell
 x = 10;
 arr = [5];
 ```
 
-Inside a struct, `=` fields refer to the same global location for all instances.
+Inside structs, = creates a per-instance mutable field.
+Each struct instance owns its own copy of the field.
+
 ```haskell
 struct A {
     x = 0;
@@ -33,10 +38,10 @@ a = struct A;
 b = struct A;
 
 a.x = 5;
-println b.x;   # 5 #
+println b.x;   # 0 #
 ```
 
-All structs share the same location when `=` is used.
+Struct fields are not shared between instances.
 
 ### `::=` Reactive Assignment (relationships)
 
@@ -150,6 +155,24 @@ println c.x;
 c.x = 10;
 println c.next;
 ```
+### Open Structs
+
+Structs are **open heap objects**.
+
+Fields do **not** need to be declared in the struct definition.
+New fields may be added dynamically at runtime.
+
+```haskell
+struct Empty {}
+
+e := struct Empty;
+e.foo = 1;
+e.bar = 2;
+
+println e.foo;  # 1 #
+```
+The struct definition serves as an optional initializer, not a schema.
+
 ## Arrays
 
 Arrays are fixed-size, heap-allocated containers of values.
