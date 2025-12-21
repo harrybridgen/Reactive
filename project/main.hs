@@ -1,21 +1,54 @@
 import std.hashmap;
 
-m = hashmap(16);
+struct Pair {
+    i = 0;
+    j = 0;
+}
+func twosum(arr, target) {
+    m := hashmap(arr);
+    p := struct Pair;
 
-put(m, 10, 100);
-put(m, 20, 200);
+    idx = 0;
+    didx ::= idx + 1;
 
-println get(m, 10);   # 100 #
-println get(m, 20);   # 200 #
-println get(m, 30);   # 0 #
+    loop {
+        if idx >= arr {
+            break;
+        }
 
-x = 10;
-y ::= hashmap_get(m, x);
+        x := arr[idx];
+        want := target - x;
 
-println y;   # 100 #
+        if has(m, want) {
+            p.i = get(m, want);
+            p.j = idx;
+            return p;
+        }
 
-x = 20;
-println y;   # 200 #
+        put(m, x, idx);
+        idx = didx;
+    }
 
-put(m, 20, 999);
-println y;   # 999 #
+    return struct Pair;
+}
+
+# ---- test ---- #
+nums = [4];
+nums[0] = 2;
+nums[1] = 7;
+nums[2] = 11;
+nums[3] = 15;
+
+result := struct Pair;
+
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
+
+println result.i;
+println result.j;
+
+nums[1] = 8;
+nums[2] = 1;
+
+println result.i;
+println result.j;

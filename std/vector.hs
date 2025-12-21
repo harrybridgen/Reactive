@@ -3,15 +3,18 @@
 # ========================================= #
 #                                           #
 # This module provides a 2D integer vector  #
-# type with reactive position updates.     #
+# type with reactive position updates.      #
+#                                           #
+# Vectors are designed to integrate         #
+# naturally with the reactive execution     #
+# model (::=).                              #
 #                                           #
 # All operations are:                       #
 # - integer-only                            #
-# - pure and side-effect free               #
+# - deterministic                           #
+# - side-effect free (except for explicit   #
+#   field mutation)                         #
 # - safe for reactive expressions (::=)     #
-#                                           #
-# Vectors are designed to work naturally   #
-# with the reactive execution model.       #
 #                                           #
 # Import with:                              #
 #     import std.vector;                    #
@@ -20,15 +23,22 @@
 
 import std.maths;
 
+
 # ----------------------------------------- #
 # Vector2                                   #
 # ----------------------------------------- #
-# A simple 2D vector with velocity and      #
-# reactive next-position fields.            #
+# A simple 2D vector with position and      #
+# velocity, supporting reactive motion.     #
 #                                           #
-# x, y   : position                         #
-# vx, vy : velocity                         #
-# dx, dy : next position (reactive)         #
+# Fields:                                   #
+#   x, y   : current position               #
+#   vx, vy : velocity                       #
+#   dx, dy : next position (reactive)       #
+#   mag2   : squared magnitude (reactive)   #
+#   mag    : magnitude (reactive)           #
+#                                           #
+# Reactive fields automatically update      #
+# when dependent fields change.             #
 # ----------------------------------------- #
 struct Vector2 {
     x = 0;
@@ -41,9 +51,22 @@ struct Vector2 {
     dy ::= y + vy;
 
     mag2 ::= x*x + y*y;
-    mag ::= sqrt(x*x + y*y);
+    mag  ::= sqrt(x*x + y*y);
 }
 
+
+# ----------------------------------------- #
+# vec2                                      #
+# ----------------------------------------- #
+# Create a vector with the given position   #
+# and zero velocity.                        #
+#                                           #
+# Args:                                     #
+#   x, y : initial position                 #
+#                                           #
+# Returns:                                  #
+#   new Vector2                             #
+# ----------------------------------------- #
 func vec2(x, y) {
     v := struct Vector2;
     v.x = x;
@@ -51,21 +74,64 @@ func vec2(x, y) {
     return v;
 }
 
+
+# ----------------------------------------- #
+# vec2full                                  #
+# ----------------------------------------- #
+# Create a vector with position and         #
+# velocity specified.                       #
+#                                           #
+# Args:                                     #
+#   x, y   : initial position               #
+#   vx, vy : initial velocity               #
+#                                           #
+# Returns:                                  #
+#   new Vector2                             #
+# ----------------------------------------- #
 func vec2full(x, y, vx, vy) {
     v := struct Vector2;
-    v.x = x;
-    v.y = y;
+    v.x  = x;
+    v.y  = y;
     v.vx = vx;
     v.vy = vy;
     return v;
 }
 
+
+# ----------------------------------------- #
+# update                                    #
+# ----------------------------------------- #
+# Advance the vector by one time step       #
+# using its reactive next-position fields. #
+#                                           #
+# This applies:                             #
+#   x = x + vx                              #
+#   y = y + vy                              #
+#                                           #
+# Args:                                     #
+#   v : Vector2                             #
+#                                           #
+# Returns:                                  #
+#   v (updated in place)                    #
+# ----------------------------------------- #
 func update(v) {
     v.x = v.dx;
     v.y = v.dy;
     return v;
 }
 
+
+# ----------------------------------------- #
+# add                                       #
+# ----------------------------------------- #
+# Compute the vector sum of two vectors.    #
+#                                           #
+# Args:                                     #
+#   a, b : Vector2                          #
+#                                           #
+# Returns:                                  #
+#   new Vector2 representing a + b          #
+# ----------------------------------------- #
 func add(a, b) {
     r := struct Vector2;
     r.x = a.x + b.x;
@@ -73,6 +139,18 @@ func add(a, b) {
     return r;
 }
 
+
+# ----------------------------------------- #
+# sub                                       #
+# ----------------------------------------- #
+# Compute the vector difference a - b.      #
+#                                           #
+# Args:                                     #
+#   a, b : Vector2                          #
+#                                           #
+# Returns:                                  #
+#   new Vector2 representing a - b          #
+# ----------------------------------------- #
 func sub(a, b) {
     r := struct Vector2;
     r.x = a.x - b.x;
@@ -80,6 +158,19 @@ func sub(a, b) {
     return r;
 }
 
+
+# ----------------------------------------- #
+# scale                                     #
+# ----------------------------------------- #
+# Scale a vector by an integer factor.      #
+#                                           #
+# Args:                                     #
+#   v : Vector2                             #
+#   s : scalar                              #
+#                                           #
+# Returns:                                  #
+#   new Vector2 representing v * s          #
+# ----------------------------------------- #
 func scale(v, s) {
     r := struct Vector2;
     r.x = v.x * s;
@@ -87,39 +178,134 @@ func scale(v, s) {
     return r;
 }
 
+
+# ----------------------------------------- #
+# length2                                   #
+# ----------------------------------------- #
+# Compute the squared length of a vector.   #
+#                                           #
+# Useful for comparisons without sqrt.      #
+#                                           #
+# Args:                                     #
+#   v : Vector2                             #
+#                                           #
+# Returns:                                  #
+#   x*x + y*y                               #
+# ----------------------------------------- #
 func length2(v) {
     return v.x * v.x + v.y * v.y;
 }
 
+
+# ----------------------------------------- #
+# length                                    #
+# ----------------------------------------- #
+# Compute the length (magnitude) of a       #
+# vector.                                   #
+#                                           #
+# Uses integer square root (floor).         #
+#                                           #
+# Args:                                     #
+#   v : Vector2                             #
+#                                           #
+# Returns:                                  #
+#   floor(|v|)                              #
+# ----------------------------------------- #
 func length(v) {
     return sqrt(length2(v));
 }
 
+
+# ----------------------------------------- #
+# distance2                                 #
+# ----------------------------------------- #
+# Compute the squared distance between two  #
+# vectors.                                  #
+#                                           #
+# Args:                                     #
+#   a, b : Vector2                          #
+#                                           #
+# Returns:                                  #
+#   squared distance between a and b        #
+# ----------------------------------------- #
 func distance2(a, b) {
     dx := a.x - b.x;
     dy := a.y - b.y;
     return dx * dx + dy * dy;
 }
 
+
+# ----------------------------------------- #
+# distance                                  #
+# ----------------------------------------- #
+# Compute the distance between two vectors. #
+#                                           #
+# Uses integer square root (floor).         #
+#                                           #
+# Args:                                     #
+#   a, b : Vector2                          #
+#                                           #
+# Returns:                                  #
+#   floor(distance(a, b))                   #
+# ----------------------------------------- #
 func distance(a, b) {
     return sqrt(distance2(a, b));
 }
 
+
+# ----------------------------------------- #
+# setvelocity                               #
+# ----------------------------------------- #
+# Set the velocity of a vector.             #
+#                                           #
+# Args:                                     #
+#   v      : Vector2                        #
+#   vx, vy : new velocity                   #
+#                                           #
+# Returns:                                  #
+#   v (updated in place)                    #
+# ----------------------------------------- #
 func setvelocity(v, vx, vy) {
     v.vx = vx;
     v.vy = vy;
     return v;
 }
 
+
+# ----------------------------------------- #
+# addvelocity                               #
+# ----------------------------------------- #
+# Add acceleration to a vector’s velocity.  #
+#                                           #
+# Args:                                     #
+#   v      : Vector2                        #
+#   ax, ay : velocity delta                 #
+#                                           #
+# Returns:                                  #
+#   v (updated in place)                    #
+# ----------------------------------------- #
 func addvelocity(v, ax, ay) {
     v.vx = v.vx + ax;
     v.vy = v.vy + ay;
     return v;
 }
 
+
+# ----------------------------------------- #
+# zero                                      #
+# ----------------------------------------- #
+# Reset a vector’s position and velocity    #
+# to zero.                                  #
+#                                           #
+# Args:                                     #
+#   v : Vector2                             #
+#                                           #
+# Returns:                                  #
+#   v (updated in place)                    #
+# ----------------------------------------- #
 func zero(v) {
-    v.x = 0;
-    v.y = 0;
+    v.x  = 0;
+    v.y  = 0;
     v.vx = 0;
     v.vy = 0;
     return v;

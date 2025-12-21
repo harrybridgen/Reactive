@@ -594,61 +594,39 @@ fn clone_value(&mut self, v: Type) -> Type {
 }
 
 
-fn execute_ast(&mut self, ast: AST) {
-    let stack_len = self.stack.len(); 
 
-    let mut tmp = Vec::new();
-    let mut lg = crate::compiler::LabelGenerator::new();
-    let mut bs = Vec::new();
-    crate::compiler::compile(ast, &mut tmp, &mut lg, &mut bs);
+fn evaluate(&mut self, ast: AST) -> i32 {
+    match ast {
+        AST::Number(n) => n,
 
-    let saved_code = std::mem::replace(&mut self.code, tmp);
-    let saved_labels = std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
-    let saved_ptr = self.pointer;
-    self.pointer = 0;
+        AST::Var(name) => {
+            let v = self
+                .find_immutable(&name)
+                .cloned()
+                .or_else(|| self.environment.get(&name).cloned())
+                .unwrap();
+            self.as_int(v)
+        }
 
-    self.run();
-
-    self.stack.truncate(stack_len);
-
-    self.code = saved_code;
-    self.labels = saved_labels;
-    self.pointer = saved_ptr;
-}
-
-
-    fn evaluate(&mut self, ast: AST) -> i32 {
-        match ast {
-            AST::Number(n) => n,
-
-            AST::Var(name) => {
-                let v = self
-                    .find_immutable(&name)
-                    .cloned()
-                    .or_else(|| self.environment.get(&name).cloned())
-                    .unwrap();
-                self.as_int(v)
+        AST::Operation(l, op, r) => {
+            let a = self.evaluate(*l);
+            let b = self.evaluate(*r);
+            match op {
+                Operator::Addition => a + b,
+                Operator::Subtraction => a - b,
+                Operator::Multiplication => a * b,
+                Operator::Division => a / b,
+                Operator::Greater => (a > b) as i32,
+                Operator::Less => (a < b) as i32,
+                Operator::Equal => (a == b) as i32,
+                Operator::NotEqual => (a != b) as i32,
+                Operator::GreaterEqual => (a >= b) as i32,
+                Operator::LessEqual => (a <= b) as i32,
+                Operator::And => ((a > 0) && (b > 0)) as i32,
+                Operator::Or => ((a > 0) || (b > 0)) as i32,
+                Operator::Modulo => a % b  as i32,
             }
-
-            AST::Operation(l, op, r) => {
-                let a = self.evaluate(*l);
-                let b = self.evaluate(*r);
-                match op {
-                    Operator::Addition => a + b,
-                    Operator::Subtraction => a - b,
-                    Operator::Multiplication => a * b,
-                    Operator::Division => a / b,
-                    Operator::Greater => (a > b) as i32,
-                    Operator::Less => (a < b) as i32,
-                    Operator::Equal => (a == b) as i32,
-                    Operator::NotEqual => (a != b) as i32,
-                    Operator::GreaterEqual => (a >= b) as i32,
-                    Operator::LessEqual => (a <= b) as i32,
-                    Operator::And => ((a > 0) && (b > 0)) as i32,
-                    Operator::Or => ((a > 0) || (b > 0)) as i32,
-                    Operator::Modulo => a % b  as i32,
-                }
-            }
+        }
 
 AST::Index(base, index) => {
     let idx = self.evaluate(*index) as usize;
@@ -785,8 +763,8 @@ AST::Index(base, index) => {
             Type::Integer(n) => n,
             Type::LazyInteger(ast) => self.evaluate(*ast),
             Type::ArrayRef(id) => self.array_heap[id].len() as i32,
-            Type::StructRef(_) => panic!(),
-            Type::Function { .. } => panic!(),
+            Type::StructRef(_) => panic!("cannot coerce struct ref to int"),
+            Type::Function { .. } => panic!("cannot coerce function to int"),
             Type::LValue(_) => panic!("cannot coerce lvalue to int"),
 
         }
@@ -840,7 +818,7 @@ AST::Index(base, index) => {
         .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));
 
     let tokens = crate::tokenizer::tokenize(&source);
-    println!("TOKENS FROM {}: {:?}", file_path, tokens);
+    //println!("TOKENS FROM {}: {:?}", file_path, tokens);
     let ast = crate::parser::parse(tokens);
 
     let mut code = Vec::new();
