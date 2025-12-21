@@ -557,58 +557,6 @@ y[0] ::= z[0] + 1;
 z[0] = 5;
 println x[0][0]; # 6 #
 ```
-### Fibonacci-style dependency graph
-```haskell
-# allocate array #
-fib = [10]; 
-
-# base cases #
-n0 = 0; 
-n1 = 1;
-
-# relation for base cases #
-fib[0] ::= n0; 
-fib[1] ::= n1;
-
-# loop set up #
-x = 0;
-dx ::= x + 1;
-
-# set up relations between array indexes #
-loop {
-    if x >= fib - 2 {
-        break;
-    }
-
-    i := x;
-    fib[i + 2] ::= fib[i] + fib[i + 1]; 
-    x = dx;
-}
-
-# print the array #
-x = 0;
-loop{
-    if x >= fib {
-        break;
-    }
-    println fib[x]; 
-    x = dx;
-}
-
-# change base values #
-n0 = 89; 
-n1 = 144;
-
-# array prints differently due to relational indexes #
-x = 0;
-loop{
-    if x >= fib {
-        break;
-    }
-    println fib[x]; 
-    x = dx;
-}
-```
 
 ### 3D Matrix Relations
 ```haskell
