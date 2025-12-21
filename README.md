@@ -190,7 +190,18 @@ base = 10;
 
 println arr[4];   # 14 #
 ```
+### Nested Relational Arrays
+```haskell
+x = [1];
+y = [1];
+z = [1];
 
+x[0] = y;
+y[0] ::= z[0] + 1;
+
+z[0] = 5;
+println x[0][0]; # 6 #
+```
 ### Fibonacci-style dependency graph
 ```haskell
 # allocate array #
