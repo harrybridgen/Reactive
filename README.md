@@ -417,9 +417,9 @@ There is no special treatment for standard modules.
 ```
 std/
 ├── maths.hs
-├── array.hs
-├── logic.hs
-└── debug.hs
+├── vector.hs
+├── foo.hs
+└── bar.hs
 ```
 
 Modules are imported like any other file:
