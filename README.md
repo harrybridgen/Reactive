@@ -12,22 +12,117 @@ This is a small expression-oriented language compiled to bytecode and executed o
 Arrays evaluate to their length when used as integers.
 
 ## Variables and Assignment
-- `=` mutable assignment  
-  Using `=` inside a function mutates the global environment.
 
-- `:=` immutable assignment (cannot be reassigned)  
-  Immutable variables are scoped and cannot be overwritten.
+The language has **three assignment forms**, each with a distinct meaning.
 
-- `::=` reactive (lazy) assignment, evaluated when read  
-  Reactive assignments capture dependencies, not values.
-  Changing any dependency updates the result.
+### `=` Mutable Assignment
 
+`=` creates or mutates a **mutable location**.
 
-## Arrays
-- Created with `someArr = [size];`
-- Indexed with `someArr[index] = 5;`
-- Support mutable (`=`) and reactive (`::=`) element assignment
-- Bounds are checked at runtime
+At the top level, mutable variables are stored in the global environment.
+
+```haskell
+x = 10;
+arr = [5];
+```
+
+Inside structs, = creates a per-instance mutable field.
+Each struct instance owns its own copy of the field.
+
+```haskell
+struct A {
+    x = 0;
+}
+
+a = struct A;
+b = struct A;
+
+a.x = 5;
+println b.x;   # 0 #
+```
+
+Struct fields are not shared between instances.
+
+### `::=` Reactive Assignment (relationships)
+
+`::=` defines a **relationship** between locations.  
+It stores an expression and its dependencies, not a value.
+```haskell
+y ::= x + 1;
+```
+
+The expression is evaluated **when read**.  
+If any dependency changes, the result updates automatically.
+
+`::=` Reactive assignments:
+- capture **dependencies**, not snapshots
+- are lazy and pure
+- attach to the **location**, not the name
+
+They are commonly used to build **progression variables** in loops:
+```haskell
+x = 0;
+dx ::= x + 1;
+
+loop {
+    println x;
+    if x >= 4 { break; }
+    x = dx;
+}
+```
+
+Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
+
+Reactive assignments work uniformly for **variables, struct fields, and array elements**:
+
+```haskell
+c.next ::= c.x + c.step;
+arr[1] ::= arr[0] + 1;
+```
+
+Relationships attach to the underlying field or element, so all aliases observe the same behavior.
+
+Reactive assignments may depend on literals, other locations, and immutable bindings (`:=`).  
+
+Reactive relationships remain fixed unless explicitly reassigned.
+
+### `:=` Immutable Binding (capture / identity)
+
+`:=` creates a **new immutable binding**.  
+It does **not** create or reference a global location and does **not** participate in the reactive graph.
+
+This is required when capturing values in loops:
+
+```haskell
+loop {
+    i := x;  # capture current value#
+    arr[i] ::= arr[i-1] + 1;
+    x = x + 1;
+}
+```
+
+Here, `i` freezes the value of `x` for each iteration.  
+Without `:=`, reactive assignments would refer to a moving variable and the graph would be incorrect.
+
+### `:=` and Arrays in Structs
+
+When a struct field holds an array or struct, `:=` creates a **per-instance object identity**.
+
+```haskell
+struct Container {
+    data := [5];
+}
+
+c1 = struct Container;
+c2 = struct Container;
+
+c1.data[0] = 10;
+println c2.data[0];   # 0 #
+```
+
+Each instance owns its own array.
+
+Using `=` instead would cause all instances to share the same global array.
 
 ## Structs
 
@@ -43,8 +138,8 @@ struct Counter {
 ```
 ### Field Kinds
 - = mutable field
-- := immutable field (cannot be modified)
-- ::= reactive field (re-evaluated on access)
+- := immutable bind
+- ::= reactive field
 
 Reactive fields may depend on other fields in the same struct.
 Reactive fields are evaluated with the struct’s fields temporarily bound as immutable variables.
@@ -59,6 +154,104 @@ c = struct Counter;
 println c.x;
 c.x = 10;
 println c.next;
+```
+### Open Structs
+
+Structs are **open heap objects**.
+
+Fields do **not** need to be declared in the struct definition.
+New fields may be added dynamically at runtime.
+
+```haskell
+struct Empty {}
+
+e := struct Empty;
+e.foo = 1;
+e.bar = 2;
+
+println e.foo;  # 1 #
+```
+The struct definition serves as an optional initializer, not a schema.
+
+## Arrays
+
+Arrays are fixed-size, heap-allocated containers of values.
+They may store integers, structs, or other arrays.
+
+Arrays are created using a size expression:
+```haskell
+arr = [5];
+```
+When used as integers, arrays evaluate to their length.
+
+### Indexing and Assignment
+
+Array elements are accessed with brackets:
+```haskell
+arr[0] = 10;
+arr[1] ::= arr[0] + 1;
+x := arr[1]; # 11 #
+```
+Array elements support both mutable (`=`) and reactive (`::=`) assignment.
+Array values can be retrived by both `::=` and `=` variables.
+Bounds are checked at runtime.
+
+### Nested Arrays
+
+Arrays may contain other arrays, allowing arbitrary nesting.
+```haskell
+# 2x2 Matrix #
+matrix = [2];
+matrix[0] = [2];
+matrix[1] = [2];
+matrix[1][1] = 5;
+c = matrix[1][1];
+println c; # 5 #
+```
+
+### Reactive Array Relationships
+
+Reactive assignments to array elements capture relationships between values.
+```haskell
+base = 0;
+arr[0] ::= base;
+arr[1] ::= arr[0] + 1;
+base = arr[1];
+println arr[1]; # 2 #
+```
+Changing any dependency automatically updates dependent elements.
+
+### Arrays and Structs
+
+Arrays may contain structs, and struct fields may contain arrays.
+Field access (`.`) and indexing (`[]`) can be freely combined.
+```haskell
+# A container holding a 2D array of cells #
+struct Cell {
+    y = 0;
+    yy ::= y * 2;
+}
+
+struct Container {
+    m := [2];
+}
+
+c = struct Container;
+
+# allocate 2x2 array of Cells #
+c.m[0] = [2];
+c.m[1] = [2];
+
+c.m[0][0] = struct Cell;
+c.m[0][1] = struct Cell;
+
+c.m[0][0].y = 5;
+
+println c.m[0][0].y;   # 5 #
+println c.m[0][0].yy;  # 10 #
+
+c.m[0][0].y = 7;
+println c.m[0][0].yy;  # 14 #
 ```
 
 ## Functions
@@ -140,6 +333,100 @@ y = f();
 y = 10;   # allowed
 ```
 
+### Functions can be assigned to Reactive Variables
+```haskell
+import std.maths;
+
+y = -1;
+x ::= abs(y);
+println x; # 1 #
+
+y = -2;
+println x; # 2 #
+```
+
+## Imports and Modules
+
+The language supports file-based imports using dot-separated paths.
+
+```haskell
+import std.maths;
+import game.entities.player;
+```
+
+### Import Semantics
+
+- Imports load and execute another source file exactly once
+- Imported symbols (functions, structs, globals) become globally available
+- Imports are not namespaced
+- Import order matters
+- Re-importing the same module is ignored
+
+Imports are resolved relative to the program root by translating dots into folders.
+```haskell
+import game.entities.player;
+```
+
+Resolves to:
+```
+game/entities/player.hs
+```
+
+### Nested Folders
+
+Arbitrarily deep folder structures are supported.
+
+Example project layout:
+```
+project/
+├── main.hs
+├── std/
+│   └── maths.hs
+└── game/
+    └── entities/
+        └── player.hs
+```
+### Example
+game/entities/player.hs:
+```haskell
+struct Player {
+    x = 0;
+    y = 0;
+}
+
+func makeplayer(x, y) {
+    p := struct Player;
+    p.x = x;
+    p.y = y;
+    return p;
+}
+```
+
+main.hs:
+```haskell
+import game.entities.player;
+
+player = makeplayer(10, 5);
+println player.x;
+println player.y;
+```
+### Standard Library (std)
+
+The standard library is implemented as ordinary source files under the std/ folder.
+There is no special treatment for standard modules.
+```
+std/
+├── maths.hs
+├── array.hs
+├── logic.hs
+└── debug.hs
+```
+
+Modules are imported like any other file:
+```
+import std.maths;
+```
+
 ## Examples
 
 ### Reactive variables
@@ -165,6 +452,7 @@ println c.next; # 1 #
 c.x = 10;
 println c.next; # 11 #
 ```
+
 ### Factorial via Dependency Graph
 ```haskell
 fact = [6];   # we want factorials up to 5 #
@@ -350,14 +638,14 @@ println arr[0][0][0];   # 42 #
 
 ```
 
-### Matrix Multiplication
+### Matrix Multiplication with Relations
 ```haskell
 struct Mat2 {
     m;
 }
 
 func mat2(a00, a01, a10, a11) {
-    A := struct Mat2; # the := here is very important! #
+    A := struct Mat2; # immutable binding is crucial #
     A.m = [2];
     A.m[0] = [2];
     A.m[1] = [2];
@@ -376,6 +664,7 @@ func mat2mul(A, B) {
     C.m[0] = [2];
     C.m[1] = [2];
 
+    # reactive matrix multiplication #
     C.m[0][0] ::= A.m[0][0]*B.m[0][0] + A.m[0][1]*B.m[1][0];
     C.m[0][1] ::= A.m[0][0]*B.m[0][1] + A.m[0][1]*B.m[1][1];
 
@@ -385,14 +674,28 @@ func mat2mul(A, B) {
     return C;
 }
 
-A = mat2(1, 2, 3, 4);
-B = mat2(5, 6, 7, 8);
+A = mat2(1, 2,
+         3, 4);
+
+B = mat2(5, 6,
+         7, 8);
+
 C = mat2mul(A, B);
 
-println C.m[0][0];
-println C.m[0][1];
-println C.m[1][0];
-println C.m[1][1];
+# ---- initial product ---- #
+println C.m[0][0];  # 19 #
+println C.m[0][1];  # 22 #
+println C.m[1][0];  # 43 #
+println C.m[1][1];  # 50 #
+
+# ---- mutate input matrix ---- #
+A.m[0][0] = 10;
+
+# ---- product updates automatically ---- #
+println C.m[0][0];  # 10*5 + 2*7 = 64 #
+println C.m[0][1];  # 10*6 + 2*8 = 76 #
+println C.m[1][0];  # unchanged: 43 #
+println C.m[1][1];  # unchanged: 50 #
 ```
 
 ### Bank Account with reactive fields
@@ -512,6 +815,146 @@ fib.n1 = 144;
 
 printfib(fib);
 
+```
+
+### Reactive Dot-Product Matrix
+```haskell
+# Vec2 definition                 #
+struct Vec2 {
+    x = 0;
+    y = 0;
+}
+
+# Allocate vector arrays          #
+func allocvecarrays(n) {
+    A := [n];
+    B := [n];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= A {
+            break;
+        }
+        A[i] = struct Vec2;
+        B[i] = struct Vec2;
+        i = di;
+    }
+
+    return A;   # B is global mutable, shared #
+}
+
+# Initialize vectors              #
+func initvectors(A, B) {
+    A[0].x = 1;   A[0].y = 2;
+    A[1].x = 3;   A[1].y = 4;
+    A[2].x = 5;   A[2].y = 6;
+
+    B[0].x = 7;   B[0].y = 8;
+    B[1].x = 9;   B[1].y = 10;
+    B[2].x = 11;  B[2].y = 12;
+}
+
+# Allocate matrix                 #
+func allocmatrix(A, B) {
+    D := [A];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= D {
+            break;
+        }
+        D[i] = [B];
+        i = di;
+    }
+
+    return D;
+}
+
+# Bind reactive dot products      #
+func binddots(D, A, B) {
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= A {
+            break;
+        }
+
+        j = 0;
+        dj ::= j + 1;
+
+        loop {
+            if j >= B {
+                break;
+            }
+
+            ii := i;
+            jj := j;
+
+            D[ii][jj] ::= A[ii].x*B[jj].x + A[ii].y*B[jj].y;
+
+            j = dj;
+        }
+
+        i = di;
+    }
+}
+
+# Print matrix                    #
+func printmatrix(D) {
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= D {
+            break;
+        }
+
+        j = 0;
+        dj ::= j + 1;
+
+        loop {
+            if j >= D[i] {
+                break;
+            }
+
+            println D[i][j];
+            j = dj;
+        }
+
+        i = di;
+    }
+}
+
+# Demo                            #
+A = allocvecarrays(3);
+B = [3];          
+i = 0;
+di ::= i + 1;
+loop {
+    if i >= B {
+        break;
+    }
+    B[i] = struct Vec2;
+    i = di;
+}
+
+initvectors(A, B);
+
+D = allocmatrix(A, B);
+binddots(D, A, B);
+
+# ---- initial matrix ---- #
+printmatrix(D);
+
+# ---- mutate vectors ---- #
+A[1].x = 100;
+B[2].y = 1;
+
+# ---- matrix updates automatically ---- #
+printmatrix(D);
 ```
 
 ## Grammar
