@@ -70,6 +70,7 @@ Array elements are accessed with brackets:
 ```haskell
 arr[0] = 10;
 arr[1] ::= arr[0] + 1;
+x := arr[1]; # 11 #
 ```
 Array elements support both mutable (`=`) and reactive (`::=`) assignment.
 Bounds are checked at runtime.
