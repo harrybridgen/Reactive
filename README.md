@@ -756,16 +756,12 @@ println acct.projected;  # 1443 #
 import std.hashmap;
 
 struct Pair {
-    iy = 0;
-    jy = 0;
-}
-struct TwoSum {
-    ix = 0;
-    jx = 0;
+    i = 0;
+    j = 0;
 }
 func twosum(arr, target) {
     m := hashmap(arr);
-    p := struct TwoSum;
+    p := struct Pair;
 
     idx = 0;
     didx ::= idx + 1;
@@ -779,8 +775,8 @@ func twosum(arr, target) {
         want := target - x;
 
         if has(m, want) {
-            p.ix = get(m, want);
-            p.jx = idx;
+            p.i = get(m, want);
+            p.j = idx;
             return p;
         }
 
@@ -800,20 +796,21 @@ nums[3] = 15;
 
 result := struct Pair;
 
-result.iy ::= twosum(nums, 9).ix;
-result.jy ::= twosum(nums, 9).jx;
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
 
-println result.iy; # 0 #
-println result.jy; # 1 #
+println result.i; # 0 #
+println result.j; # 1 #
 
 nums[0] = 12;
 nums[2] = 1;
 nums[3] = 8
 
-println result.iy; # 2 #
-println result.jy; # 3 #
+println result.i; # 2 #
+println result.j; # 3 #
 ```
-### Fibonacci as a struct 
+
+### Reactive Fib in a Struct
 ```haskell
 struct Fibonacci {
     size := 10;
