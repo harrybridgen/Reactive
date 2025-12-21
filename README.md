@@ -24,10 +24,57 @@ Arrays evaluate to their length when used as integers.
 
 
 ## Arrays
-- Created with `someArr = [size];`
-- Indexed with `someArr[index] = 5;`
-- Support mutable (`=`) and reactive (`::=`) element assignment
-- Bounds are checked at runtime
+
+Arrays are fixed-size, heap-allocated containers of values.
+They may store integers, structs, or other arrays.
+
+Arrays are created using a size expression:
+```haskell
+arr = [5];
+```
+When used as integers, arrays evaluate to their length.
+
+### Indexing and Assignment
+
+Array elements are accessed with brackets:
+```haskell
+arr[0] = 10;
+arr[1] ::= arr[0] + 1;
+```
+Array elements support both mutable (`=`) and reactive (`::=`) assignment.
+Bounds are checked at runtime.
+
+### Nested Arrays
+
+Arrays may contain other arrays, allowing arbitrary nesting.
+```haskell
+# 2x2 Matrix #
+matrix = [2];
+matrix[0] = [2];
+matrix[1] = [2];
+matrix[1][1] = 5;
+c = matrix[1][1];
+println c; # 5 #
+```
+### Arrays and Structs
+
+Arrays may contain structs, and struct fields may contain arrays.
+Field access (`.`) and indexing (`[]`) can be freely combined.
+```haskell
+x = c.m[0][0].y;
+```
+
+### Reactive Array Relationships
+
+Reactive assignments to array elements capture relationships between values.
+```haskell
+base = 0;
+arr[0] ::= base;
+arr[1] ::= arr[0] + 1;
+base = arr[1];
+println arr[1]; # 2 #
+```
+Changing any dependency automatically updates dependent elements.
 
 ## Structs
 
