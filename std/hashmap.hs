@@ -118,7 +118,7 @@ func hash(key, cap) {
 #   0 if the table is full                  #
 # ----------------------------------------- #
 func put(m, key, value) {
-    i := hash(key, m.cap);
+    i = hash(key, m.cap);
     start := i;
 
     loop {
@@ -160,7 +160,7 @@ func put(m, key, value) {
 #   0 if key is not present                 #
 # ----------------------------------------- #
 func get(m, key) {
-    i := hash(key, m.cap);
+    i = hash(key, m.cap);
     start := i;
 
     loop {
@@ -195,7 +195,7 @@ func get(m, key) {
 #   0 otherwise                             #
 # ----------------------------------------- #
 func has(m, key) {
-    i := hash(key, m.cap);
+    i = hash(key, m.cap);
     start := i;
 
     loop {
@@ -233,7 +233,7 @@ func has(m, key) {
 #   0 if key was not found                  #
 # ----------------------------------------- #
 func remove(m, key) {
-    i := hash(key, m.cap);
+    i = hash(key, m.cap);
     start := i;
 
     loop {
