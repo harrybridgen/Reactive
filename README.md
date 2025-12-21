@@ -86,6 +86,7 @@ Reactive assignments may depend on literals, other locations, and immutable bind
 
 Reactive relationships remain fixed unless explicitly reassigned.
 
+
 ### `:=` Immutable Binding (capture / identity)
 
 `:=` creates a **new immutable binding**.  
@@ -103,26 +104,6 @@ loop {
 
 Here, `i` freezes the value of `x` for each iteration.  
 Without `:=`, reactive assignments would refer to a moving variable and the graph would be incorrect.
-
-### `:=` and Arrays in Structs
-
-When a struct field holds an array or struct, `:=` creates a **per-instance object identity**.
-
-```haskell
-struct Container {
-    data := [5];
-}
-
-c1 = struct Container;
-c2 = struct Container;
-
-c1.data[0] = 10;
-println c2.data[0];   # 0 #
-```
-
-Each instance owns its own array.
-
-Using `=` instead would cause all instances to share the same global array.
 
 ## Structs
 
@@ -334,17 +315,40 @@ y = 10;   # allowed
 ```
 
 ### Functions can be assigned to Reactive Variables
+Reactive bindings (::=) may only be used with expressions that evaluate to
+an integer value.
+
 ```haskell
 import std.maths;
 
 y = -1;
-x ::= abs(y);
+x ::= abs(y); # Returns an int #
 println x; # 1 #
 
 y = -2;
 println x; # 2 #
 ```
 
+In this language, reactivity is defined over scalar (int) values, not heap
+objects. As a result:
+- Functions returning integers may be used directly with ::=  
+- Functions returning structs cannot be bound reactively as a whole  
+
+For example, this is NOT allowed:
+```haskell
+r ::= twosum(nums, 9); # twosum returns a Pair struct
+```
+However, struct *fields* may be bound reactively, since field access
+evaluates to an integer:
+```haskell
+result := struct Pair;
+
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
+```
+This pattern is the intended way to express reactive algorithms that
+produce structured results. Reactivity applies to values, not object
+identity.
 ## Imports and Modules
 
 The language supports file-based imports using dot-separated paths.
@@ -754,7 +758,63 @@ println acct.balance;    # 1575 #
 withdraw(acct, 200);
 println acct.projected;  # 1443 #
 ```
+### Reactive Two Sum
+```haskell
+import std.hashmap;
 
+struct Pair {
+    i = 0;
+    j = 0;
+}
+func twosum(arr, target) {
+    m := hashmap(arr);
+    p := struct Pair;
+
+    idx = 0;
+    didx ::= idx + 1;
+
+    loop {
+        if idx >= arr {
+            break;
+        }
+
+        x := arr[idx];
+        want := target - x;
+
+        if has(m, want) {
+            p.i = get(m, want);
+            p.j = idx;
+            return p;
+        }
+
+        put(m, x, idx);
+        idx = didx;
+    }
+
+    return struct Pair;
+}
+
+# ---- test ---- #
+nums = [4];
+nums[0] = 2;
+nums[1] = 7;
+nums[2] = 11;
+nums[3] = 15;
+
+result := struct Pair;
+
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
+
+println result.i; # 0 #
+println result.j; # 1 #
+
+nums[1] = 8;
+nums[2] = 1;
+
+println result.i; # 1 #
+println result.j; # 2 #
+```
 ### Fibonacci as a struct 
 ```haskell
 struct Fibonacci {
