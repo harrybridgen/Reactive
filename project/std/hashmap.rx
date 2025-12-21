@@ -94,7 +94,7 @@ func hashmap(capacity) {
    cap : table capacity                    
                                            
  Returns:                                  
-   index in range [0, cap)                 
+   index in range [0, cap]                 
  ----------------------------------------- 
 #
 func hash(key, cap) {

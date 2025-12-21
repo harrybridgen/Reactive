@@ -1,6 +1,6 @@
 #
  ========================================= 
-        Reactive Vector Mathematics        
+        Reactive Vector2D Mathematics        
  ========================================= 
                                            
  This module provides a 2D integer vector  
@@ -18,7 +18,7 @@
  - safe for reactive expressions (::=)     
                                            
  Import with:                              
-     import std.vector;                    
+     import std.vector2;                    
                                            
  ========================================= 
 #
