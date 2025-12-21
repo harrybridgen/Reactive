@@ -86,6 +86,31 @@ Reactive assignments may depend on literals, other locations, and immutable bind
 
 Reactive relationships remain fixed unless explicitly reassigned.
 
+Reactive bindings (::=) may only be used with expressions that evaluate to
+an integer value.
+
+In this language, reactivity is defined over scalar (int) values, not heap
+objects. As a result:
+- Functions returning integers may be used directly with ::=  
+- Functions returning structs cannot be bound reactively as a whole  
+
+For example, this is NOT allowed:
+```haskell
+r ::= twosum(nums, 9); # twosum returns a struct
+```
+However, struct *fields* may be bound reactively, since field access
+evaluates to an integer:
+```haskell
+result := struct Pair;
+
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
+```
+This pattern is the intended way to express reactive algorithms that
+produce structured results. Reactivity applies to values, not object
+identity.
+
+
 ### `:=` Immutable Binding (capture / identity)
 
 `:=` creates a **new immutable binding**.  
