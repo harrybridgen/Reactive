@@ -339,10 +339,10 @@ import std.maths;
 
 y = -1;
 x ::= abs(y);
-println x;
+println x; # 1 #
 
 y = -2;
-println x;
+println x; # 2 #
 ```
 
 ## Imports and Modules
