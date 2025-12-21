@@ -1,0 +1,27 @@
+{
+  "name": "rx-vscode",
+  "displayName": "Reactive",
+  "description": "Syntax highlighting for Reactive language",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.75.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [
+      {
+        "id": "reactive",
+        "aliases": ["Reactive"],
+        "extensions": [".rx"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "reactive",
+        "scopeName": "source.reactive",
+        "path": "./syntaxes/reactive.tmLanguage.json"
+      }
+    ]
+  }
+}

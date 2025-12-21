@@ -1,0 +1,154 @@
+{
+  "name": "Reactive",
+  "scopeName": "source.reactive",
+  "patterns": [
+    { "include": "#comments" },
+
+    { "include": "#reactiveIdentifiers" },
+    { "include": "#immutableIdentifiers" },
+
+    { "include": "#keywords" },
+    { "include": "#types" },
+    { "include": "#functions" },
+    { "include": "#fields" },
+
+    { "include": "#numbers" },
+    { "include": "#operators" },
+    { "include": "#braces" },
+    { "include": "#mutableIdentifiers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.block.reactive",
+          "begin": "#",
+          "end": "#"
+        }
+      ]
+    },
+
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.flow.reactive.bold",
+          "match": "\\b(if|else|loop|break|return)\\b"
+        },
+        {
+          "name": "keyword.declaration.reactive",
+          "match": "\\b(import|struct|func)\\b"
+        },
+        {
+          "name": "keyword.other.io.reactive",
+          "match": "\\b(print|println)\\b"
+        }
+      ]
+    },
+
+    "types": {
+      "patterns": [
+        {
+          "name": "entity.name.type.reactive",
+          "match": "\\b[A-Z][A-Za-z0-9]*\\b"
+        }
+      ]
+    },
+
+    "functions": {
+      "patterns": [
+        {
+          "name": "entity.name.function.reactive",
+          "match": "\\b[a-z][a-zA-Z0-9]*\\s*(?=\\()"
+        }
+      ]
+    },
+
+"fields": {
+  "patterns": [
+    {
+      "name": "meta.member.access.reactive",
+      "match": "\\.([A-Za-z_][A-Za-z0-9_]*)",
+      "captures": {
+        "1": { "name": "variable.other.property" }
+      }
+    }
+  ]
+},
+
+
+    "reactiveIdentifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.reactive.binding",
+          "match": "\\b[a-z][a-zA-Z0-9]*\\s*(?=::=)"
+        }
+      ]
+    },
+
+    "immutableIdentifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.immutable.binding",
+          "match": "\\b[a-z][a-zA-Z0-9]*\\s*(?=:=)"
+        }
+      ]
+    },
+
+    "mutableIdentifiers": {
+      "patterns": [
+        {
+          "name": "variable.other.readwrite.reactive",
+          "match": "(?<!\\.)\\b[a-z][a-zA-Z0-9]*\\b"
+        }
+      ]
+    },
+
+
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.integer.reactive",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.assignment.reactive.relationship",
+          "match": "::="
+        },
+        {
+          "name": "keyword.operator.assignment.reactive.immutable",
+          "match": ":="
+        },
+        {
+          "name": "keyword.operator.assignment.reactive.mutable.subtle",
+          "match": "="
+        },
+        {
+          "name": "keyword.operator.arithmetic.reactive",
+          "match": "\\+|-|\\*|/|%"
+        },
+        {
+          "name": "keyword.operator.comparison.reactive",
+          "match": "==|!=|<=|>=|<|>"
+        },
+        {
+          "name": "keyword.operator.logical.reactive",
+          "match": "&&|\\|\\|"
+        }
+      ]
+    },
+
+    "braces": {
+      "patterns": [
+        {
+          "name": "punctuation.section.block.reactive",
+          "match": "[{}]"
+        }
+      ]
+    }
+  }
+}
