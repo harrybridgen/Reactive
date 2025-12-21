@@ -1,4 +1,4 @@
-# Simple Parser Language
+# Reactive Language
 
 This is a small expression-oriented language compiled to bytecode and executed on a stack-based virtual machine.
 
@@ -417,9 +417,9 @@ There is no special treatment for standard modules.
 ```
 std/
 ├── maths.hs
-├── array.hs
-├── logic.hs
-└── debug.hs
+├── vector.hs
+├── foo.hs
+└── bar.hs
 ```
 
 Modules are imported like any other file:
