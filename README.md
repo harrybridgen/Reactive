@@ -350,14 +350,14 @@ println arr[0][0][0];   # 42 #
 
 ```
 
-### Matrix Multiplication
+### Matrix Multiplication with Relations
 ```haskell
 struct Mat2 {
     m;
 }
 
 func mat2(a00, a01, a10, a11) {
-    A := struct Mat2; # the := here is very important! #
+    A := struct Mat2; # immutable binding is crucial #
     A.m = [2];
     A.m[0] = [2];
     A.m[1] = [2];
@@ -376,6 +376,7 @@ func mat2mul(A, B) {
     C.m[0] = [2];
     C.m[1] = [2];
 
+    # reactive matrix multiplication #
     C.m[0][0] ::= A.m[0][0]*B.m[0][0] + A.m[0][1]*B.m[1][0];
     C.m[0][1] ::= A.m[0][0]*B.m[0][1] + A.m[0][1]*B.m[1][1];
 
@@ -385,14 +386,27 @@ func mat2mul(A, B) {
     return C;
 }
 
-A = mat2(1, 2, 3, 4);
-B = mat2(5, 6, 7, 8);
+A = mat2(1, 2,
+         3, 4);
+
+B = mat2(5, 6,
+         7, 8);
+
 C = mat2mul(A, B);
 
-println C.m[0][0];
-println C.m[0][1];
-println C.m[1][0];
-println C.m[1][1];
+# ---- initial product ---- #
+println C.m[0][0];  # 19 #
+println C.m[0][1];  # 22 #
+println C.m[1][0];  # 43 #
+println C.m[1][1];  # 50 #
+
+# ---- mutate input matrix ---- #
+A.m[0][0] = 10;
+
+# ---- product updates automatically ---- #
+println C.m[0][0];  # 10*5 + 2*7 = 64 #
+println C.m[0][1];  # 10*6 + 2*8 = 76 #
+println C.m[1][0];  # unchanged: 43 #
 ```
 
 ### Bank Account with reactive fields
