@@ -117,31 +117,21 @@ println c.next; # 1 #
 c.x = 10;
 println c.next; # 11 #
 ```
-### Factorial via Dependency Graph
-```haskell
-fact = [6];   # we want factorials up to 5 #
-
-fact[0] ::= 1;
-fact[1] ::= 1;
-
-x = 1;
-dx ::= x + 1;
-
-loop {
-    if x >= fact - 1 {
-        break;
-    }
-
-    i := x;
-    fact[i + 1] ::= fact[i] * (i + 1);
-    x = dx;
-}
-
-println fact[5];  # 120 #
-```
 
 ### Functions Returning Structs
 ```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
+func makecounter(start) {
+    c = struct Counter;
+    c.x = start;
+    return c;
+}
+
 func advance(c) {
     c.x = c.next;
     return c.x;
@@ -151,6 +141,7 @@ counter = makecounter(10);
 
 println advance(counter); # 11 #
 println counter.next;     # 12 #
+
 ```
 
 ### Arrays and lazy elements
