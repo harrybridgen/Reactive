@@ -557,58 +557,6 @@ y[0] ::= z[0] + 1;
 z[0] = 5;
 println x[0][0]; # 6 #
 ```
-### Fibonacci-style dependency graph
-```haskell
-# allocate array #
-fib = [10]; 
-
-# base cases #
-n0 = 0; 
-n1 = 1;
-
-# relation for base cases #
-fib[0] ::= n0; 
-fib[1] ::= n1;
-
-# loop set up #
-x = 0;
-dx ::= x + 1;
-
-# set up relations between array indexes #
-loop {
-    if x >= fib - 2 {
-        break;
-    }
-
-    i := x;
-    fib[i + 2] ::= fib[i] + fib[i + 1]; 
-    x = dx;
-}
-
-# print the array #
-x = 0;
-loop{
-    if x >= fib {
-        break;
-    }
-    println fib[x]; 
-    x = dx;
-}
-
-# change base values #
-n0 = 89; 
-n1 = 144;
-
-# array prints differently due to relational indexes #
-x = 0;
-loop{
-    if x >= fib {
-        break;
-    }
-    println fib[x]; 
-    x = dx;
-}
-```
 
 ### 3D Matrix Relations
 ```haskell
@@ -638,12 +586,12 @@ println arr[0][0][0];   # 42 #
 ### Matrix Multiplication with Relations
 ```haskell
 struct Mat2 {
-    m;
+    m := [2];
 }
+
 
 func mat2(a00, a01, a10, a11) {
     A := struct Mat2; # immutable binding is crucial #
-    A.m = [2];
     A.m[0] = [2];
     A.m[1] = [2];
 
@@ -657,7 +605,6 @@ func mat2(a00, a01, a10, a11) {
 
 func mat2mul(A, B) {
     C := struct Mat2;
-    C.m = [2];
     C.m[0] = [2];
     C.m[1] = [2];
 
@@ -756,16 +703,12 @@ println acct.projected;  # 1443 #
 import std.hashmap;
 
 struct Pair {
-    iy = 0;
-    jy = 0;
-}
-struct TwoSum {
-    ix = 0;
-    jx = 0;
+    i = 0;
+    j = 0;
 }
 func twosum(arr, target) {
     m := hashmap(arr);
-    p := struct TwoSum;
+    p := struct Pair;
 
     idx = 0;
     didx ::= idx + 1;
@@ -779,8 +722,8 @@ func twosum(arr, target) {
         want := target - x;
 
         if has(m, want) {
-            p.ix = get(m, want);
-            p.jx = idx;
+            p.i = get(m, want);
+            p.j = idx;
             return p;
         }
 
@@ -800,20 +743,21 @@ nums[3] = 15;
 
 result := struct Pair;
 
-result.iy ::= twosum(nums, 9).ix;
-result.jy ::= twosum(nums, 9).jx;
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
 
-println result.iy; # 0 #
-println result.jy; # 1 #
+println result.i; # 0 #
+println result.j; # 1 #
 
 nums[0] = 12;
 nums[2] = 1;
 nums[3] = 8
 
-println result.iy; # 2 #
-println result.jy; # 3 #
+println result.i; # 2 #
+println result.j; # 3 #
 ```
-### Fibonacci as a struct 
+
+### Reactive Fib in a Struct
 ```haskell
 struct Fibonacci {
     size := 10;
@@ -877,33 +821,46 @@ printfib(fib);
 
 ### Reactive Dot-Product Matrix
 ```haskell
-# Vec2 definition                 #
+# ---- pair of vectors ---- #
+struct VecPair {
+    A;
+    B;
+}
+
+
+# ---- vec2 ---- #
 struct Vec2 {
     x = 0;
     y = 0;
 }
 
-# Allocate vector arrays          #
+# ---- allocate vector arrays ---- #
 func allocvecarrays(n) {
-    A := [n];
-    B := [n];
+    P := struct VecPair;
+
+    P.A = [n];
+    P.B = [n];
 
     i = 0;
     di ::= i + 1;
     loop {
-        if i >= A {
+        if i >= n {
             break;
         }
-        A[i] = struct Vec2;
-        B[i] = struct Vec2;
+        P.A[i] = struct Vec2;
+        P.B[i] = struct Vec2;
         i = di;
     }
 
-    return A;   # B is global mutable, shared #
+    return P;
 }
 
-# Initialize vectors              #
-func initvectors(A, B) {
+
+# ---- init vectors ---- #
+func initvectors(P) {
+    A = P.A;
+    B = P.B;
+
     A[0].x = 1;   A[0].y = 2;
     A[1].x = 3;   A[1].y = 4;
     A[2].x = 5;   A[2].y = 6;
@@ -913,7 +870,8 @@ func initvectors(A, B) {
     B[2].x = 11;  B[2].y = 12;
 }
 
-# Allocate matrix                 #
+
+# ---- allocate matrix ---- #
 func allocmatrix(A, B) {
     D := [A];
 
@@ -930,7 +888,7 @@ func allocmatrix(A, B) {
     return D;
 }
 
-# Bind reactive dot products      #
+# ---- bind reactive dot products ---- #
 func binddots(D, A, B) {
     i = 0;
     di ::= i + 1;
@@ -960,7 +918,8 @@ func binddots(D, A, B) {
     }
 }
 
-# Print matrix                    #
+
+# ---- print matrix ---- #
 func printmatrix(D) {
     i = 0;
     di ::= i + 1;
@@ -986,20 +945,13 @@ func printmatrix(D) {
     }
 }
 
-# Demo                            #
-A = allocvecarrays(3);
-B = [3];          
-i = 0;
-di ::= i + 1;
-loop {
-    if i >= B {
-        break;
-    }
-    B[i] = struct Vec2;
-    i = di;
-}
+# ---- demo ---- #
 
-initvectors(A, B);
+P = allocvecarrays(3);
+initvectors(P);
+
+A = P.A;
+B = P.B;
 
 D = allocmatrix(A, B);
 binddots(D, A, B);
@@ -1013,6 +965,7 @@ B[2].y = 1;
 
 # ---- matrix updates automatically ---- #
 printmatrix(D);
+
 ```
 
 ## Grammar
