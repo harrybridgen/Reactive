@@ -418,18 +418,36 @@ impl VM {
 
                     match target {
                         Type::LValue(LValue::ArrayElem { array_id, index }) => {
+                            if index >= self.array_heap[array_id].len() {
+                                panic!(
+                                    "array assignment out of bounds: index {} but length {}",
+                                    index,
+                                    self.array_heap[array_id].len()
+                                );
+                            }
+
                             self.array_heap[array_id][index] = value;
                         }
 
                         Type::LValue(LValue::StructField { struct_id, field }) => {
                             if self.heap[struct_id].immutables.contains(&field) {
-                panic!("immutable field");
+                                panic!(
+                                    "cannot assign to immutable field '{}'",
+                                    field
+                                );
                             }
+
                             self.heap[struct_id].fields.insert(field, value);
                         }
 
-                        _ => panic!("StoreThrough target is not an lvalue"),
+                        other => {
+                            panic!(
+                                "internal error: StoreThrough target is not an lvalue (got {:?})",
+                                other
+                            );
+                        }
                     }
+
                 }
                 Instruction::StoreThroughReactive(ast) => {
                     let target = self.pop();
@@ -822,6 +840,7 @@ AST::Index(base, index) => {
         .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));
 
     let tokens = crate::tokenizer::tokenize(&source);
+    println!("TOKENS FROM {}: {:?}", file_path, tokens);
     let ast = crate::parser::parse(tokens);
 
     let mut code = Vec::new();

@@ -26,7 +26,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                 s.push(c);
 
                 while let Some(ch) = chars.peek() {
-                    if ch.is_alphanumeric() {
+                    if ch.is_alphanumeric() || *ch == '_' {
                         s.push(*ch);
                         chars.next();
                     } else {

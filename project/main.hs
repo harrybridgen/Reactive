@@ -1,19 +1,21 @@
-import std.vector;
+import std.hashmap;
 
-v := struct Vector2;
+m = hashmap(16);
 
-v.x = 3;
-v.y = 4;
+put(m, 10, 100);
+put(m, 20, 200);
 
-println v.mag2;   # 25 #
-println v.mag;    # 5 #
+println get(m, 10);   # 100 #
+println get(m, 20);   # 200 #
+println get(m, 30);   # 0 #
 
-# move the vector #
-v.vx = 1;
-v.vy = 2;
+x = 10;
+y ::= hashmap_get(m, x);
 
-v.x = v.dx;
-v.y = v.dy;
+println y;   # 100 #
 
-println v.x;      # 4 #
+x = 20;
+println y;   # 200 #
 
+put(m, 20, 999);
+println y;   # 999 #
