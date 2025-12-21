@@ -90,7 +90,7 @@ This is required when capturing values in loops:
 
 ```haskell
 loop {
-    i := x;                # capture current value
+    i := x;  # capture current value#
     arr[i] ::= arr[i-1] + 1;
     x = x + 1;
 }
@@ -103,11 +103,11 @@ Without `:=`, reactive assignments would refer to a moving variable and the grap
 
 When a struct field holds an array or struct, `:=` creates a **per-instance object identity**.
 
-```
+```haskell
 struct Container {
     data := [5];
 }
-``
+
 c1 = struct Container;
 c2 = struct Container;
 
@@ -118,6 +118,7 @@ println c2.data[0];   # 0 #
 Each instance owns its own array.
 
 Using `=` instead would cause all instances to share the same global array.
+
 ## Structs
 
 Structs define heap-allocated records with named fields.
@@ -132,8 +133,8 @@ struct Counter {
 ```
 ### Field Kinds
 - = mutable field
-- := immutable field (cannot be modified)
-- ::= reactive field (re-evaluated on access)
+- := immutable bind
+- ::= reactive field
 
 Reactive fields may depend on other fields in the same struct.
 Reactive fields are evaluated with the struct’s fields temporarily bound as immutable variables.
