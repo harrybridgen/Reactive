@@ -1,2 +1,5 @@
 /target
 /reactive
+/rx-vscode/.vscode
+/rx-vscode/node_modules
+/rx-vscode/*.vsix
