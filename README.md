@@ -758,7 +758,7 @@ println acct.balance;    # 1575 #
 withdraw(acct, 200);
 println acct.projected;  # 1443 #
 ```
-### Two Sum
+### Reactive Two Sum
 ```haskell
 import std.hashmap;
 
@@ -766,7 +766,6 @@ struct Pair {
     i = 0;
     j = 0;
 }
-
 func twosum(arr, target) {
     m := hashmap(arr);
     p := struct Pair;
@@ -802,9 +801,19 @@ nums[1] = 7;
 nums[2] = 11;
 nums[3] = 15;
 
-r = twosum(nums, 9);
-println r.i; # 0 (index) -> 2 #
-println r.j; # 1 (index) -> 7 #
+result := struct Pair;
+
+result.i ::= twosum(nums, 9).i;
+result.j ::= twosum(nums, 9).j;
+
+println result.i; # 0 #
+println result.j; # 1 #
+
+nums[1] = 8;
+nums[2] = 1;
+
+println result.i; # 1 #
+println result.j; # 2 #
 ```
 ### Fibonacci as a struct 
 ```haskell
