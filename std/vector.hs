@@ -18,6 +18,7 @@
 #                                           #
 # ========================================= #
 
+import std.maths;
 
 # ----------------------------------------- #
 # Vector2                                   #
@@ -29,9 +30,6 @@
 # vx, vy : velocity                         #
 # dx, dy : next position (reactive)         #
 # ----------------------------------------- #
-
-import std.maths;
-
 struct Vector2 {
     x = 0;
     y = 0;

@@ -234,9 +234,29 @@ impl VM {
                         args.push(self.pop());
                     }
                     args.reverse();
-                    let f = self.environment.get(&name).cloned().unwrap();
-                    let ret = self.call_function(f, args);
-                    self.stack.push(ret);
+
+                    let f = match self.environment.get(&name) {
+                        Some(v) => v.clone(),
+                        None => {
+                            panic!(
+                                "call error: `{}` is not defined (attempted to call with {} argument(s))",
+                                name, argc
+                            )
+                        }
+                    };
+
+                    match f {
+                        Type::Function { .. } => {
+                            let ret = self.call_function(f, args);
+                            self.stack.push(ret);
+                        }
+                        other => {
+                            panic!(
+                                "call error: `{}` is not a function (found {:?})",
+                                name, other
+                            )
+                        }
+                    }
                 }
                 Instruction::StoreStruct(name, fields) => {
                     self.struct_defs.insert(name, fields);
