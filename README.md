@@ -332,7 +332,6 @@ func f() {
 y = f();
 y = 10;   # allowed
 ```
-## Imports and Modules
 
 ### Functions can be assigned to Reactive Variables
 ```haskell
@@ -346,6 +345,7 @@ y = -2;
 println x;
 ```
 
+## Imports and Modules
 
 The language supports file-based imports using dot-separated paths.
 
