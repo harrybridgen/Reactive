@@ -1,11 +1,11 @@
 use std::fs;
 
-use simple_parser::compiler::compile;
-use simple_parser::compiler::LabelGenerator;
-use simple_parser::grammar::Instruction;
-use simple_parser::parser::parse;
-use simple_parser::tokenizer::tokenize;
-use simple_parser::vm::VM;
+use reactive_language::compiler::compile;
+use reactive_language::compiler::LabelGenerator;
+use reactive_language::grammar::Instruction;
+use reactive_language::parser::parse;
+use reactive_language::tokenizer::tokenize;
+use reactive_language::vm::VM;
 
 fn main() {
     let file_path = String::from("project/main.hs");

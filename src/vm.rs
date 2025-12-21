@@ -814,7 +814,6 @@ AST::Index(base, index) => {
     fn import_module(&mut self, path: Vec<String>) {
     let file_path = format!("project/{}.hs", path.join("/"));
 
-
     let source = std::fs::read_to_string(&file_path)
         .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));
 
