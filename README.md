@@ -959,79 +959,124 @@ printmatrix(D);
 
 ## Grammar
 ```haskell
-program        ::= statement (";" statement)* ";"?
+program
+    ::= statement (";" statement)* ";"?
 
-statement      ::= assignment
-                 | array_assignment
-                 | reactive_assignment
-                 | immutable_assignment
-                 | struct_definition
-                 | function_definition
-                 | if_statement
-                 | loop_statement
-                 | break_statement
-                 | print_statement
-                 | println_statement
-                 | expression
+statement
+    ::= import_statement
+     | struct_definition
+     | function_definition
+     | if_statement
+     | loop_statement
+     | break_statement
+     | return_statement
+     | print_statement
+     | println_statement
+     | assignment
+     | reactive_assignment
+     | immutable_assignment
+     | expression
 
-assignment     ::= identifier "=" expression
+
+import_statement
+    ::= "import" import_path
+
+import_path
+    ::= identifier ("." identifier)*
+
+
+assignment
+    ::= lvalue "=" expression
 
 reactive_assignment
-                ::= identifier "::=" expression
+    ::= lvalue "::=" expression
 
 immutable_assignment
-                ::= identifier ":=" expression
+    ::= identifier ":=" expression
 
-array_assignment
-                ::= identifier "[" expression "]" "=" expression
-                 | identifier "[" expression "]" "::=" expression
 
-struct_definition ::= "struct" identifier "{" field* "}"
+lvalue
+    ::= identifier
+     | lvalue "[" expression "]"
+     | lvalue "." identifier
 
-field              ::= identifier ("=" | ":=" | "::=") expression ";"
 
-function_definition ::= "func" identifier "(" params ")" block
+struct_definition
+    ::= "struct" identifier "{" field* "}"
 
-params             ::= identifier ("," identifier)*
+field
+    ::= identifier
+     | identifier ("=" | ":=" | "::=") expression ";"?
 
-if_statement   ::= "if" expression block ("else" block)?
 
-loop_statement ::= "loop" block
+function_definition
+    ::= "func" identifier "(" params ")" block
+
+params
+    ::= identifier ("," identifier)*
+
+
+if_statement
+    ::= "if" expression block ("else" block)?
+
+loop_statement
+    ::= "loop" block
 
 break_statement
-                ::= "break"
+    ::= "break"
 
-block          ::= "{" statement (";" statement)* ";"? "}"
+return_statement
+    ::= "return"
+     | "return" expression
+
+
+block
+    ::= "{" statement (";" statement)* ";"? "}"
+
 
 print_statement
-                ::= "print" expression
+    ::= "print" expression
 
 println_statement
-                ::= "println" expression
+    ::= "println" expression
 
-expression     ::= or_expr
 
-or_expr        ::= and_expr ("||" and_expr)*
+expression
+    ::= or_expr
 
-and_expr       ::= comparison ("&&" comparison)*
+or_expr
+    ::= and_expr ("||" and_expr)*
 
-comparison     ::= additive ((">" | "<" | ">=" | "<=" | "==" | "!=") additive)*
+and_expr
+    ::= comparison ("&&" comparison)*
 
-additive       ::= multiplicative (("+" | "-") multiplicative)*
+comparison
+    ::= additive ((">" | "<" | ">=" | "<=" | "==" | "!=") additive)*
 
-multiplicative ::= postfix (("*" | "/") postfix)*
+additive
+    ::= multiplicative (("+" | "-") multiplicative)*
 
-postfix ::= factor (("." identifier) | ("[" expression "]"))*
+multiplicative
+    ::= postfix (("*" | "/") postfix)*
 
-factor         ::= number
-                 | identifier
-                 | "-" factor
-                 | "(" expression ")"
-                 | "[" expression "]"
+postfix
+    ::= factor (("." identifier) | ("[" expression "]"))*
 
-identifier     ::= [a-zA-Z][a-zA-Z0-9]*
-number         ::= [0-9]+
+factor
+    ::= number
+     | identifier
+     | "-" factor
+     | "(" expression ")"
+     | "[" expression "]"
 
-comment        ::= "#" .* "#"
+
+identifier
+    ::= [a-zA-Z][a-zA-Z0-9]*
+
+number
+    ::= [0-9]+
+
+comment
+    ::= "#" .* "#"
 
 ```
