@@ -91,12 +91,6 @@ println c; # 5 #
 Arrays may contain structs, and struct fields may contain arrays.
 Field access (`.`) and indexing (`[]`) can be freely combined.
 ```haskell
-# A cell stored inside a matrix #
-struct Cell {
-    value = 0;
-    doubled ::= value * 2;
-}
-
 # A container holding a 2D array of cells #
 struct Cell {
     y = 0;
