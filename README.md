@@ -806,11 +806,12 @@ result.jy ::= twosum(nums, 9).jx;
 println result.iy; # 0 #
 println result.jy; # 1 #
 
-nums[1] = 8;
+nums[0] = 12;
 nums[2] = 1;
+nums[3] = 8
 
-println result.iy; # 1 #
-println result.jy; # 2 #
+println result.iy; # 2 #
+println result.jy; # 3 #
 ```
 ### Fibonacci as a struct 
 ```haskell
