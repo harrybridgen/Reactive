@@ -98,42 +98,31 @@ struct Cell {
 }
 
 # A container holding a 2D array of cells #
-struct Grid {
+struct Cell {
+    y = 0;
+    yy ::= y * 2;
+}
+
+struct Container {
     m = [2];
 }
 
-# create grid #
-g = struct Grid;
+c = struct Container;
 
-# allocate 2x2 array #
-g.m[0] = [2];
-g.m[1] = [2];
+# allocate 2x2 array of Cells #
+c.m[0] = [2];
+c.m[1] = [2];
 
-# fill grid with Cell structs #
-g.m[0][0] = struct Cell;
-g.m[0][1] = struct Cell;
-g.m[1][0] = struct Cell;
-g.m[1][1] = struct Cell;
+c.m[0][0] = struct Cell;
+c.m[0][1] = struct Cell;
 
-# assign values #
-g.m[0][0].value = 10;
-g.m[0][1].value = 20;
-g.m[1][0].value = 30;
-g.m[1][1].value = 40;
+c.m[0][0].y = 5;
 
-# access nested fields #
-println g.m[0][0].value;    # 10 #
-println g.m[0][0].doubled;  # 20 #
+println c.m[0][0].y;   # 5 #
+println c.m[0][0].yy;  # 10 #
 
-# mutate a deeply nested field #
-g.m[1][1].value = 7;
-
-# reactive field updates automatically #
-println g.m[1][1].doubled;  # 14 #
-
-# expressions can freely mix indexing and field access #
-x = g.m[1][0].value + g.m[0][1].doubled;
-println x; # 30 + 40 = 70 #
+c.m[0][0].y = 7;
+println c.m[0][0].yy;  # 14 #
 ```
 
 ### Reactive Array Relationships
