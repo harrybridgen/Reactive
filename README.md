@@ -167,7 +167,7 @@ println c.next; # 11 #
 ```
 ### Factorial via Dependency Graph
 ```haskell
-fact = [6];   # allocate space for factorials 0..5 #
+fact = [6];   # we want factorials up to 5 #
 
 fact[0] ::= 1;
 fact[1] ::= 1;
@@ -190,6 +190,18 @@ println fact[5];  # 120 #
 
 ### Functions Returning Structs
 ```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
+func makecounter(start) {
+    c = struct Counter;
+    c.x = start;
+    return c;
+}
+
 func advance(c) {
     c.x = c.next;
     return c.x;
@@ -199,6 +211,7 @@ counter = makecounter(10);
 
 println advance(counter); # 11 #
 println counter.next;     # 12 #
+
 ```
 
 ### Arrays and lazy elements
@@ -247,7 +260,18 @@ base = 10;
 
 println arr[4];   # 14 #
 ```
+### Nested Relational Arrays
+```haskell
+x = [1];
+y = [1];
+z = [1];
 
+x[0] = y;
+y[0] ::= z[0] + 1;
+
+z[0] = 5;
+println x[0][0]; # 6 #
+```
 ### Fibonacci-style dependency graph
 ```haskell
 # allocate array #
