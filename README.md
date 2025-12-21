@@ -734,7 +734,54 @@ println acct.balance;    # 1575 #
 withdraw(acct, 200);
 println acct.projected;  # 1443 #
 ```
+### Two Sum
+```haskell
+import std.hashmap;
 
+struct Pair {
+    i = 0;
+    j = 0;
+}
+
+func twosum(arr, target) {
+    m := hashmap(arr);
+    p := struct Pair;
+
+    idx = 0;
+    didx ::= idx + 1;
+
+    loop {
+        if idx >= arr {
+            break;
+        }
+
+        x := arr[idx];
+        want := target - x;
+
+        if has(m, want) {
+            p.i = get(m, want);
+            p.j = idx;
+            return p;
+        }
+
+        put(m, x, idx);
+        idx = didx;
+    }
+
+    return struct Pair;
+}
+
+# ---- test ---- #
+nums = [4];
+nums[0] = 2;
+nums[1] = 7;
+nums[2] = 11;
+nums[3] = 15;
+
+r = twosum(nums, 9);
+println r.i; # 0 (index) -> 2 #
+println r.j; # 1 (index) -> 7 #
+```
 ### Fibonacci as a struct 
 ```haskell
 struct Fibonacci {
