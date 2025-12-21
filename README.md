@@ -1,4 +1,4 @@
-# Simple Parser Language
+# Reactive Language
 
 This is a small expression-oriented language compiled to bytecode and executed on a stack-based virtual machine.
 
