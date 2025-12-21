@@ -586,12 +586,12 @@ println arr[0][0][0];   # 42 #
 ### Matrix Multiplication with Relations
 ```haskell
 struct Mat2 {
-    m;
+    m := [2];
 }
+
 
 func mat2(a00, a01, a10, a11) {
     A := struct Mat2; # immutable binding is crucial #
-    A.m = [2];
     A.m[0] = [2];
     A.m[1] = [2];
 
@@ -605,7 +605,6 @@ func mat2(a00, a01, a10, a11) {
 
 func mat2mul(A, B) {
     C := struct Mat2;
-    C.m = [2];
     C.m[0] = [2];
     C.m[1] = [2];
 
