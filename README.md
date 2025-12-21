@@ -267,13 +267,6 @@ println counter.x;
 
 Each loop iteration creates a fresh immutable scope.
 
-## Scoping Rules
-- Mutable variables are global
-- Immutable variables are block-scoped
-- Immutable scopes are cleared on each loop iteration
-- Inner immutable bindings shadow outer ones
-- Function parameters are immutable bindings and behave like `:=`
-
 ## Return
 ### Returns are eager
 ```haskell
@@ -763,12 +756,16 @@ println acct.projected;  # 1443 #
 import std.hashmap;
 
 struct Pair {
-    i = 0;
-    j = 0;
+    iy = 0;
+    jy = 0;
+}
+struct TwoSum {
+    ix = 0;
+    jx = 0;
 }
 func twosum(arr, target) {
     m := hashmap(arr);
-    p := struct Pair;
+    p := struct TwoSum;
 
     idx = 0;
     didx ::= idx + 1;
@@ -782,8 +779,8 @@ func twosum(arr, target) {
         want := target - x;
 
         if has(m, want) {
-            p.i = get(m, want);
-            p.j = idx;
+            p.ix = get(m, want);
+            p.jx = idx;
             return p;
         }
 
@@ -791,7 +788,7 @@ func twosum(arr, target) {
         idx = didx;
     }
 
-    return struct Pair;
+    return p;
 }
 
 # ---- test ---- #
@@ -803,17 +800,18 @@ nums[3] = 15;
 
 result := struct Pair;
 
-result.i ::= twosum(nums, 9).i;
-result.j ::= twosum(nums, 9).j;
+result.iy ::= twosum(nums, 9).ix;
+result.jy ::= twosum(nums, 9).jx;
 
-println result.i; # 0 #
-println result.j; # 1 #
+println result.iy; # 0 #
+println result.jy; # 1 #
 
-nums[1] = 8;
+nums[0] = 12;
 nums[2] = 1;
+nums[3] = 8
 
-println result.i; # 1 #
-println result.j; # 2 #
+println result.iy; # 2 #
+println result.jy; # 3 #
 ```
 ### Fibonacci as a struct 
 ```haskell
