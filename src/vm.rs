@@ -61,9 +61,11 @@ impl VM {
                     if self.immutable_exists(&name) {
                         panic!("cannot assign to immutable variable `{name}`");
                     }
+
                     let v = self.pop();
                     self.environment.insert(name, v);
                 }
+
                 Instruction::Import(path) => {
                     let module_name = path.join(".");
 
@@ -170,20 +172,40 @@ impl VM {
                 Instruction::ArrayGet => {
                     let idx = {
                         let v = self.pop();
-                        self.as_int(v) as usize
+                        let i = self.as_int(v);
+                        if i < 0 {
+                            panic!("array index out of bounds: index {} is negative", i);
+                        }
+                        i as usize
                     };
 
                     let arr = self.pop();
 
                     match arr {
                         Type::ArrayRef(id) => {
-                            let elem = self.array_heap[id].get(idx).cloned().unwrap();
+                            let arr_ref = &self.array_heap[id];
+                            let len = arr_ref.len();
+
+                            if idx >= len {
+                                panic!(
+                                    "array index out of bounds: index {}, length {}",
+                                    idx, len
+                                );
+                            }
+
+                            let elem = arr_ref[idx].clone();
                             let out = self.load_value(elem);
                             self.stack.push(out);
                         }
-                        _ => panic!(),
+                        other => {
+                            panic!(
+                                "type error: attempted to index non-array value {:?}",
+                                other
+                            );
+                        }
                     }
                 }
+
                 Instruction::StoreIndex(name) => {
                     let val = self.pop();
                     let idx = {
@@ -680,20 +702,14 @@ AST::Index(base, index) => {
         }
     }
 fn eval_reactive_field(&mut self, id: usize, ast: AST) -> Type {
+    let saved_stack = std::mem::take(&mut self.immutable_stack);
     self.immutable_stack.push(HashMap::new());
-
-    {
-        let scope = self.immutable_stack.last_mut().unwrap();
-        for (k, v) in self.heap[id].fields.iter() {
-            scope.insert(k.clone(), v.clone());
-        }
-    }
-
     let result = self.eval_value(ast);
+    self.immutable_stack = saved_stack;
 
-    self.immutable_stack.pop();
     result
 }
+
 
 
 fn eval_value(&mut self, ast: AST) -> Type {
@@ -812,7 +828,7 @@ AST::Index(base, index) => {
         self.as_int(v)
     }
     fn import_module(&mut self, path: Vec<String>) {
-    let file_path = format!("project/{}.hs", path.join("/"));
+    let file_path = format!("project/{}.rx", path.join("/"));
 
     let source = std::fs::read_to_string(&file_path)
         .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));

@@ -8,7 +8,7 @@ use reactive_language::tokenizer::tokenize;
 use reactive_language::vm::VM;
 
 fn main() {
-    let file_path = String::from("project/main.hs");
+    let file_path = String::from("project/main.rx");
 
     let input = fs::read_to_string(file_path).expect("Could not read file");
 
