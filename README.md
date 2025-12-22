@@ -167,8 +167,7 @@ print x; # 10 #
 - point to a variable
 - participate in the reactive graph
 - update when things change
-- 
-Instead:
+
 - `:=` takes a snapshot of a value and gives it a name.
 
 That name:
