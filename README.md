@@ -209,7 +209,7 @@ println c;   # E #
 
 Reactivity applies to characters and indices, not whole strings:
 ```haskell
-x ::= "HELLO";   # invalid
+x ::= "HELLO";   # invalid #
 ```
 
 ### Strings in Structs and Functions
