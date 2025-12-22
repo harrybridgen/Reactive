@@ -37,16 +37,7 @@ func render() {
     loop {
         if y >= height { break; }
 
-        x = 0;
-        dx ::= x + 1;
-
-        loop {
-            if x >= width { break; }
-            print screen[y][x];
-            x = dx;
-        }
-
-        println ' ';
+        println screen[y];
         y = dy;
     }
 }
@@ -93,7 +84,7 @@ framebuffer();
 # main loop (advance time only) #
 loop {
     render();
-    delay(10000);
+    delay(20000);
 
     tx = dtx;
     ty = dty;

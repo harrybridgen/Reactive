@@ -184,36 +184,58 @@ impl VM {
                 Instruction::Print => {
                     let v = self.pop();
                     match v {
-                        Type::Char(c) => print!("{}", char::from_u32(c).unwrap()),
-                        Type::Integer(n) => print!("{n}"),
+                        Type::Char(c) => {
+                            print!("{}", char::from_u32(c).unwrap());
+                        }
+
+                        Type::Integer(n) => {
+                            print!("{n}");
+                        }
+
                         Type::ArrayRef(id) => {
-                            for elem in &self.array_heap[id] {
-                                match elem {
-                                    Type::Char(c) => print!("{}", char::from_u32(*c).unwrap()),
+                            let elems = self.array_heap[id].clone();
+
+                            for elem in elems {
+                                let v = self.load_value(elem);
+                                match v {
+                                    Type::Char(c) => print!("{}", char::from_u32(c).unwrap()),
                                     _ => panic!("non-char in string"),
                                 }
                             }
                         }
+
                         _ => panic!("cannot print value"),
                     }
                 }
+
                 Instruction::Println => {
                     let v = self.pop();
                     match v {
-                        Type::Char(c) => print!("{}", char::from_u32(c).unwrap()),
-                        Type::Integer(n) => print!("{n}"),
+                        Type::Char(c) => {
+                            print!("{}", char::from_u32(c).unwrap());
+                        }
+
+                        Type::Integer(n) => {
+                            print!("{n}");
+                        }
+
                         Type::ArrayRef(id) => {
-                            for elem in &self.array_heap[id] {
-                                match elem {
-                                    Type::Char(c) => print!("{}", char::from_u32(*c).unwrap()),
+                            let elems = self.array_heap[id].clone();
+
+                            for elem in elems {
+                                let v = self.load_value(elem);
+                                match v {
+                                    Type::Char(c) => print!("{}", char::from_u32(c).unwrap()),
                                     _ => panic!("non-char in string"),
                                 }
                             }
                         }
+
                         _ => panic!("cannot print value"),
                     }
                     println!();
                 }
+
                 Instruction::ArrayNew => {
                     let n = {
                         let v = self.pop();
