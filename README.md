@@ -184,7 +184,7 @@ Strings are:
 - indexable
 - mutable
 - usable anywhere arrays are allowed
-- 
+
 ```haskell
 s = "HELLO";
 s[0] = 'X';
