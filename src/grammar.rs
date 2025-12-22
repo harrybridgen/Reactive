@@ -49,7 +49,7 @@ use std::collections::HashSet;
 #[derive(Debug, Clone)]
 pub enum Type {
     Integer(i32),
-    LazyInteger(Box<AST>),
+    LazyValue(Box<AST>),
     ArrayRef(usize),
 
     Function { params: Vec<String>, body: Vec<AST> },

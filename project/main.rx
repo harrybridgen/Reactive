@@ -1,16 +1,82 @@
-s = [5];
-s[0] = 'h';
-s[1] = 'e';
-s[2] = 'l';
-s[3] = 'l';
-s[4] = 'o';
+# constants #
+width := 30;
+height := 10;
 
-i = 0;
-di ::= i + 1;
+text := "HELLO REACTIVE";
+text_len := text;
+
+text_y := height /2 ;
+
+screen := [height];
+
+# loop setup #
+tx = 0;
+dir = 1;
+dtx ::= tx + dir;
+y = 0;
+dy ::= y + 1;
+
+# build screen reactive dependance graph # 
 loop {
-    if i >= s { break; }
-    print s[i];
-    i = di;
+    if y >= height { break; }
+
+    screen[y] = [width];
+
+    x = 0;
+    dx ::= x + 1;
+
+    loop {
+        if x >= width { break; }
+
+        screen[y][x] ::= (y == text_y && x >= tx && x < tx + text_len)
+                       ? text[x - tx]
+                       : (' ');
+
+        x = dx;
+    }
+    y = dy;
 }
-println "";
-println "Yo";
+
+# render (pure observation) #
+func render() {
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= height { break; }
+
+        x = 0;
+        dx ::= x + 1;
+
+        loop {
+            if x >= width { break; }
+            print screen[y][x];
+            x = dx;
+        }
+
+        println ' ';
+        y = dy;
+    }
+}
+
+#  delay  #
+func delay(n) {
+    d = 0;
+    dd ::= d + 1;
+    loop {
+        if d >= n { break; }
+        d = dd;
+    }
+}
+
+# main loop (advance time only)  #
+loop {
+    render();
+    delay(20000);
+
+    tx = dtx;
+
+    if tx <= 0 { dir = 1; }
+    if tx + text_len >= width { dir = -1; }
+
+}

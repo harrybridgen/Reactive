@@ -79,7 +79,7 @@ impl VM {
                         panic!("cannot reactively assign to immutable variable `{name}`");
                     }
                     let frozen = self.freeze_ast(ast);
-                    self.environment.insert(name, Type::LazyInteger(frozen));
+                    self.environment.insert(name, Type::LazyValue(frozen));
                 }
                 Instruction::StoreImmutable(name) => {
                     let v = self.pop();
@@ -257,7 +257,7 @@ impl VM {
 
                     match target {
                         Type::ArrayRef(id) => {
-                            self.array_heap[id][idx] = Type::LazyInteger(frozen);
+                            self.array_heap[id][idx] = Type::LazyValue(frozen);
                         }
                         _ => panic!(),
                     }
@@ -310,7 +310,7 @@ impl VM {
                         Type::StructRef(id) => {
                             let v = self.heap[id].fields.get(&field).cloned().unwrap();
                             let out = match v {
-                                Type::LazyInteger(ast) => self.eval_reactive_field(*ast),
+                                Type::LazyValue(ast) => self.eval_reactive_field(*ast),
                                 other => other,
                             };
                             self.stack.push(out);
@@ -327,7 +327,7 @@ impl VM {
                                 panic!()
                             }
                             let stored = match val {
-                                Type::LazyInteger(ast) => Type::Integer(self.evaluate(*ast)),
+                                Type::LazyValue(ast) => self.eval_value(*ast),
                                 other => other,
                             };
 
@@ -347,9 +347,7 @@ impl VM {
                                 panic!()
                             }
                             let frozen = self.freeze_ast(ast);
-                            self.heap[id]
-                                .fields
-                                .insert(field, Type::LazyInteger(frozen));
+                            self.heap[id].fields.insert(field, Type::LazyValue(frozen));
                         }
                         _ => panic!(),
                     }
@@ -493,7 +491,7 @@ impl VM {
 
                     match target {
                         Type::LValue(LValue::ArrayElem { array_id, index }) => {
-                            self.array_heap[array_id][index] = Type::LazyInteger(frozen);
+                            self.array_heap[array_id][index] = Type::LazyValue(frozen);
                         }
 
                         Type::LValue(LValue::StructField { struct_id, field }) => {
@@ -502,7 +500,7 @@ impl VM {
                             }
                             self.heap[struct_id]
                                 .fields
-                                .insert(field, Type::LazyInteger(frozen));
+                                .insert(field, Type::LazyValue(frozen));
                         }
 
                         _ => panic!("StoreThroughReactive target is not an lvalue"),
@@ -543,7 +541,7 @@ impl VM {
 
                 Some(StructFieldInit::Reactive(ast)) => {
                     let frozen = self.freeze_ast(Box::new(ast));
-                    map.insert(name, Type::LazyInteger(frozen));
+                    map.insert(name, Type::LazyValue(frozen));
                 }
             }
         }
@@ -570,7 +568,7 @@ impl VM {
                 self.heap.push(inst);
                 Type::StructRef(new_id)
             }
-            Type::LazyInteger(ast) => Type::LazyInteger(ast),
+            Type::LazyValue(ast) => Type::LazyValue(ast),
             Type::Integer(n) => Type::Integer(n),
             Type::Function { params, body } => Type::Function { params, body },
             Type::LValue(_) => panic!("cannot clone lvalue"),
@@ -685,7 +683,7 @@ impl VM {
                     Type::StructRef(id) => {
                         let v = self.heap[id].fields.get(&field).cloned().unwrap();
                         match v {
-                            Type::LazyInteger(ast) => {
+                            Type::LazyValue(ast) => {
                                 if let Type::Integer(n) = self.eval_reactive_field(*ast) {
                                     n
                                 } else {
@@ -759,7 +757,7 @@ impl VM {
                     Type::StructRef(id) => {
                         let v = self.heap[id].fields.get(&field).cloned().unwrap();
                         match v {
-                            Type::LazyInteger(ast) => self.eval_reactive_field(*ast),
+                            Type::LazyValue(ast) => self.eval_reactive_field(*ast),
                             other => other,
                         }
                     }
@@ -799,7 +797,7 @@ impl VM {
         match v {
             Type::Integer(n) => n,
             Type::Char(c) => c as i32,
-            Type::LazyInteger(ast) => self.evaluate(*ast),
+            Type::LazyValue(ast) => self.evaluate(*ast),
             Type::ArrayRef(id) => self.array_heap[id].len() as i32,
             Type::StructRef(_) => panic!("cannot coerce struct ref to int"),
             Type::Function { .. } => panic!("cannot coerce function to int"),
@@ -809,7 +807,7 @@ impl VM {
 
     fn load_value(&mut self, v: Type) -> Type {
         match v {
-            Type::LazyInteger(ast) => Type::Integer(self.evaluate(*ast)),
+            Type::LazyValue(ast) => self.eval_value(*ast),
             Type::LValue(_) => panic!("cannot load lvalue directly"),
             other => other,
         }
