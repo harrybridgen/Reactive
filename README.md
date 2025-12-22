@@ -73,11 +73,12 @@ loop {
 
 Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
 
-Reactive assignments work uniformly for **variables, struct fields, and array elements**:
+Reactive assignments work uniformly for **variables, struct fields, array elements and tenary operator**:
 
 ```haskell
 c.next ::= c.x + c.step;
 arr[1] ::= arr[0] + 1;
+x ::= arr[1] > 1 ? 10 : 20;
 ```
 
 Relationships attach to the underlying field or element, so all aliases observe the same behavior.
