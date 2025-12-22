@@ -61,8 +61,8 @@ func delay(n) {
 # ================== MAIN ================== # 
 
 # screen constants #
-width := 31;
-height := 5;
+width := 30;
+height := 7
 screen := [height];
 
 # text constants #
@@ -71,7 +71,7 @@ text_len := text;
 
 # horizontal motion #
 tx = 0;
-vx = 3;
+vx = 1;
 dtx ::= tx + vx;
 
 # vertical motion #

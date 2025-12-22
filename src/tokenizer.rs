@@ -141,45 +141,101 @@ pub fn tokenize(input: &str) -> Vec<Token> {
             }
             '\'' => {
                 let ch = match chars.next() {
-                    Some('\\') => match chars.next() {
-                        Some('n') => '\n',
-                        Some('t') => '\t',
-                        Some('r') => '\r',
-                        Some('0') => '\0',
-                        Some('\'') => '\'',
-                        Some('\\') => '\\',
+                    Some('\\') => match chars.peek() {
+                        Some('n') => {
+                            chars.next();
+                            '\n'
+                        }
+                        Some('t') => {
+                            chars.next();
+                            '\t'
+                        }
+                        Some('r') => {
+                            chars.next();
+                            '\r'
+                        }
+                        Some('\'') => {
+                            chars.next();
+                            '\''
+                        }
+                        Some('\\') => {
+                            chars.next();
+                            '\\'
+                        }
+
+                        Some('0'..='7') => {
+                            let mut value: u32 = 0;
+                            for _ in 0..3 {
+                                match chars.peek() {
+                                    Some('0'..='7') => {
+                                        value =
+                                            value * 8 + (chars.next().unwrap() as u32 - '0' as u32);
+                                    }
+                                    _ => break,
+                                }
+                            }
+                            char::from_u32(value).expect("Invalid octal escape in char literal")
+                        }
+
                         Some(c) => panic!("Invalid escape sequence: \\{c}"),
                         None => panic!("Unterminated escape sequence"),
                     },
+
                     Some(c) => c,
                     None => panic!("Unterminated char literal"),
                 };
 
                 match chars.next() {
-                    Some('\'') => {
-                        tokens.push(Token::Char(ch as u32));
-                    }
+                    Some('\'') => tokens.push(Token::Char(ch as u32)),
                     _ => panic!("Unterminated char literal"),
                 }
             }
+
             '"' => {
                 let mut s = String::new();
 
                 while let Some(c) = chars.next() {
                     match c {
                         '"' => break,
-                        '\\' => {
-                            let esc = match chars.next() {
-                                Some('n') => '\n',
-                                Some('t') => '\t',
-                                Some('r') => '\r',
-                                Some('"') => '"',
-                                Some('\\') => '\\',
-                                Some(c) => panic!("Invalid escape \\{c}"),
-                                None => panic!("Unterminated escape"),
-                            };
-                            s.push(esc);
-                        }
+                        '\\' => match chars.peek() {
+                            Some('n') => {
+                                chars.next();
+                                s.push('\n');
+                            }
+                            Some('t') => {
+                                chars.next();
+                                s.push('\t');
+                            }
+                            Some('r') => {
+                                chars.next();
+                                s.push('\r');
+                            }
+                            Some('"') => {
+                                chars.next();
+                                s.push('"');
+                            }
+                            Some('\\') => {
+                                chars.next();
+                                s.push('\\');
+                            }
+
+                            Some('0'..='7') => {
+                                let mut value = 0;
+                                for _ in 0..3 {
+                                    if let Some('0'..='7') = chars.peek() {
+                                        value =
+                                            value * 8 + (chars.next().unwrap() as u8 - b'0') as u32;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                                s.push(char::from_u32(value).expect("Invalid octal escape"));
+                            }
+
+                            Some(c) => panic!("Invalid escape \\{c}"),
+                            None => panic!("Unterminated escape"),
+                        },
+
                         c => s.push(c),
                     }
                 }
