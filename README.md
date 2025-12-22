@@ -180,7 +180,7 @@ That name:
 **If the `:=` is binding an array or struct, the contents **are** mutable**
 
 #### Why `:=` exists at all
-Reactive bindings (::=) do not store values! They store relationships.
+Reactive bindings `::=` do not store values! They store relationships.
 This means that:
 ```haskell
 arr[i] ::= arr[i - 1] + 1;
