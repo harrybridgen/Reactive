@@ -112,7 +112,7 @@ This is required when capturing values in loops:
 
 ```haskell
 loop {
-    i := x;  # capture current value#
+    i := x;  # capture current value #
     arr[i] ::= arr[i-1] + 1;
     x = x + 1;
 }
@@ -264,7 +264,7 @@ func add(a, b) {
     return a + b;
 }
 
-println add(2, 3);  # 5 #` 
+println add(2, 3);  # 5 # 
 ```
 ----------
 
@@ -281,9 +281,9 @@ Calling a function:
 4.  Returns a value (or `0` if no return is executed)
     
 ```haskell
-`func f(x) {
+func f(x) {
     x = 10;   # error: x is immutable
-}` 
+}
 ```
 Parameters behave like `:=` bindings.
 
@@ -352,10 +352,10 @@ Reactive Bindings Require Scalar Results
 
 Reactive assignments (`::=`) operate on **integer-valued expressions only**.
 ```haskell
-y ::= abs(x);  # allowed
+y ::= abs(x);  # allowed #
 
 player = struct Player;
-y ::= player;  # NOT allowed
+y ::= player;  # NOT allowed #
 ```
 
 Functions returning integers may be used directly in reactive expressions.
@@ -366,7 +366,7 @@ Functions returning integers may be used directly in reactive expressions.
 
 Reactive bindings **cannot bind entire structs or arrays**.
 
-`r ::= twosum(nums, 9);   # invalid: returns struct` 
+`r ::= twosum(nums, 9);   # invalid: returns struct #` 
 
 This is because reactivity is defined over **values**, not object identity.
 
@@ -379,7 +379,7 @@ To express reactive algorithms that produce structured results, bind **individua
 result := struct Pair;
 
 result.i ::= twosum(nums, 9).i;
-result.j ::= twosum(nums, 9).j;` 
+result.j ::= twosum(nums, 9).j;  # reactive field #
 ```
 This is the intended and supported pattern.
 
@@ -396,7 +396,7 @@ func buildcounter(start) {
 }
 
 counter = buildcounter(10);
-println counter.next;  # reactive field` 
+println counter.next;  # reactive field # 
 ```
 Reactivity is preserved because it is attached to heap locations.
 
