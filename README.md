@@ -1055,7 +1055,7 @@ printmatrix(D);
 ### Bouncing String with Reactive Framebuffer
 ```haskell
 # build reactive framebuffer #
-func buildscreen() {
+func framebuffer() {
     y = 0;
     dy ::= y + 1;
 
@@ -1136,7 +1136,7 @@ diry = 1;
 dty ::= ty + diry;
 
 # build the reactive framebuffer #
-buildscreen();
+framebuffer();
 
 # main loop (advance time only) #
 loop {
