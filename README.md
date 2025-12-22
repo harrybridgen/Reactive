@@ -1052,49 +1052,38 @@ printmatrix(D);
 
 ```
 
-### Moving String with Reactive Framebuffer
+### Bouncing String with Reactive Framebuffer
 ```haskell
-# constants #
-width := 30;
-height := 10;
-
-text := "HELLO REACTIVE";
-text_len := text;
-
-text_y := height /2 ;
-
-screen := [height];
-
-# loop setup #
-tx = 0;
-dir = 1;
-dtx ::= tx + dir;
-
-y = 0;
-dy ::= y + 1;
-
-# build screen reactive dependance graph # 
-loop {
-    if y >= height { break; }
-
-    screen[y] = [width];
-
-    x = 0;
-    dx ::= x + 1;
+# build reactive framebuffer #
+func buildscreen() {
+    y = 0;
+    dy ::= y + 1;
 
     loop {
-        if x >= width { break; }
+        if y >= height { break; }
 
-        screen[y][x] ::= (y == text_y && x >= tx && x < tx + text_len)
-                       ? text[x - tx]
-                       : (' ');
+        screen[y] = [width];
 
+        x = 0;
+        dx ::= x + 1;
 
-        x = dx;
+        loop {
+            if x >= width { break; }
+
+            yy := y;
+            xx := x;
+
+            screen[yy][xx] ::= (yy == ty && xx >= tx && xx < tx + text_len)
+                             ? text[xx - tx]
+                             : (' ');
+
+            x = dx;
+        }
+
+        y = dy;
     }
-
-    y = dy;
 }
+
 
 # render (pure observation) #
 func render() {
@@ -1118,7 +1107,7 @@ func render() {
     }
 }
 
-#  delay  #
+# delay #
 func delay(n) {
     d = 0;
     dd ::= d + 1;
@@ -1128,15 +1117,46 @@ func delay(n) {
     }
 }
 
-# main loop (advance time only)  #
+# ========= START ========= # 
+
+# constants #
+width := 31;
+height := 5;
+screen := [height];
+
+text := "HELLO REACTIVE";
+text_len := text;
+
+# horizontal motion #
+tx = 0;
+dir = 1;
+dtx ::= tx + dir;
+
+# vertical motion #
+ty = 0;
+diry = 1;
+dty ::= ty + diry;
+
+# loop vars #
+y = 0;
+dy ::= y + 1;
+
+# build the reactive framebuffer #
+buildscreen();
+
+# main loop (advance time only) #
 loop {
     render();
     delay(20000);
 
     tx = dtx;
-
+    ty = dty;
+    
     if tx <= 0 { dir = 1; }
     if tx + text_len >= width { dir = -1; }
+
+    if ty <= 0 { diry = 1; }
+    if ty >= height - 1 { diry = -1; }
 
 }
 ```
