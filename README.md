@@ -256,12 +256,15 @@ println counter.x;
 
 ## Expressions
 - Arithmetic: `+ - * /`
+- Modulo `%`
 - Comparison: `> < >= <= == !=`
 - Logic: `&& ||`
 - No boolean type: `0` is false, non-zero is true
+- Tenary `x ? y : z;`
 
 ## Control Flow
 - `if { } else { }` conditional execution
+- `return x;` returns a value from a function
 - `loop { }` infinite loop
 - `break` exits the nearest loop
 
