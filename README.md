@@ -5,12 +5,15 @@ This is a small expression-oriented language compiled to bytecode and executed o
 
 ## Values and Types
 - **Integers**: 32-bit signed integers
+- **Characters**: Unicode scalar values ('A', 'b', '\n')
+- **Strings**: Mutable arrays of characters ("HELLO")
 - **Arrays**: Fixed-size, zero-initialized arrays of values (integers, structs, or arrays)
 - **Lazy integers**: Expressions stored as ASTs and evaluated on access
 - **Structs**: Heap-allocated records with named fields
 - **Functions**: Callable units that may return integers, arrays, or structs
 
-Arrays evaluate to their length when used as integers.
+Arrays (including strings) evaluate to their length when used as integers.
+
 ## Expressions
 - Arithmetic: `+ - * /`
 - Modulo `%`
@@ -26,6 +29,7 @@ Arrays evaluate to their length when used as integers.
 - `break` exits the nearest loop
 
 Each loop iteration creates a fresh immutable scope.
+
 ## Variables and Assignment
 
 The language has **three assignment forms**, each with a distinct meaning.
@@ -120,13 +124,9 @@ c.next ::= c.x + c.step;
 arr[1] ::= arr[0] + 1;
 x ::= arr[1] > 1 ? 10 : 20;
 ```
-
-Relationships attach to the underlying field or element, so all aliases observe the same behavior.
-
-Reactive assignments may depend on literals, other locations, and immutable bindings (`:=`).  
-
-Reactive relationships remain fixed unless explicitly reassigned.
-
+- Relationships attach to the underlying field or element, so all aliases observe the same behavior.
+- Reactive assignments may depend on literals, other locations, and immutable bindings (`:=`).  
+- Reactive relationships remain fixed unless explicitly reassigned.
 
 ### `:=` Immutable Binding (capture / identity)
 
@@ -145,6 +145,110 @@ loop {
 
 Here, `i` freezes the value of `x` for each iteration.  
 Without `:=`, reactive assignments would refer to a moving variable and the graph would be incorrect.
+
+
+## Characters and Strings
+### Characters
+
+Character literals use single quotes:
+```haskell
+c = 'A';
+println c;   # A #
+```
+
+Characters behave like integers but preserve character semantics:
+```haskell
+x = 'A';
+y ::= x + 1;
+
+println y;   # B #
+x = 'Z';
+println y;   # [ #
+```
+
+Rules:
+- ```char + int => char```
+- ```char``` coerces to integer only when required
+
+### Strings
+
+Strings use double quotes and are compiled as arrays of characters:
+
+```haskell
+s := "HELLO";
+println s;      # HELLO #
+println s[1];   # E #
+```
+
+Strings are:
+- indexable
+- mutable
+- usable anywhere arrays are allowed
+- 
+```haskell
+s = "HELLO";
+s[0] = 'X';
+println s;   # XELLO #
+```
+
+### Reactivity with Text
+
+Reactive bindings work naturally with characters and strings:
+```haskell
+text := "HELLO";
+
+i = 0;
+di ::= i + 1;
+
+c ::= text[i];
+
+println c;   # H #
+i = di;
+println c;   # E #
+```
+
+Reactivity applies to characters and indices, not whole strings:
+```haskell
+x ::= "HELLO";   # invalid
+```
+
+### Strings in Structs and Functions
+
+Strings are normal heap values:
+```haskell
+struct Label {
+    text;
+}
+
+l = struct Label;
+l.text = "OK";
+l.text[1] = '!';
+println l.text;  # O! #
+```
+
+Returned strings are shared by reference:
+```haskell
+func make() {
+    return "HI";
+}
+
+a = make();
+b = a;
+b[0] = 'X';
+
+println a;  # XI #
+```
+
+### Printing Strings
+- print / println automatically detect strings and characters
+- strings print as text, not arrays
+- characters print as characters, not numbers
+
+```haskell
+println 'A';      # A #
+println "ABC";    # ABC #
+println "A"[0]+1; # B #
+```
 
 ## Structs
 
