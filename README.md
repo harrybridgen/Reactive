@@ -70,6 +70,19 @@ foo();
 println x; # 10, not 1 #
 ```
 
+However, if you wanted to change x without mutating the global variable x, you could do:
+```haskell
+func foo(x){
+    x := x + 1;
+    return x;
+}
+
+x = 1;
+foo(); # return never used #
+
+println x; # 1, not 10 #
+```
+
 ### `::=` Reactive Assignment (relationships)
 
 `::=` defines a **relationship** between locations.  
