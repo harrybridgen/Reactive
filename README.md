@@ -49,7 +49,7 @@ println arr; # 5 (length) #
 println arr[3] # 0 (3rd index init 0) #
 ```
 
-Inside structs, = creates a per-instance mutable field.
+Inside structs, `=` creates a per-instance mutable field.
 Each struct instance owns its own copy of the field.
 
 ```haskell
@@ -66,7 +66,7 @@ println b.x;   # 0 #
 
 Struct fields are not shared between instances.
 
-Inside functions, Mutable Assignments act within the global environment.
+Inside functions, `=` mutates the global environment.
 ```haskell
 func foo(){
     x = 10;
@@ -77,19 +77,26 @@ foo();
 
 println x; # 10, not 1 #
 ```
+This behavior is intentional: functions do not create local mutable variables.
 
-However, if you wanted to change x without mutating the global variable x, you could do:
+If you want to compute a value without mutating a global variable, use `:=`.
+`:=` creates an immutable local binding instead of a mutable location.
+
 ```haskell
-func foo(x){
+func foo(x) {
     x := x + 1;
     return x;
 }
 
 x = 1;
-foo(); # return never used #
+foo();   # return value ignored #
 
-println x; # 1, not 10 #
+println x;  # 1, not 10 #
+
 ```
+Here:
+- x inside the function is a captured value, not a mutable location
+- changes to it do not affect the global x
 
 ### `::=` Reactive Assignment (relationships)
 
