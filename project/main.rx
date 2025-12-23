@@ -1,112 +1,145 @@
-# build reactive framebuffer #
-func framebuffer() {
+# ---- pair of vectors ---- #
+struct VecPair {
+    A;
+    B;
+}
+
+
+# ---- vec2 ---- #
+struct Vec2 {
+    x = 0;
     y = 0;
-    dy ::= y + 1;
+}
+
+# ---- allocate vector arrays ---- #
+func allocvecarrays(n) {
+    P := struct VecPair;
+
+    P.A = [n];
+    P.B = [n];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= n {
+            break;
+        }
+        P.A[i] = struct Vec2;
+        P.B[i] = struct Vec2;
+        i = di;
+    }
+
+    return P;
+}
+
+
+# ---- init vectors ---- #
+func initvectors(P) {
+    A = P.A;
+    B = P.B;
+
+    A[0].x = 1;   A[0].y = 2;
+    A[1].x = 3;   A[1].y = 4;
+    A[2].x = 5;   A[2].y = 6;
+
+    B[0].x = 7;   B[0].y = 8;
+    B[1].x = 9;   B[1].y = 10;
+    B[2].x = 11;  B[2].y = 12;
+}
+
+
+# ---- allocate matrix ---- #
+func allocmatrix(A, B) {
+    D := [A];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= D {
+            break;
+        }
+        D[i] = [B];
+        i = di;
+    }
+
+    return D;
+}
+
+# ---- bind reactive dot products ---- #
+func binddots(D, A, B) {
+    i = 0;
+    di ::= i + 1;
 
     loop {
-        if y >= height { break; }
+        if i >= A {
+            break;
+        }
 
-        screen[y] = [width];
-
-        x = 0;
-        dx ::= x + 1;
+        j = 0;
+        dj ::= j + 1;
 
         loop {
-            if x >= width { break; }
+            if j >= B {
+                break;
+            }
 
-            yy := y;
-            xx := x;
+            ii := i;
+            jj := j;
 
-            screen[yy][xx] ::= (yy == ty && xx >= tx && xx < tx + text_len)
-                             ? text[xx - tx]
-                             : (' ');
-            x = dx;
+            D[ii][jj] ::= A[ii].x*B[jj].x + A[ii].y*B[jj].y;
+
+            j = dj;
         }
-        y = dy;
+
+        i = di;
     }
 }
 
-# render (pure observation) #
-func render() {
-    print clear_terminal;
-    print reset_cursor;
 
-    y = 0;
-    dy ::= y + 1;
+# ---- print matrix ---- #
+func printmatrix(D) {
+    i = 0;
+    di ::= i + 1;
 
     loop {
-        if y >= height { break; }
+        if i >= D {
+            break;
+        }
 
-        println screen[y];
-        y = dy;
+        j = 0;
+        dj ::= j + 1;
+
+        loop {
+            if j >= D[i] {
+                break;
+            }
+
+            println D[i][j];
+            j = dj;
+        }
+
+        i = di;
     }
 }
 
-# delay #
-func delay(n) {
-    d = 0;
-    dd ::= d + 1;
-    loop {
-        if d >= n { break; }
-        d = dd;
-    }
-}
+# ---- demo ---- #
 
-# ================== MAIN ================== # 
+P = allocvecarrays(3);
+initvectors(P);
 
-# screen constants #
-width := 31;
-height := 5;
-screen := [height];
+A = P.A;
+B = P.B;
 
-# text constants #
-text := "HELLO REACTIVE";
-text_len := text;
+D = allocmatrix(A, B);
+binddots(D, A, B);
 
-# ESC CLI commands # 
-clear_terminal := "\033[2J"
-reset_cursor := "\033[H"
+# ---- initial matrix ---- #
+printmatrix(D);
 
-# horizontal motion #
-tx = 0;
-vx = 1;
-dtx ::= tx + vx;
+# ---- mutate vectors ---- #
+A[1].x = 100;
+B[2].y = 1;
+println ' ';
 
-# vertical motion #
-ty = 0;
-vy = 1;
-dty ::= ty + vy;
-
-
-# build the reactive framebuffer #
-framebuffer();
-
-# main loop (advance time only) #
-loop {
-    render();
-    delay(20000);
-
-    tx = dtx;
-    ty = dty;
-    
-    if tx < 0 {
-        tx = -tx;
-        vx = -vx;
-    }
-
-    if tx + text_len > width {
-        tx = (width - text_len) - ((tx + text_len) - width);
-        vx = -vx;
-    }
-
-
-    if ty < 0 {
-        ty = -ty;
-        vy = -vy;
-    }
-
-    if ty > height - 1 {
-        ty = (height - 1) - (ty - (height - 1));
-        vy = -vy;
-    }
-}
+# ---- matrix updates automatically ---- #
+printmatrix(D);

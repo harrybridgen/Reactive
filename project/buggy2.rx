@@ -1,0 +1,100 @@
+# ================= MATRIX STRUCT ================= #
+
+struct Matrix {
+    data;
+}
+
+# ================= BUILD MATRIX ================= #
+
+func build_matrix() {
+    M := struct Matrix
+    M.data = [4];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= 4 { break; }
+        M.data[i] = i + 1;   # fill with 1,2,3,4...#
+        i = di;
+    }
+    return M;
+}
+
+# ================= ADD MATRICES ================= #
+
+func add_matrix(a, b) {
+    M := struct Matrix;
+    M.data = [4];
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= 4 { break; }
+        ii := i;      # capture index too #
+        # \/ THIS FIXED IT, TRY USING PARAMS, IT DOESNT WORK #
+        M.data[ii] ::= A.data[ii] + B.data[ii];
+        i = di;
+    }
+    return M;
+}
+
+# ================= DEMO ================= #
+
+A = build_matrix();
+B = build_matrix();
+C = add_matrix(A, B);
+
+# print result #
+i = 0;
+di ::= i + 1;
+
+loop {
+    if i >= 4 { break; }
+    println C.data[i];
+    i = di;
+}
+
+#
+Current semantics (important):
+
+Reactive bindings (::=) are evaluated later and currently behave like
+GLOBAL closures only.
+
+They may safely reference:
+- global variables (A, B, etc.)
+- struct fields injected into reactive scope (x, y, len, etc.)
+- numeric / char literals
+
+They may NOT reference:
+- function parameters (a, b)
+- local variables (i)
+- values captured via := (aa := a, ii := i)
+
+Why this breaks:
+- ::= stores only an AST
+- when re-evaluated, the function scope is gone
+- parameters and locals no longer exist
+- lookup fails → unbound variable / unwrap(None)
+
+Why the "A.data[ii] + B.data[ii]" hack works:
+- A and B are globals
+- ii is frozen with :=
+- no function-local names are required at eval time
+
+What NOT to do:
+- Do NOT make params behave like :=
+  (this lies about lifetimes and breaks later)
+
+Correct fix:
+- Implement reactive closures
+- Store captures inside LazyValue at ::= creation time
+- Capture free variables (params, locals, structs, arrays)
+- Inject captures into immutable scope during evaluation
+
+Once done:
+- params work in ::=
+- locals work in ::=
+- matrix addition works correctly
+- mental model matches runtime behavior
+#
