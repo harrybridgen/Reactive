@@ -1,0 +1,55 @@
+#
+ =========================================
+        Queue Correctness Test
+ =========================================
+#
+
+import std.queue;
+
+println "Create queue(cap=3)";
+q := queue(3);
+
+println "Initial state:";
+println q.empty;   # 1 #
+println q.full;    # 0 #
+println q.size;    # 0 #
+
+println "Enqueue 10, 20, 30";
+println enqueue(q, 10);
+println enqueue(q, 20);
+println enqueue(q, 30);
+
+println "State after fills:";
+println q.empty;   # 0 #
+println q.full;    # 1 #
+println q.size;    # 3 #
+
+println "Try enqueue when full:";
+println enqueue(q, 40);  # 0 #
+
+println "Peek front:";
+println peek(q);   # 10 #
+
+println "Dequeue all:";
+println dequeue(q);  # 10 #
+println dequeue(q);  # 20 #
+println dequeue(q);  # 30 #
+
+println "State after empty:";
+println q.empty;   # 1 #
+println q.full;    # 0 #
+println q.size;    # 0 #
+
+println "Try dequeue empty:";
+println dequeue(q); # 0 #
+
+println "Wraparound test:";
+println enqueue(q, 1); # 1 #
+println enqueue(q, 2); # 2 #
+println dequeue(q);    # 1 #
+println enqueue(q, 3); # 3 #
+
+println "Final contents:";
+println dequeue(q);  # 2 #
+println dequeue(q);  # 3 #
+println dequeue(q);  # 0 #

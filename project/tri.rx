@@ -1,0 +1,57 @@
+# ------------------------------------------------ #
+# Pascal / Sierpinski via XOR (2D-ish in 1D)       #
+# ------------------------------------------------ #
+
+width := 63;
+steps := 32;
+
+cells = [width];
+cells[width / 2] = 1;
+
+row = 0;
+drow ::= row + 1;
+
+loop {
+    if row >= steps { break; }
+
+    prev := [width];
+
+    k = 0;
+    dk ::= k + 1;
+    loop {
+        if k >= width { break; }
+        prev[k] = cells[k];
+        k = dk;
+    }
+
+    # print row number then row #
+    print '[';
+    println row;
+
+    j = 0;
+    dj ::= j + 1;
+    loop {
+        if j >= width { break; }
+        print (prev[j] == 1 ? 'X' : '.');
+        j = dj;
+    }
+    println ' ';
+
+    next := [width];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= width { break; }
+        ii := i;
+
+        next[ii] ::=
+            ((ii > 0         ? prev[ii - 1] : 0) +
+             (ii < width - 1 ? prev[ii + 1] : 0)) % 2;
+
+        i = di;
+    }
+
+    cells = next;
+    row = drow;
+}

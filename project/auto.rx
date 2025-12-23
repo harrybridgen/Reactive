@@ -1,0 +1,65 @@
+# ------------------------------------------------ #
+# 1D Cellular Automaton (Rule 30)                  #
+# ------------------------------------------------ #
+
+width := 33;
+steps := 16;
+
+cells = [width];
+
+mid := width / 2;
+cells[mid] = 1;
+
+step = 0;
+dstep ::= step + 1;
+
+loop {
+    if step >= steps { break; }
+
+    # ---- snapshot cells into prev (deep copy) ---- #
+    prev := [width];
+
+    k = 0;
+    dk ::= k + 1;
+
+    loop {
+        if k >= width { break; }
+        prev[k] = cells[k];
+        k = dk;
+    }
+
+    # ---- print prev ---- #
+    j = 0;
+    dj ::= j + 1;
+
+    loop {
+        if j >= width { break; }
+        print (prev[j] == 1 ? 'X' : '.');
+        j = dj;
+    }
+    println ' ';
+
+    # ---- build next generation ---- #
+    next := [width];
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= width { break; }
+
+        ii := i;
+
+        left  ::= ii > 0 ? prev[ii - 1] : 0;
+        right ::= ii < width - 1 ? prev[ii + 1] : 0;
+
+        next[ii] ::= ((ii > 0 ? prev[ii - 1] : 0) + (ii < width - 1 ? prev[ii + 1] : 0)) % 2;
+
+
+        i = di;
+    }
+
+
+    cells = next;
+    step = dstep;
+}

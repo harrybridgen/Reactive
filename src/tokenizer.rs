@@ -1,4 +1,6 @@
 use crate::grammar::Token;
+use std::iter::Peekable;
+use std::str::Chars;
 
 pub fn tokenize(input: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
@@ -6,244 +8,91 @@ pub fn tokenize(input: &str) -> Vec<Token> {
 
     while let Some(c) = chars.next() {
         match c {
-            '0'..='9' => {
-                let mut value = c.to_digit(10).unwrap();
-
-                while let Some(number) = chars.peek() {
-                    if number.is_ascii_digit() {
-                        value = value * 10 + number.to_digit(10).unwrap();
-                        chars.next();
-                    } else {
-                        break;
-                    }
-                }
-
-                tokens.push(Token::Number(value.try_into().unwrap()));
-            }
-
-            'a'..='z' | 'A'..='Z' => {
-                let mut s = String::new();
-                s.push(c);
-
-                while let Some(ch) = chars.peek() {
-                    if ch.is_alphanumeric() || *ch == '_' {
-                        s.push(*ch);
-                        chars.next();
-                    } else {
-                        break;
-                    }
-                }
-
-                let token = match s.as_str() {
-                    "print" => Token::Print,
-                    "println" => Token::Println,
-                    "if" => Token::If,
-                    "else" => Token::Else,
-                    "loop" => Token::Loop,
-                    "break" => Token::Break,
-                    "func" => Token::Func,
-                    "return" => Token::Return,
-                    "struct" => Token::Struct,
-                    "import" => Token::Import,
-                    _ => Token::Ident(s),
-                };
-
-                tokens.push(token);
-            }
+            '0'..='9' => tokens.push(read_number(c, &mut chars)),
+            'a'..='z' | 'A'..='Z' => tokens.push(read_ident(c, &mut chars)),
             '.' => tokens.push(Token::Dot),
             ',' => tokens.push(Token::Comma),
-            ':' => {
-                if let Some(':') = chars.peek() {
-                    chars.next();
-                    if let Some('=') = chars.next() {
-                        tokens.push(Token::ReactiveAssign);
-                    } else {
-                        panic!("Expected '=' after '::'");
-                    }
-                } else if let Some('=') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::ImmutableAssign);
-                } else {
-                    tokens.push(Token::Colon);
-                }
-            }
             '?' => tokens.push(Token::Question),
-            '%' => {
-                tokens.push(Token::Modulo);
-            }
-            '|' => {
-                if let Some('|') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::Or);
-                } else {
-                    panic!("Did not find matching '|' for Or '||'")
-                }
-            }
-            '!' => {
-                if let Some('=') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::NotEqual);
-                } else {
-                    chars.next();
-                    tokens.push(Token::Not);
-                }
-            }
-            '&' => {
-                if let Some('&') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::And);
-                } else {
-                    panic!("Did not find matching '&' for And '&&'")
-                }
-            }
-            '>' => {
-                if let Some('=') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::GreaterEqual);
-                } else {
-                    chars.next();
-                    tokens.push(Token::Greater);
-                }
-            }
-            '<' => {
-                if let Some('=') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::LessEqual);
-                } else {
-                    chars.next();
-                    tokens.push(Token::Less);
-                }
-            }
+            '%' => tokens.push(Token::Modulo),
             '{' => tokens.push(Token::LBrace),
             '}' => tokens.push(Token::RBrace),
             '[' => tokens.push(Token::LSquare),
             ']' => tokens.push(Token::RSquare),
             ';' => tokens.push(Token::Semicolon),
-            '=' => {
-                if let Some('=') = chars.peek() {
-                    chars.next();
-                    tokens.push(Token::Equal);
-                } else {
-                    tokens.push(Token::Assign);
-                }
-            }
-
+            '(' => tokens.push(Token::LParen),
+            ')' => tokens.push(Token::RParen),
             '+' => tokens.push(Token::Add),
             '*' => tokens.push(Token::Mul),
             '/' => tokens.push(Token::Div),
             '-' => tokens.push(Token::Sub),
-            '(' => tokens.push(Token::LParen),
-            ')' => tokens.push(Token::RParen),
-            '#' => {
-                for char in chars.by_ref() {
-                    if char == '#' {
-                        break;
+
+            ':' => match chars.peek() {
+                Some(':') => {
+                    chars.next();
+                    match chars.next() {
+                        Some('=') => tokens.push(Token::ReactiveAssign),
+                        _ => panic!("Expected '=' after '::'"),
                     }
                 }
-            }
-            '\'' => {
-                let ch = match chars.next() {
-                    Some('\\') => match chars.peek() {
-                        Some('n') => {
-                            chars.next();
-                            '\n'
-                        }
-                        Some('t') => {
-                            chars.next();
-                            '\t'
-                        }
-                        Some('r') => {
-                            chars.next();
-                            '\r'
-                        }
-                        Some('\'') => {
-                            chars.next();
-                            '\''
-                        }
-                        Some('\\') => {
-                            chars.next();
-                            '\\'
-                        }
-
-                        Some('0'..='7') => {
-                            let mut value: u32 = 0;
-                            for _ in 0..3 {
-                                match chars.peek() {
-                                    Some('0'..='7') => {
-                                        value =
-                                            value * 8 + (chars.next().unwrap() as u32 - '0' as u32);
-                                    }
-                                    _ => break,
-                                }
-                            }
-                            char::from_u32(value).expect("Invalid octal escape in char literal")
-                        }
-
-                        Some(c) => panic!("Invalid escape sequence: \\{c}"),
-                        None => panic!("Unterminated escape sequence"),
-                    },
-
-                    Some(c) => c,
-                    None => panic!("Unterminated char literal"),
-                };
-
-                match chars.next() {
-                    Some('\'') => tokens.push(Token::Char(ch as u32)),
-                    _ => panic!("Unterminated char literal"),
+                Some('=') => {
+                    chars.next();
+                    tokens.push(Token::ImmutableAssign);
                 }
-            }
+                _ => tokens.push(Token::Colon),
+            },
 
-            '"' => {
-                let mut s = String::new();
-
-                while let Some(c) = chars.next() {
-                    match c {
-                        '"' => break,
-                        '\\' => match chars.peek() {
-                            Some('n') => {
-                                chars.next();
-                                s.push('\n');
-                            }
-                            Some('t') => {
-                                chars.next();
-                                s.push('\t');
-                            }
-                            Some('r') => {
-                                chars.next();
-                                s.push('\r');
-                            }
-                            Some('"') => {
-                                chars.next();
-                                s.push('"');
-                            }
-                            Some('\\') => {
-                                chars.next();
-                                s.push('\\');
-                            }
-
-                            Some('0'..='7') => {
-                                let mut value = 0;
-                                for _ in 0..3 {
-                                    if let Some('0'..='7') = chars.peek() {
-                                        value =
-                                            value * 8 + (chars.next().unwrap() as u8 - b'0') as u32;
-                                    } else {
-                                        break;
-                                    }
-                                }
-                                s.push(char::from_u32(value).expect("Invalid octal escape"));
-                            }
-
-                            Some(c) => panic!("Invalid escape \\{c}"),
-                            None => panic!("Unterminated escape"),
-                        },
-
-                        c => s.push(c),
-                    }
+            '=' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    tokens.push(Token::Equal);
                 }
+                _ => tokens.push(Token::Assign),
+            },
 
-                tokens.push(Token::StringLiteral(s));
-            }
+            '|' => match chars.peek() {
+                Some('|') => {
+                    chars.next();
+                    tokens.push(Token::Or);
+                }
+                _ => panic!("Expected '||'"),
+            },
+
+            '&' => match chars.peek() {
+                Some('&') => {
+                    chars.next();
+                    tokens.push(Token::And);
+                }
+                _ => panic!("Expected '&&'"),
+            },
+
+            '!' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    tokens.push(Token::NotEqual);
+                }
+                _ => tokens.push(Token::Not),
+            },
+
+            '>' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    tokens.push(Token::GreaterEqual);
+                }
+                _ => tokens.push(Token::Greater),
+            },
+
+            '<' => match chars.peek() {
+                Some('=') => {
+                    chars.next();
+                    tokens.push(Token::LessEqual);
+                }
+                _ => tokens.push(Token::Less),
+            },
+
+            '#' => skip_comment(&mut chars),
+
+            '\'' => tokens.push(read_char(&mut chars)),
+            '"' => tokens.push(read_string(&mut chars)),
 
             c if c.is_whitespace() => {}
             _ => panic!("[tokenizer] invalid char: {c}"),
@@ -251,4 +100,103 @@ pub fn tokenize(input: &str) -> Vec<Token> {
     }
 
     tokens
+}
+
+fn read_number(first: char, chars: &mut Peekable<Chars>) -> Token {
+    let mut value = first.to_digit(10).unwrap();
+    while let Some(c) = chars.peek().copied() {
+        if c.is_ascii_digit() {
+            chars.next();
+            value = value * 10 + c.to_digit(10).unwrap();
+        } else {
+            break;
+        }
+    }
+    Token::Number(value as i32)
+}
+
+fn read_ident(first: char, chars: &mut Peekable<Chars>) -> Token {
+    let mut s = String::new();
+    s.push(first);
+
+    while let Some(c) = chars.peek().copied() {
+        if c.is_alphanumeric() || c == '_' {
+            chars.next();
+            s.push(c);
+        } else {
+            break;
+        }
+    }
+
+    match s.as_str() {
+        "print" => Token::Print,
+        "println" => Token::Println,
+        "if" => Token::If,
+        "else" => Token::Else,
+        "loop" => Token::Loop,
+        "break" => Token::Break,
+        "func" => Token::Func,
+        "return" => Token::Return,
+        "struct" => Token::Struct,
+        "import" => Token::Import,
+        _ => Token::Ident(s),
+    }
+}
+
+fn read_char(chars: &mut Peekable<Chars>) -> Token {
+    let ch = match chars.next() {
+        Some('\\') => read_escape(chars),
+        Some(c) => c,
+        None => panic!("Unterminated char literal"),
+    };
+
+    match chars.next() {
+        Some('\'') => Token::Char(ch as u32),
+        _ => panic!("Unterminated char literal"),
+    }
+}
+
+fn read_string(chars: &mut Peekable<Chars>) -> Token {
+    let mut s = String::new();
+    while let Some(c) = chars.next() {
+        match c {
+            '"' => break,
+            '\\' => s.push(read_escape(chars)),
+            c => s.push(c),
+        }
+    }
+    Token::StringLiteral(s)
+}
+
+fn read_escape(chars: &mut Peekable<Chars>) -> char {
+    match chars.next() {
+        Some('n') => '\n',
+        Some('t') => '\t',
+        Some('r') => '\r',
+        Some('"') => '"',
+        Some('\'') => '\'',
+        Some('\\') => '\\',
+        Some(c @ '0'..='7') => {
+            let mut value = (c as u32) - ('0' as u32);
+            for _ in 0..2 {
+                if let Some(d @ '0'..='7') = chars.peek().copied() {
+                    chars.next();
+                    value = value * 8 + (d as u32 - '0' as u32);
+                } else {
+                    break;
+                }
+            }
+            char::from_u32(value).expect("Invalid octal escape")
+        }
+        Some(c) => panic!("Invalid escape sequence: \\{c}"),
+        None => panic!("Unterminated escape sequence"),
+    }
+}
+
+fn skip_comment(chars: &mut Peekable<Chars>) {
+    while let Some(c) = chars.next() {
+        if c == '#' {
+            break;
+        }
+    }
 }

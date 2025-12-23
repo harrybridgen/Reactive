@@ -1,114 +1,159 @@
+use std::collections::{HashMap, HashSet};
+
+//
+// ----------------------------- TOKENS -----------------------------
+//
+
 #[derive(Debug, Clone, PartialEq)]
 pub enum Token {
+    // literals / identifiers
+    Number(i32),
+    Ident(String),
+    Char(u32),
+    StringLiteral(String),
+
+    // arithmetic
     Add,
+    Sub,
     Mul,
     Div,
-    Sub,
-    Number(i32),
-    LParen,
-    RParen,
-    Ident(String),
-    Assign,
-    ReactiveAssign,
-    ImmutableAssign,
-    Semicolon,
-    Print,
-    Println,
+    Modulo,
+
+    // comparison / logic
     Greater,
     Less,
+    GreaterEqual,
+    LessEqual,
     Equal,
-    Or,
+    NotEqual,
     And,
-    If,
-    Else,
+    Or,
+    Not,
+
+    // assignment
+    Assign,
+    ImmutableAssign,
+    ReactiveAssign,
+
+    // punctuation
+    LParen,
+    RParen,
     LBrace,
     RBrace,
     LSquare,
     RSquare,
+    Semicolon,
+    Dot,
+    Comma,
+    Colon,
+    Question,
+
+    // keywords
+    If,
+    Else,
     Loop,
     Break,
-    LessEqual,
-    GreaterEqual,
-    NotEqual,
-    Not,
     Func,
     Return,
     Struct,
-    Dot,
-    Comma,
     Import,
-    Modulo,
-    Question,
-    Colon,
-    Char(u32),
-    StringLiteral(String),
+    Print,
+    Println,
 }
 
-use std::collections::HashMap;
-use std::collections::HashSet;
+//
+// ----------------------------- RUNTIME TYPES -----------------------------
+//
 
 #[derive(Debug, Clone)]
 pub enum Type {
     Integer(i32),
-    LazyValue(Box<AST>, HashMap<String, Type>),
+    Char(u32),
+
     ArrayRef(usize),
+    StructRef(usize),
 
     Function { params: Vec<String>, body: Vec<AST> },
 
-    StructRef(usize),
+    LazyValue(Box<AST>, HashMap<String, Type>),
     LValue(LValue),
-    Char(u32),
 }
+
 #[derive(Debug, Clone)]
 pub enum LValue {
     ArrayElem { array_id: usize, index: usize },
     StructField { struct_id: usize, field: String },
 }
+
 #[derive(Debug, Clone)]
 pub struct StructInstance {
     pub fields: HashMap<String, Type>,
     pub immutables: HashSet<String>,
 }
+
+//
+// ----------------------------- AST -----------------------------
+//
+
 #[derive(Debug, Clone)]
 pub enum AST {
+    // literals
     Number(i32),
-    Operation(Box<AST>, Operator, Box<AST>),
-    Assign(String, Box<AST>),
-    ReactiveAssign(String, Box<AST>),
-    ImmutableAssign(String, Box<AST>),
+    Char(u32),
+    StringLiteral(String),
+
+    // variables
     Var(String),
+
+    // expressions
+    Operation(Box<AST>, Operator, Box<AST>),
+    Ternary {
+        cond: Box<AST>,
+        then_expr: Box<AST>,
+        else_expr: Box<AST>,
+    },
+
+    // arrays
+    ArrayNew(Box<AST>),
+    Index(Box<AST>, Box<AST>),
+
+    // assignment (binding-level)
+    Assign(String, Box<AST>),
+    ImmutableAssign(String, Box<AST>),
+    ReactiveAssign(String, Box<AST>),
+
+    // assignment (lvalue-level)
+    AssignTarget(Box<AST>, Box<AST>),
+    ReactiveAssignTarget(Box<AST>, Box<AST>),
+
+    // control flow
     Program(Vec<AST>),
-    Print(Box<AST>),
-    Println(Box<AST>),
     IfElse(Box<AST>, Vec<AST>, Vec<AST>),
     Loop(Vec<AST>),
     Break,
-    Import(Vec<String>),
+    Return(Option<Box<AST>>),
 
-    ArrayNew(Box<AST>),
-    Index(Box<AST>, Box<AST>),
-    AssignTarget(Box<AST>, Box<AST>),
-    ReactiveAssignTarget(Box<AST>, Box<AST>),
+    // IO
+    Print(Box<AST>),
+    Println(Box<AST>),
+
+    // functions
     FuncDef {
         name: String,
         params: Vec<String>,
         body: Vec<AST>,
     },
-
-    Return(Option<Box<AST>>),
-
     Call {
         name: String,
         args: Vec<AST>,
     },
 
+    // structs
     StructDef {
         name: String,
         fields: Vec<(String, Option<StructFieldInit>)>,
     },
-
     StructNew(String),
-
     FieldAccess(Box<AST>, String),
     FieldAssign {
         base: Box<AST>,
@@ -116,14 +161,15 @@ pub enum AST {
         value: Box<AST>,
         kind: FieldAssignKind,
     },
-    Ternary {
-        cond: Box<AST>,
-        then_expr: Box<AST>,
-        else_expr: Box<AST>,
-    },
-    Char(u32),
-    StringLiteral(String),
+
+    // modules
+    Import(Vec<String>),
 }
+
+//
+// ----------------------------- STRUCT FIELDS -----------------------------
+//
+
 #[derive(Debug, Clone)]
 pub enum FieldAssignKind {
     Normal,
@@ -138,73 +184,100 @@ pub enum StructFieldInit {
     Reactive(AST),
 }
 
+//
+// ----------------------------- OPERATORS -----------------------------
+//
+
 #[derive(Debug, Clone)]
 pub enum Operator {
     Addition,
+    Subtraction,
     Multiplication,
     Division,
-    Subtraction,
+    Modulo,
+
     Greater,
     Less,
     GreaterEqual,
     LessEqual,
-    NotEqual,
     Equal,
-    Or,
+    NotEqual,
+
     And,
-    Modulo,
+    Or,
 }
+
+//
+// ----------------------------- BYTECODE -----------------------------
+//
 
 #[derive(Debug, Clone)]
 pub enum Instruction {
+    // stack ops
+    Push(i32),
+    PushChar(u32),
+    Load(String),
+
+    // variable storage
+    Store(String),
+    StoreImmutable(String),
+    StoreReactive(String, Box<AST>),
+
+    // arithmetic
     Add,
+    Sub,
     Mul,
     Div,
-    Sub,
-    Push(i32),
-    Load(String),
-    Store(String),
-    StoreReactive(String, Box<AST>),
-    StoreImmutable(String),
-    Print,
-    Println,
+    Modulo,
+
+    // comparison / logic
     Greater,
     Less,
     GreaterEqual,
     LessEqual,
     Equal,
     NotEqual,
-    Or,
     And,
+    Or,
+
+    // control flow
     Label(String),
     Jump(String),
     JumpIfZero(String),
+    Return,
 
-    Modulo,
-
+    // arrays
     ArrayNew,
     ArrayGet,
+    ArrayLValue,
     StoreIndex(String),
     StoreIndexReactive(String, Box<AST>),
-    PushImmutableContext,
-    PopImmutableContext,
-    ClearImmutableContext,
 
-    StoreFunction(String, Vec<String>, Vec<AST>),
-
+    // structs
     StoreStruct(String, Vec<(String, Option<StructFieldInit>)>),
     NewStruct(String),
     FieldGet(String),
     FieldSet(String),
     FieldSetReactive(String, Box<AST>),
-
-    Call(String, usize),
-
-    ArrayLValue,
     FieldLValue(String),
+
+    // indirect stores
     StoreThrough,
     StoreThroughReactive(Box<AST>),
+
+    // functions
+    StoreFunction(String, Vec<String>, Vec<AST>),
+    Call(String, usize),
+
+    // immutable scopes
+    PushImmutableContext,
+    PopImmutableContext,
+    ClearImmutableContext,
+
+    // io
+    Print,
+    Println,
+
+    // modules
     Import(Vec<String>),
-    Return,
-    PushChar(u32),
 }

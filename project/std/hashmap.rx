@@ -255,8 +255,29 @@ func remove(m, key) {
         }
 
         if m.keys[i] == key {
+            # remove entry #
             m.used[i] = 0;
             m.size = m.size - 1;
+
+            # rehash following cluster #
+            j = (i + 1) % m.cap;
+
+            loop {
+                if m.used[j] == 0 {
+                    break;
+                }
+
+                k := m.keys[j];
+                v := m.values[j];
+
+                m.used[j] = 0;
+                m.size = m.size - 1;
+
+                put(m, k, v);
+
+                j = (j + 1) % m.cap;
+            }
+
             return 1;
         }
 
