@@ -1268,118 +1268,123 @@ println ' ';
 printmatrix(D);
 ```
 
-### Bouncing String with Reactive Framebuffer
+### Bouncing String with Reactive Constraint-Driven Framebuffer via Structs
 ```haskell
-# build reactive framebuffer #
+struct Screen {
+    width := 31;
+    height := 5;
+    buf := [height];
+}
+
+struct Text {
+    str := "HELLO REACTIVE";
+    len  := str;
+    x = 0;
+    y = 0;
+
+    vx = 1;
+    vy = 1;
+
+    dx ::= x + vx;
+    dy ::= y + vy;
+}
+func alloc_screen() {
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+        
+        screen.buf[y] = [screen.width];
+
+        y = dy;
+    }
+}
+
 func framebuffer() {
     y = 0;
     dy ::= y + 1;
 
     loop {
-        if y >= height { break; }
-
-        screen[y] = [width];
+        if y >= screen.height { break; }
 
         x = 0;
         dx ::= x + 1;
 
         loop {
-            if x >= width { break; }
+            if x >= screen.width { break; }
 
             yy := y;
             xx := x;
 
-            screen[yy][xx] ::= (yy == ty && xx >= tx && xx < tx + text_len)
-                             ? text[xx - tx]
-                             : (' ');
+            screen.buf[yy][xx] ::=
+                (yy == text.y &&
+                 xx >= text.x &&
+                 xx < text.x + text.len)
+                    ? text.str[xx - text.x]
+                    : (' ');
+
             x = dx;
         }
+
         y = dy;
     }
 }
-
-# render (pure observation) #
 func render() {
-    print clear_terminal;
-    print reset_cursor;
+    print "\033[2J";
+    print "\033[H";
 
     y = 0;
     dy ::= y + 1;
 
     loop {
-        if y >= height { break; }
-
-        println screen[y];
+        if y >= screen.height { break; }
+        println screen.buf[y];
         y = dy;
     }
 }
-
-# delay #
 func delay(n) {
     d = 0;
     dd ::= d + 1;
+
     loop {
         if d >= n { break; }
         d = dd;
     }
 }
+screen := struct Screen;
+text := struct Text;
 
-# ================== MAIN ================== # 
+alloc_screen();
 
-# screen constants #
-width := 31;
-height := 5;
-screen := [height];
-
-# text constants #
-text := "HELLO REACTIVE";
-text_len := text;
-
-# ESC CLI commands # 
-clear_terminal := "\033[2J"
-reset_cursor := "\033[H"
-
-# horizontal motion #
-tx = 0;
-vx = 1;
-dtx ::= tx + vx;
-
-# vertical motion #
-ty = 0;
-vy = 1;
-dty ::= ty + vy;
-
-
-# build the reactive framebuffer #
 framebuffer();
 
-# main loop (advance time only) #
 loop {
     render();
     delay(20000);
 
-    tx = dtx;
-    ty = dty;
-    
-    if tx < 0 {
-        tx = -tx;
-        vx = -vx;
+    text.x = text.dx;
+    text.y = text.dy;
+
+    if text.x < 0 {
+        text.x = -text.x;
+        text.vx = -text.vx;
     }
 
-    if tx + text_len > width {
-        tx = (width - text_len) - ((tx + text_len) - width);
-        vx = -vx;
+    if (text.x + text.len) > screen.width {
+        text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
+        text.vx = -text.vx;
     }
 
-
-    if ty < 0 {
-        ty = -ty;
-        vy = -vy;
+    # vertical bounce #
+    if text.y < 0 {
+        text.y = -text.y;
+        text.vy = -text.vy;
     }
 
-    if ty > height - 1 {
-        ty = (height - 1) - (ty - (height - 1));
-        vy = -vy;
+    if text.y > (screen.height - 1) {
+        text.y = (screen.height - 1) - (text.y - (screen.height - 1));
+        text.vy = -text.vy;
     }
 }
 ```
