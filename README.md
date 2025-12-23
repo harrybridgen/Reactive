@@ -1376,7 +1376,6 @@ loop {
         text.vx = -text.vx;
     }
 
-    # vertical bounce #
     if text.y < 0 {
         text.y = -text.y;
         text.vy = -text.vy;
