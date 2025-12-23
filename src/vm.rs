@@ -5,7 +5,7 @@ pub struct VM {
     // Operand stack
     stack: Vec<Type>,
 
-    // Global mutable environment (functions do NOT create local mutable variables)
+    // Global mutable environment
     environment: HashMap<String, Type>,
 
     // Immutable scopes (:= bindings, function parameters, and temporary reactive contexts)
@@ -308,7 +308,6 @@ impl VM {
                                 panic!("cannot assign to immutable field `{}`", field);
                             }
 
-                            // Stored fields should be concrete values, not LValues.
                             let stored = self.force_to_storable(val);
                             self.heap[id].fields.insert(field, stored);
                         }
@@ -1132,7 +1131,7 @@ impl VM {
         cap
     }
 
-    // Freeze immutables that are integers (preserves your prior behavior).
+    // Freeze immutables that are integers.
     fn freeze_ast(&self, ast: Box<AST>) -> Box<AST> {
         match *ast {
             AST::Var(name) => {
