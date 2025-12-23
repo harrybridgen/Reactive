@@ -68,15 +68,6 @@ impl Parser {
             Some(Token::Number(n)) => AST::Number(*n),
             Some(Token::Char(char)) => AST::Char(*char),
             Some(Token::StringLiteral(str)) => AST::StringLiteral(str.clone()),
-            Some(Token::Sub) => {
-                let right = self.parse_factor();
-                AST::Operation(
-                    Box::new(AST::Number(0)),
-                    Operator::Subtraction,
-                    Box::new(right),
-                )
-            }
-
             Some(Token::LParen) => {
                 let expr = self.parse_ternary();
                 match self.next() {
@@ -130,19 +121,32 @@ impl Parser {
 
         ast
     }
+    fn parse_unary(&mut self) -> AST {
+        if matches!(self.peek(), Some(Token::Sub)) {
+            self.next();
+            let expr = self.parse_unary();
+            AST::Operation(
+                Box::new(AST::Number(0)),
+                Operator::Subtraction,
+                Box::new(expr),
+            )
+        } else {
+            self.parse_postfix()
+        }
+    }
 
     fn parse_summand(&mut self) -> AST {
-        let mut ast = self.parse_postfix();
+        let mut ast = self.parse_unary();
 
         while let Some(Token::Mul | Token::Div | Token::Modulo) = self.peek() {
-            let op: Operator = match self.peek() {
+            let op = match self.peek() {
                 Some(Token::Mul) => Operator::Multiplication,
                 Some(Token::Div) => Operator::Division,
                 Some(Token::Modulo) => Operator::Modulo,
                 _ => unreachable!(),
             };
             self.next();
-            let right = self.parse_postfix();
+            let right = self.parse_unary();
             ast = AST::Operation(Box::new(ast), op, Box::new(right));
         }
 

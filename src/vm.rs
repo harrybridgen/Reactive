@@ -1,5 +1,8 @@
 use crate::grammar::{AST, Instruction, LValue, Operator, StructFieldInit, StructInstance, Type};
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::{HashMap, HashSet},
+    hash::Hash,
+};
 
 pub struct VM {
     stack: Vec<Type>,
@@ -12,6 +15,8 @@ pub struct VM {
     heap: Vec<StructInstance>,
     array_heap: Vec<Vec<Type>>,
     imported_modules: HashSet<String>,
+    debug: bool,
+    debug_reactive_ctx: Vec<String>,
 }
 
 impl VM {
@@ -28,6 +33,8 @@ impl VM {
             heap: Vec::new(),
             array_heap: Vec::new(),
             imported_modules: HashSet::new(),
+            debug: true,
+            debug_reactive_ctx: Vec::new(),
         }
     }
 
@@ -79,7 +86,9 @@ impl VM {
                         panic!("cannot reactively assign to immutable variable `{name}`");
                     }
                     let frozen = self.freeze_ast(ast);
-                    self.environment.insert(name, Type::LazyValue(frozen));
+                    let captured = self.capture_immutables_for_ast(&frozen);
+                    self.environment
+                        .insert(name, Type::LazyValue(frozen, captured));
                 }
                 Instruction::StoreImmutable(name) => {
                     let v = self.pop();
@@ -330,7 +339,7 @@ impl VM {
                     };
 
                     let frozen = self.freeze_ast(ast);
-
+                    let captured = self.capture_immutables_for_ast(&frozen);
                     let target = self
                         .find_immutable(&name)
                         .cloned()
@@ -339,7 +348,7 @@ impl VM {
 
                     match target {
                         Type::ArrayRef(id) => {
-                            self.array_heap[id][idx] = Type::LazyValue(frozen);
+                            self.array_heap[id][idx] = Type::LazyValue(frozen, captured);
                         }
                         _ => panic!(),
                     }
@@ -392,8 +401,11 @@ impl VM {
                         Type::StructRef(id) => {
                             let v = self.heap[id].fields.get(&field).cloned().unwrap();
                             let out = match v {
-                                Type::LazyValue(ast) => {
-                                    self.eval_reactive_field_in_struct(id, *ast)
+                                Type::LazyValue(ast, captured) => {
+                                    self.immutable_stack.push(captured);
+                                    let out = self.eval_reactive_field_in_struct(id, *ast);
+                                    self.immutable_stack.pop();
+                                    out
                                 }
                                 other => other,
                             };
@@ -411,7 +423,12 @@ impl VM {
                                 panic!()
                             }
                             let stored = match val {
-                                Type::LazyValue(ast) => self.eval_value(*ast),
+                                Type::LazyValue(ast, captured) => {
+                                    self.immutable_stack.push(captured);
+                                    let out = self.eval_value(*ast);
+                                    self.immutable_stack.pop();
+                                    out
+                                }
                                 other => other,
                             };
 
@@ -431,7 +448,10 @@ impl VM {
                                 panic!()
                             }
                             let frozen = self.freeze_ast(ast);
-                            self.heap[id].fields.insert(field, Type::LazyValue(frozen));
+                            let captured = self.capture_immutables_for_ast(&frozen);
+                            self.heap[id]
+                                .fields
+                                .insert(field, Type::LazyValue(frozen, captured));
                         }
                         _ => panic!(),
                     }
@@ -571,20 +591,33 @@ impl VM {
                 }
                 Instruction::StoreThroughReactive(ast) => {
                     let target = self.pop();
-                    let frozen = self.freeze_ast(ast);
 
+                    let frozen = self.freeze_ast(ast);
+                    let captured = self.capture_immutables_for_ast(&frozen);
                     match target {
                         Type::LValue(LValue::ArrayElem { array_id, index }) => {
-                            self.array_heap[array_id][index] = Type::LazyValue(frozen);
+                            self.array_heap[array_id][index] = Type::LazyValue(frozen, captured);
                         }
 
                         Type::LValue(LValue::StructField { struct_id, field }) => {
                             if self.heap[struct_id].immutables.contains(&field) {
                                 panic!("immutable field");
                             }
+                            if self.debug {
+                                eprintln!(
+                                    "DEBUG: StoreThroughReactive (struct field) about to store frozen AST: {:?}",
+                                    frozen
+                                );
+                                eprintln!("DEBUG: immutable frame keys at store time:");
+                                for (i, scope) in self.immutable_stack.iter().enumerate() {
+                                    let mut keys: Vec<_> = scope.keys().cloned().collect();
+                                    keys.sort();
+                                    eprintln!("  frame[{i}] keys={:?}", keys);
+                                }
+                            }
                             self.heap[struct_id]
                                 .fields
-                                .insert(field, Type::LazyValue(frozen));
+                                .insert(field, Type::LazyValue(frozen, captured));
                         }
 
                         _ => panic!("StoreThroughReactive target is not an lvalue"),
@@ -628,7 +661,10 @@ impl VM {
                     map.insert(name.clone(), Type::Integer(0));
                 }
                 Some(StructFieldInit::Reactive(_)) => {
-                    map.insert(name.clone(), Type::LazyValue(Box::new(AST::Number(0))));
+                    map.insert(
+                        name.clone(),
+                        Type::LazyValue(Box::new(AST::Number(0)), HashMap::new()),
+                    );
                 }
                 _ => {
                     map.insert(name.clone(), Type::Integer(0));
@@ -649,7 +685,9 @@ impl VM {
                         self.eval_reactive_field_in_struct(id, ast)
                     }
                     StructFieldInit::Reactive(ast) => {
-                        Type::LazyValue(self.freeze_ast(Box::new(ast)))
+                        let frozen = self.freeze_ast(Box::new(ast));
+                        let captured = self.capture_immutables_for_ast(&frozen);
+                        Type::LazyValue(frozen, captured)
                     }
                 };
 
@@ -681,7 +719,6 @@ impl VM {
                 );
             }
         }
-
         let result = self.eval_value(ast);
         self.immutable_stack.pop();
         result
@@ -700,7 +737,7 @@ impl VM {
                 self.heap.push(inst);
                 Type::StructRef(new_id)
             }
-            Type::LazyValue(ast) => Type::LazyValue(ast),
+            Type::LazyValue(ast, captured) => Type::LazyValue(ast, captured),
             Type::Integer(n) => Type::Integer(n),
             Type::Function { params, body } => Type::Function { params, body },
             Type::LValue(_) => panic!("cannot clone lvalue"),
@@ -815,8 +852,11 @@ impl VM {
                     Type::StructRef(id) => {
                         let v = self.heap[id].fields.get(&field).cloned().unwrap();
                         match v {
-                            Type::LazyValue(ast) => {
-                                if let Type::Integer(n) = self.eval_reactive_field(*ast) {
+                            Type::LazyValue(ast, captured) => {
+                                self.immutable_stack.push(captured);
+                                let out = self.eval_reactive_field(*ast);
+                                self.immutable_stack.pop();
+                                if let Type::Integer(n) = out {
                                     n
                                 } else {
                                     unreachable!()
@@ -846,11 +886,9 @@ impl VM {
         }
     }
     fn eval_reactive_field(&mut self, ast: AST) -> Type {
-        let saved_stack = std::mem::take(&mut self.immutable_stack);
         self.immutable_stack.push(HashMap::new());
         let result = self.eval_value(ast);
-        self.immutable_stack = saved_stack;
-
+        self.immutable_stack.pop();
         result
     }
 
@@ -858,11 +896,21 @@ impl VM {
         match ast {
             AST::Number(n) => Type::Integer(n),
             AST::Char(c) => Type::Char(c),
-            AST::Var(name) => self
-                .find_immutable(&name)
-                .cloned()
-                .or_else(|| self.environment.get(&name).cloned())
-                .unwrap(),
+            AST::Var(name) => {
+                if let Some(v) = self.find_immutable(&name).cloned() {
+                    return v;
+                }
+                if let Some(v) = self.environment.get(&name).cloned() {
+                    return v;
+                }
+
+                self.dbg_dump_state(&format!(
+                    "UNBOUND VAR lookup failed for `{}` while eval_value(Var)",
+                    name
+                ));
+                panic!("undefined variable: {name}");
+            }
+
             AST::Ternary {
                 cond,
                 then_expr,
@@ -889,7 +937,13 @@ impl VM {
                     Type::StructRef(id) => {
                         let v = self.heap[id].fields.get(&field).cloned().unwrap();
                         match v {
-                            Type::LazyValue(ast) => self.eval_reactive_field(*ast),
+                            Type::LazyValue(ast, captured) => {
+                                self.immutable_stack.push(captured);
+                                let out = self.eval_reactive_field(*ast);
+                                self.immutable_stack.pop();
+                                out
+                            }
+
                             other => other,
                         }
                     }
@@ -955,7 +1009,13 @@ impl VM {
         match v {
             Type::Integer(n) => n,
             Type::Char(c) => c as i32,
-            Type::LazyValue(ast) => self.evaluate(*ast),
+            Type::LazyValue(ast, captured) => {
+                self.immutable_stack.push(captured);
+                let out = self.evaluate(*ast);
+                self.immutable_stack.pop();
+                out
+            }
+
             Type::ArrayRef(id) => self.array_heap[id].len() as i32,
             Type::LValue(lv) => {
                 let tmp = self.read_lvalue(lv);
@@ -967,7 +1027,12 @@ impl VM {
 
     fn load_value(&mut self, v: Type) -> Type {
         match v {
-            Type::LazyValue(ast) => self.eval_value(*ast),
+            Type::LazyValue(ast, captured) => {
+                self.immutable_stack.push(captured);
+                let out = self.eval_value(*ast);
+                self.immutable_stack.pop();
+                out
+            }
             Type::LValue(lv) => self.read_lvalue(lv),
             other => other,
         }
@@ -983,6 +1048,53 @@ impl VM {
                 self.load_value(v)
             }
         }
+    }
+    fn ast_free_vars(&self, ast: &AST, out: &mut HashSet<String>) {
+        match ast {
+            AST::Var(n) => {
+                out.insert(n.clone());
+            }
+            AST::Operation(l, _, r) => {
+                self.ast_free_vars(l, out);
+                self.ast_free_vars(r, out);
+            }
+            AST::Index(b, i) => {
+                self.ast_free_vars(b, out);
+                self.ast_free_vars(i, out);
+            }
+            AST::FieldAccess(b, _) => {
+                self.ast_free_vars(b, out);
+            }
+            AST::Ternary {
+                cond,
+                then_expr,
+                else_expr,
+            } => {
+                self.ast_free_vars(cond, out);
+                self.ast_free_vars(then_expr, out);
+                self.ast_free_vars(else_expr, out);
+            }
+            AST::Call { args, .. } => {
+                for a in args {
+                    self.ast_free_vars(a, out);
+                }
+            }
+            AST::Number(_) | AST::Char(_) | AST::StringLiteral(_) => {}
+            _ => {}
+        }
+    }
+
+    fn capture_immutables_for_ast(&self, ast: &AST) -> HashMap<String, Type> {
+        let mut names = HashSet::new();
+        self.ast_free_vars(ast, &mut names);
+
+        let mut cap = HashMap::new();
+        for n in names {
+            if let Some(v) = self.find_immutable(&n).cloned() {
+                cap.insert(n, v);
+            }
+        }
+        cap
     }
 
     fn freeze_ast(&self, ast: Box<AST>) -> Box<AST> {
@@ -1057,5 +1169,67 @@ impl VM {
         self.code = saved_code;
         self.labels = saved_labels;
         self.pointer = saved_ptr;
+    }
+    fn dbg_short_type(&self, v: &Type) -> String {
+        match v {
+            Type::Integer(n) => format!("Int({})", n),
+            Type::Char(c) => format!("Char({})", c),
+            Type::ArrayRef(id) => format!("ArrayRef({})", id),
+            Type::StructRef(id) => format!("StructRef({})", id),
+            Type::Function { params, .. } => format!("Function(params={:?})", params),
+            Type::LValue(lv) => format!("LValue({:?})", lv),
+            Type::LazyValue(ast, captured) => format!("Lazy({:?}, cap={:?})", ast, captured.keys()),
+        }
+    }
+
+    fn dump_env_keys(&self) -> Vec<String> {
+        let mut keys: Vec<_> = self.environment.keys().cloned().collect();
+        keys.sort();
+        keys
+    }
+
+    fn dump_immutable_stack(&self) -> Vec<Vec<String>> {
+        self.immutable_stack
+            .iter()
+            .enumerate()
+            .map(|(i, scope)| {
+                let mut keys: Vec<_> = scope.keys().cloned().collect();
+                keys.sort();
+                // label frames so you can see function frames vs injected frames
+                keys.into_iter().map(|k| format!("[{i}] {k}")).collect()
+            })
+            .collect()
+    }
+
+    fn dump_stack(&self) -> Vec<String> {
+        self.stack.iter().map(|v| self.dbg_short_type(v)).collect()
+    }
+
+    fn dbg_dump_state(&self, headline: &str) {
+        if !self.debug {
+            return;
+        }
+
+        eprintln!("\n================ VM DEBUG ================");
+        eprintln!("{}", headline);
+        eprintln!(
+            "ip={} instr={:?}",
+            self.pointer,
+            self.code.get(self.pointer)
+        );
+        eprintln!("reactive_ctx={:?}", self.debug_reactive_ctx);
+        eprintln!("stack(len={}): {:?}", self.stack.len(), self.dump_stack());
+        eprintln!("env keys: {:?}", self.dump_env_keys());
+        eprintln!("immutable frames: {}", self.immutable_stack.len());
+        for (frame_i, scope) in self.immutable_stack.iter().enumerate() {
+            let mut keys: Vec<_> = scope.keys().cloned().collect();
+            keys.sort();
+            eprintln!("  frame[{frame_i}] keys={keys:?}");
+            // Uncomment to print values too (can be noisy):
+            // for k in keys { eprintln!("    {k} = {}", self.dbg_short_type(&scope[&k])); }
+        }
+        eprintln!("heap structs: {}", self.heap.len());
+        eprintln!("array heap: {}", self.array_heap.len());
+        eprintln!("==========================================\n");
     }
 }

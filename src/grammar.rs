@@ -46,10 +46,11 @@ pub enum Token {
 
 use std::collections::HashMap;
 use std::collections::HashSet;
+
 #[derive(Debug, Clone)]
 pub enum Type {
     Integer(i32),
-    LazyValue(Box<AST>),
+    LazyValue(Box<AST>, HashMap<String, Type>),
     ArrayRef(usize),
 
     Function { params: Vec<String>, body: Vec<AST> },

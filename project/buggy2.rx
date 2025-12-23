@@ -16,7 +16,7 @@ func build_matrix() {
 }
 
 func add_matrix(a, b) {
-    M := struct Matrix;
+    M := struct Matrix
 
     i = 0;
     di ::= i + 1;
@@ -24,8 +24,7 @@ func add_matrix(a, b) {
     loop {
         if i >= 4 { break; }
         ii := i;  
-        # THIS FIXED IT, TRY USING PARAMS (a.data[ii], b.data[ii]), IT DOESNT WORK #
-        M.data[ii] ::= A.data[ii] + B.data[ii];
+        M.data[ii] ::= a.data[ii] + b.data[ii];
         i = di;
     }
     return M;
@@ -37,8 +36,7 @@ func print_matrix(M){
 
     loop {
         if i >= 4 { break; }
-        println 
-        M.data[i];
+        println M.data[i];
         i = di;
     }
 }
