@@ -1,120 +1,52 @@
-struct Vec2 {
-    x = 0;
-    y = 0;
+import std.hashmap;
+
+struct Pair {
+    p1 = 0;
+    p2 = 0;
 }
+func twosum(arr, target) {
+    m := hashmap(arr);
+    p := struct Pair;
 
-func new_vec_array(n) {
-    V := [n];
-
-    i = 0;
-    di ::= i + 1;
+    idx = 0;
+    didx ::= idx + 1;
 
     loop {
-        if i >= n { break; }
-        V[i] = struct Vec2;
-        i = di;
-    }
-
-    return V;
-}
-
-func new_matrix(rows, cols) {
-    M := [rows];
-
-    i = 0;
-    di ::= i + 1;
-
-    loop {
-        if i >= rows { break; }
-        M[i] = [cols];
-        i = di;
-    }
-
-    return M;
-}
-
-func init_vec_values(V, x0, y0, dx, dy) {
-    i = 0;
-    di ::= i + 1;
-
-    loop {
-        if i >= V { break; }
-
-        V[i].x = x0 + i * dx;
-        V[i].y = y0 + i * dy;
-
-        i = di;
-    }
-}
-
-
-
-func bind_dot_products(M, A, B) {
-    i = 0;
-    di ::= i + 1;
-
-    loop {
-        if i >= A { break; }
-
-        j = 0;
-        dj ::= j + 1;
-
-        loop {
-            if j >= B { break; }
-
-            ii := i;
-            jj := j;
-
-            M[ii][jj] ::=
-                A[ii].x * B[jj].x +
-                A[ii].y * B[jj].y;
-
-            j = dj;
+        if idx >= arr {
+            break;
         }
 
-        i = di;
-    }
-}
+        x := arr[idx];
+        want := target - x;
 
-func print_matrix(M) {
-    i = 0;
-    di ::= i + 1;
-
-    loop {
-        if i >= M { break; }
-
-        j = 0;
-        dj ::= j + 1;
-
-        loop {
-            if j >= M[i] { break; }
-            println M[i][j];
-            j = dj;
+        if has(m, want) {
+            p.p1 = get(m, want);
+            p.p2 = idx;
+            return p;
         }
 
-        i = di;
+        put(m, x, idx);
+        idx = didx;
     }
+
+    return p;
 }
 
-A = new_vec_array(3);
-B = new_vec_array(3);
+# ---- test ---- #
+nums = [4];
+nums[0] = 2;
+nums[1] = 7;
+nums[2] = 11;
+nums[3] = 15;
 
-# A = [(1,2), (3,4), (5,6)] #
-init_vec_values(A, 1, 2, 2, 2);
+result ::= twosum(nums, 9);
 
-# B = [(7,8), (9,10), (11,12)] #
-init_vec_values(B, 7, 8, 2, 2);
+println result.p1; # 0 #
+println result.p2; # 1 #
 
-M = new_matrix(A, B);
-bind_dot_products(M, A, B);
+nums[0] = 12;
+nums[2] = 1;
+nums[3] = 8
 
-# ---- initial matrix ---- #
-print_matrix(M);
-
-# ---- mutate vectors ---- #
-A[1].x = 100;
-B[2].y = 1;
-println ' ';
-
-# ---- matrix updates automatically ---- #
-print_matrix(M);
+println result.p1; # 2 #
+println result.p2; # 3 #
