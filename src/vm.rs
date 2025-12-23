@@ -361,27 +361,7 @@ impl VM {
                 Instruction::FieldLValue(field) => self.exec_field_lvalue(field),
                 Instruction::StoreThrough => self.exec_store_through(),
                 Instruction::StoreThroughReactive(ast) => self.exec_store_through_reactive(ast),
-                Instruction::StoreThroughImmutable => {
-                    let value = self.pop();
-                    let target = self.pop();
-
-                    let stored = self.force_to_storable(value);
-
-                    match target {
-                        Type::LValue(LValue::StructField { struct_id, field }) => {
-                            let inst = &mut self.heap[struct_id];
-
-                            if inst.fields.contains_key(&field) {
-                                panic!("cannot reassign immutable field `{}`", field);
-                            }
-
-                            inst.fields.insert(field.clone(), stored);
-                            inst.immutables.insert(field);
-                        }
-
-                        _ => panic!("immutable assignment only allowed on struct fields"),
-                    }
-                }
+                Instruction::StoreThroughImmutable => self.store_through_immutable(),
             }
 
             self.pointer += 1;
@@ -538,7 +518,27 @@ impl VM {
             ),
         }
     }
+    fn store_through_immutable(&mut self) {
+        let value = self.pop();
+        let target = self.pop();
 
+        let stored = self.force_to_storable(value);
+
+        match target {
+            Type::LValue(LValue::StructField { struct_id, field }) => {
+                let inst = &mut self.heap[struct_id];
+
+                if inst.fields.contains_key(&field) {
+                    panic!("cannot reassign immutable field `{}`", field);
+                }
+
+                inst.fields.insert(field.clone(), stored);
+                inst.immutables.insert(field);
+            }
+
+            _ => panic!("immutable assignment only allowed on struct fields"),
+        }
+    }
     fn exec_store_through_reactive(&mut self, ast: Box<AST>) {
         let target = self.pop();
 
