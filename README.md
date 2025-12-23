@@ -277,10 +277,9 @@ Strings use double quotes and are compiled as arrays of characters:
 
 ```haskell
 s := "HELLO";
-len := s;
 println s;      # HELLO #
 println s[1];   # E #
-println s+0;    # 5 (coerce s into len int)
+println s+0;    # 5 (coerce s into len int)#
 ```
 
 Strings are:
