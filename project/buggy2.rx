@@ -23,7 +23,7 @@ func add_matrix(a, b) {
 
     loop {
         if i >= 4 { break; }
-        ii := i;      # capture index too #
+        ii := i;  
         # THIS FIXED IT, TRY USING PARAMS (a.data[ii], b.data[ii]), IT DOESNT WORK #
         M.data[ii] ::= A.data[ii] + B.data[ii];
         i = di;
@@ -32,7 +32,6 @@ func add_matrix(a, b) {
 }
 
 func print_matrix(M){
-    # print result #
     i = 0;
     di ::= i + 1;
 
