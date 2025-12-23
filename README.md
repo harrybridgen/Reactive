@@ -500,7 +500,7 @@ func add(a, b) {
 
 println add(2, 3);  # 5 # 
 ```
-----------
+
 
 ### Function Execution Model
 
@@ -521,7 +521,7 @@ func f(x) {
 ```
 Parameters behave like `:=` bindings.
 
-----------
+
 
 ### Return Semantics
 
@@ -542,7 +542,7 @@ println b;  # 11 #
 ```
 Reactive relationships do **not escape** the function unless explicitly attached to a location outside.
 
-----------
+
 
 ### Returned Heap Values Are Shared
 
@@ -567,7 +567,7 @@ println c2.x;  # 10 #
 ```
 This sharing is intentional and allows mutation and reactivity across aliases.
 
-----------
+
 
 ### Immutability Does Not Propagate Through Return
 
@@ -584,7 +584,7 @@ y = 10;   # allowed
 
 Immutability applies only to the _binding_, not the value.
 
-----------
+
 
 ### Reactive Use of Functions
 
@@ -600,46 +600,47 @@ y ::= player;  # NOT allowed #
 
 Functions returning integers may be used directly in reactive expressions.
 
-----------
 
-### Functions Returning Heap Objects Are Not Reactive
 
-You cannot bind a reactive relationship to object identity.
-But you can bind to their fields.
+### Reactive Bindings and Functions Returning Heap Objects
 
-`r ::= twosum(nums, 9);   # invalid: returns struct #` 
-
-This is because reactivity is defined over **values**, not object identity.
-
-----------
-
-### Reactive Binding of Struct Fields (Recommended Pattern)
-
-To express reactive algorithms that produce structured results, bind **individual fields**:
+Reactive bindings (::=) may reference expressions that evaluate to heap-allocated values, including structs and arrays returned from functions.
 ```haskell
-result := struct Pair;
-
-result.i ::= twosum(nums, 9).i;
-result.j ::= twosum(nums, 9).j;  # reactive field #
+result ::= twosum(nums, 9); # Returns a pair struct #
 ```
-This is the intended and supported pattern.
 
-----------
+This is valid.
 
-### Functions and Reactive Construction
+Reactive bindings store an expression (AST), not a snapshot.
+When the binding is read, the expression is re-evaluated.
 
-Functions may **establish reactive relationships** on heap objects and return them.
+If the expression returns a heap object:
+- the returned object is accessed normally
+- field reads reflect the latest computed result
+
+Reactivity does not track object identity changes.
+Instead, it re-evaluates the expression that produces the object.
+
+
+
+### Reactivity Is Expression-Based, Not Identity-Based
+
+Reactive bindings observe expressions, not object identity.
+
+This means:
+
+the result of a function may change
+
+the heap object returned may change
+
+but reactivity is driven by expression re-evaluation, not pointer tracking
 ```haskell
-func buildcounter(start) {
-    c := struct Counter;
-    c.x = start;
-    return c;
-}
-
-counter = buildcounter(10);
-println counter.next;  # reactive field # 
+r ::= makecounter(x);
 ```
-Reactivity is preserved because it is attached to heap locations.
+
+Each read of r re-evaluates makecounter(x).
+
+
 
 ## Imports and Modules
 
