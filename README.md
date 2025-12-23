@@ -673,7 +673,6 @@ The language supports file-based imports using dot-separated paths.
 
 ```haskell
 import std.maths;
-import game.entities.player;
 ```
 
 ### Import Semantics
@@ -685,13 +684,13 @@ import game.entities.player;
 - Re-importing the same module is ignored
 
 Imports are resolved relative to the program root by translating dots into folders.
+
 ```haskell
 import game.entities.player;
 ```
-
 Resolves to:
 ```
-game/entities/player.hs
+game/entities/player.rx
 ```
 
 ### Nested Folders
