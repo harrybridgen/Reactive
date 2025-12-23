@@ -4,10 +4,10 @@ struct Screen {
     buf := [height];
 }
 
-struct Text {
-    text := "HELLO REACTIVE";
-    len  := text;
+textstr := "HELLO REACTIVE";
+len  := textstr;
 
+struct Text {
     x = 0;
     y = 0;
 
@@ -17,7 +17,7 @@ struct Text {
     dx ::= x + vx;
     dy ::= y + vy;
 }
-func alloc_screen(screen) {
+func alloc_screen() {
     y = 0;
     dy ::= y + 1;
 
@@ -30,7 +30,7 @@ func alloc_screen(screen) {
     }
 }
 
-func framebuffer(screen, text) {
+func framebuffer() {
     y = 0;
     dy ::= y + 1;
 
@@ -49,8 +49,8 @@ func framebuffer(screen, text) {
             screen.buf[yy][xx] ::=
                 (yy == text.y &&
                  xx >= text.x &&
-                 xx < text.x + text.len)
-                    ? text.text[xx - text.x]
+                 xx < text.x + len)
+                    ? textstr[xx - text.x]
                     : (' ');
 
             x = dx;
@@ -59,7 +59,7 @@ func framebuffer(screen, text) {
         y = dy;
     }
 }
-func render(screen) {
+func render() {
     print "\033[2J";
     print "\033[H";
 
@@ -85,14 +85,14 @@ screen := struct Screen;
 text   := struct Text;
 
 # allocate stable buffers first #
-alloc_screen(screen);
+alloc_screen();
 
 # build reactive dependency graph #
-framebuffer(screen, text);
+framebuffer();
 
 # main loop: advance time only #
 loop {
-    render(screen);
+    render();
     delay(20000);
 
     text.x = text.dx;
@@ -104,9 +104,9 @@ loop {
         text.vx = -text.vx;
     }
 
-    if text.x + text.len > screen.width {
-        text.x = (screen.width - text.len)
-                 - ((text.x + text.len) - screen.width);
+    if text.x + len > screen.width {
+        text.x = (screen.width - len)
+                 - ((text.x + len) - screen.width);
         text.vx = -text.vx;
     }
 
