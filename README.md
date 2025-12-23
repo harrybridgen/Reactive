@@ -728,7 +728,7 @@ main.hs:
 ```haskell
 import game.entities.player;
 
-player = makeplayer(10, 5);
+player := makeplayer(10, 5);
 
 println player.xy; # 15 #
 ```
