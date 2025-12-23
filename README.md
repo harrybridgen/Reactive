@@ -8,7 +8,7 @@ This is a small expression-oriented language compiled to bytecode and executed o
 - **Characters**: Unicode scalar values ('A', 'b', '\n')
 - **Strings**: Mutable arrays of characters ("HELLO")
 - **Arrays**: Fixed-size, zero-initialized arrays of values (integers, characters, structs, or arrays).  
-- **Lazy integers**: Expressions stored as ASTs and evaluated on access
+- **Lazy values**: Expressions stored as ASTs and evaluated on access
 - **Structs**: Heap-allocated records with named fields
 - **Functions**: Callable units that may return integers, arrays, or structs
 
@@ -28,7 +28,7 @@ Arrays (including strings) evaluate to their length when used as integers.
 - `loop { }` infinite loop
 - `break` exits the nearest loop
 
-Each loop iteration creates a fresh immutable scope.
+Each loop iteration creates a fresh immutable `:=` scope, while mutable and reactive locations persist.
 
 ## Variables and Assignment
 
@@ -43,9 +43,13 @@ At the top level, mutable variables are stored in the global environment.
 ```haskell
 x = 10;
 arr = [5];
+
+println x; # 10 #
+println arr; # 5 (length) #
+println arr[3] # 0 (3rd index init 0) #
 ```
 
-Inside structs, = creates a per-instance mutable field.
+Inside structs, `=` creates a per-instance mutable field.
 Each struct instance owns its own copy of the field.
 
 ```haskell
@@ -62,7 +66,7 @@ println b.x;   # 0 #
 
 Struct fields are not shared between instances.
 
-Inside functions, Mutable Assignments act within the global environment.
+Inside functions, `=` mutates the global environment.
 ```haskell
 func foo(){
     x = 10;
@@ -73,26 +77,35 @@ foo();
 
 println x; # 10, not 1 #
 ```
+This behavior is intentional: functions do not create local mutable variables.
 
-However, if you wanted to change x without mutating the global variable x, you could do:
+If you want to compute a value without mutating a global variable, use `:=`.
+`:=` creates an immutable local binding instead of a mutable location.
+
 ```haskell
-func foo(x){
+func foo(x) {
     x := x + 1;
     return x;
 }
 
 x = 1;
-foo(); # return never used #
+foo();   # return value ignored #
 
-println x; # 1, not 10 #
+println x;  # 1, not 10 #
+
 ```
+Here `x` inside the function is a captured value, not a mutable location
+
 
 ### `::=` Reactive Assignment (relationships)
 
 `::=` defines a **relationship** between locations.  
 It stores an expression and its dependencies, not a value.
 ```haskell
+x = 1;
 y ::= x + 1;
+
+println y; # 2 #
 ```
 
 The expression is evaluated **when read**.  
@@ -100,7 +113,7 @@ If any dependency changes, the result updates automatically.
 
 `::=` Reactive assignments:
 - capture **dependencies**, not snapshots
-- are lazy and pure
+- are lazy evaluated
 - attach to the **location**, not the name
 
 They are commonly used to build **progression variables** in loops:
@@ -117,12 +130,29 @@ loop {
 
 Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
 
-Reactive assignments work uniformly for **variables, struct fields, array elements and ternary operator**:
+Reactive assignments work uniformly for **variables, struct fields, array elemements**
 
 ```haskell
+struct Counter {
+    x = 1;
+    step = 1;
+}
+
+c = struct Counter;
 c.next ::= c.x + c.step;
-arr[1] ::= arr[0] + 1;
+
+println c.next; # 2 # 
+c.x = c.next;
+println c.next; # 3 # 
+```
+Reactive assignments may use ternary expressions on the right-hand side.
+```haskell
+arr = [2]
+arr[1] ::= arr[0] + 2;
 x ::= arr[1] > 1 ? 10 : 20;
+
+println arr[0]; # 0 #
+print x; # 10 #
 ```
 - Relationships attach to the underlying field or element, so all aliases observe the same behavior.
 - Reactive assignments may depend on literals, other locations, and immutable bindings (`:=`).  
@@ -130,21 +160,93 @@ x ::= arr[1] > 1 ? 10 : 20;
 
 ### `:=` Immutable Binding (capture / identity)
 
-`:=` creates a **new immutable binding**.  
-It does **not** create or reference a global location and does **not** participate in the reactive graph.
+**`:=` is value capture, not assignment**
 
-This is required when capturing values in loops:
+`:=` does not:
+- create a location
+- point to a variable
+- participate in the reactive graph
+- update when things change
 
+- `:=` takes a snapshot of a value and gives it a name.
+
+That name:
+- is immutable
+- is not reactive
+- disappears when the scope ends
+- cannot be reassigned
+- cannot be observed reactively
+
+**If the `:=` is binding an array or struct, the contents **are** mutable**
+
+#### Why `:=` exists at all
+Reactive bindings `::=` do not store values! They store relationships.
+This means that:
 ```haskell
+arr[i] ::= arr[i - 1] + 1;
+```
+does not mean: “use the current value of i”
+It means: “use whatever `i` refers to when this expression is evaluated”
+
+So if `i` keeps changing, the dependency graph becomes self-referential, unstable, or incorrect.
+
+#### The problem (without `:=`)
+
+Take this code:
+```haskell
+arr = [3];
+i = 0;
+
 loop {
-    i := x;  # capture current value #
-    arr[i] ::= arr[i-1] + 1;
-    x = x + 1;
+    arr[i] ::= i * 10;
+    i = i + 1;
+    if i >= 3 { break; }
 }
+
+print arr[0];
+print arr[1];
+print arr[2];
+```
+Becomes:
+```
+arr[0] = 30
+arr[1] = 30
+arr[2] = 30
+```
+and **not**:
+```
+arr[0] = 0
+arr[1] = 10
+arr[2] = 20
+```
+Why?
+Because `::=` doesn’t store a value it stores “whatever `i` is later”.
+
+So, you need to use the `:=` imutable bind to "capture" the value of `i`
+```haskell
+arr = [3];
+i = 0;
+
+loop {
+    j := i; # capture the current value #
+    arr[j] ::= j * 10;
+    i = i + 1;
+    if i >= 3 { break; }
+}
+
+print arr[0];
+print arr[1];
+print arr[2];
 ```
 
-Here, `i` freezes the value of `x` for each iteration.  
-Without `:=`, reactive assignments would refer to a moving variable and the graph would be incorrect.
+Here, `j` freezes the value of `i` for each iteration.  
+
+Each reactive assignment becomes:
+- independent
+- anchored to a fixed index
+- safe to evaluate later
+
+Without `:=`, all reactive assignments would refer to the same moving variable, and the graph would be invalid.
 
 
 ## Characters and Strings
@@ -314,9 +416,11 @@ When used as integers, arrays evaluate to their length.
 
 Array elements are accessed with brackets:
 ```haskell
+arr = [2];
 arr[0] = 10;
 arr[1] ::= arr[0] + 1;
-x := arr[1]; # 11 #
+x := arr[1]; 
+print x; # 11 #
 ```
 Array elements support both mutable (`=`) and reactive (`::=`) assignment.
 Array values can be retrived by both `::=` and `=` variables.
@@ -444,6 +548,12 @@ Reactive relationships do **not escape** the function unless explicitly attached
 
 Arrays and structs are heap-allocated and returned **by reference**.
 ```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
 func make() {
     s := struct Counter;
     return s;
@@ -494,7 +604,8 @@ Functions returning integers may be used directly in reactive expressions.
 
 ### Functions Returning Heap Objects Are Not Reactive
 
-Reactive bindings **cannot bind entire structs or arrays**.
+You cannot bind a reactive relationship to object identity.
+But you can bind to their fields.
 
 `r ::= twosum(nums, 9);   # invalid: returns struct #` 
 
@@ -820,6 +931,7 @@ println C.m[0][1];  # 22 #
 println C.m[1][0];  # 43 #
 println C.m[1][1];  # 50 #
 
+println ' ';
 # ---- mutate input matrix ---- #
 A.m[0][0] = 10;
 
@@ -891,8 +1003,8 @@ println acct.projected;  # 1443 #
 import std.hashmap;
 
 struct Pair {
-    i = 0;
-    j = 0;
+    p1 = 0;
+    p2 = 0;
 }
 func twosum(arr, target) {
     m := hashmap(arr);
@@ -910,8 +1022,8 @@ func twosum(arr, target) {
         want := target - x;
 
         if has(m, want) {
-            p.i = get(m, want);
-            p.j = idx;
+            p.p1 = get(m, want);
+            p.p2 = idx;
             return p;
         }
 
@@ -931,18 +1043,18 @@ nums[3] = 15;
 
 result := struct Pair;
 
-result.i ::= twosum(nums, 9).i;
-result.j ::= twosum(nums, 9).j;
+result.p1 ::= twosum(nums, 9).p1;
+result.p2 ::= twosum(nums, 9).p2;
 
-println result.i; # 0 #
-println result.j; # 1 #
+println result.p1; # 0 #
+println result.p2; # 1 #
 
 nums[0] = 12;
 nums[2] = 1;
 nums[3] = 8
 
-println result.i; # 2 #
-println result.j; # 3 #
+println result.p1; # 2 #
+println result.p2; # 3 #
 ```
 
 ### Reactive Fib in a Struct
@@ -1150,10 +1262,10 @@ printmatrix(D);
 # ---- mutate vectors ---- #
 A[1].x = 100;
 B[2].y = 1;
+println ' ';
 
 # ---- matrix updates automatically ---- #
 printmatrix(D);
-
 ```
 
 ### Bouncing String with Reactive Framebuffer
