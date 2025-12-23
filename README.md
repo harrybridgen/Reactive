@@ -416,9 +416,11 @@ When used as integers, arrays evaluate to their length.
 
 Array elements are accessed with brackets:
 ```haskell
+arr = [2];
 arr[0] = 10;
 arr[1] ::= arr[0] + 1;
-x := arr[1]; # 11 #
+x := arr[1]; 
+print x; # 11 #
 ```
 Array elements support both mutable (`=`) and reactive (`::=`) assignment.
 Array values can be retrived by both `::=` and `=` variables.
@@ -546,6 +548,12 @@ Reactive relationships do **not escape** the function unless explicitly attached
 
 Arrays and structs are heap-allocated and returned **by reference**.
 ```haskell
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
 func make() {
     s := struct Counter;
     return s;
@@ -923,6 +931,7 @@ println C.m[0][1];  # 22 #
 println C.m[1][0];  # 43 #
 println C.m[1][1];  # 50 #
 
+println ' ';
 # ---- mutate input matrix ---- #
 A.m[0][0] = 10;
 
@@ -1044,8 +1053,8 @@ nums[0] = 12;
 nums[2] = 1;
 nums[3] = 8
 
-println result.p1; # 0 #
-println result.p2; # 1 #
+println result.p1; # 2 #
+println result.p2; # 3 #
 ```
 
 ### Reactive Fib in a Struct
@@ -1253,10 +1262,10 @@ printmatrix(D);
 # ---- mutate vectors ---- #
 A[1].x = 100;
 B[2].y = 1;
+println ' ';
 
 # ---- matrix updates automatically ---- #
 printmatrix(D);
-
 ```
 
 ### Bouncing String with Reactive Framebuffer
