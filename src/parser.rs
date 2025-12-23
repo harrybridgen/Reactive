@@ -387,10 +387,10 @@ impl Parser {
             return self.parse_func_def();
         }
 
-        if let Some(Token::Struct) = self.peek() {
-            if matches!(self.peek_n(2), Some(Token::LBrace)) {
-                return self.parse_struct_def();
-            }
+        if let Some(Token::Struct) = self.peek()
+            && matches!(self.peek_n(2), Some(Token::LBrace))
+        {
+            return self.parse_struct_def();
         }
 
         if let Some(Token::Return) = self.peek() {
@@ -424,23 +424,23 @@ impl Parser {
             return AST::Loop(loop_block);
         }
 
-        if let Some(Token::Ident(name)) = self.peek() {
-            if matches!(
+        if let Some(Token::Ident(name)) = self.peek()
+            && matches!(
                 self.peek_n(1),
                 Some(Token::Assign | Token::ReactiveAssign | Token::ImmutableAssign)
-            ) {
-                let name = name.clone();
-                self.next();
-                let op = self.next().cloned().unwrap();
-                let expr = self.parse_ternary();
+            )
+        {
+            let name = name.clone();
+            self.next();
+            let op = self.next().cloned().unwrap();
+            let expr = self.parse_ternary();
 
-                return match op {
-                    Token::Assign => AST::Assign(name, Box::new(expr)),
-                    Token::ReactiveAssign => AST::ReactiveAssign(name, Box::new(expr)),
-                    Token::ImmutableAssign => AST::ImmutableAssign(name, Box::new(expr)),
-                    _ => unreachable!(),
-                };
-            }
+            return match op {
+                Token::Assign => AST::Assign(name, Box::new(expr)),
+                Token::ReactiveAssign => AST::ReactiveAssign(name, Box::new(expr)),
+                Token::ImmutableAssign => AST::ImmutableAssign(name, Box::new(expr)),
+                _ => unreachable!(),
+            };
         }
 
         let expr = self.parse_ternary();

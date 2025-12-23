@@ -633,7 +633,7 @@ impl VM {
                         }
 
                         (Type::Char(a), Type::Char(b)) => {
-                            self.stack.push(Type::Char((a % b) as u32));
+                            self.stack.push(Type::Char((a % b)));
                         }
 
                         (a, b) => {
@@ -856,12 +856,9 @@ impl VM {
                                 self.immutable_stack.push(captured);
                                 let out = self.eval_reactive_field(*ast);
                                 self.immutable_stack.pop();
-                                if let Type::Integer(n) = out {
-                                    n
-                                } else {
-                                    unreachable!()
-                                }
+                                self.as_int(out)
                             }
+
                             other => self.as_int(other),
                         }
                     }
