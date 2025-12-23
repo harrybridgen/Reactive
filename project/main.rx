@@ -1,92 +1,73 @@
-# ---- pair of vectors ---- #
-struct VecPair {
-    A;
-    B;
-}
-
-
-# ---- vec2 ---- #
 struct Vec2 {
     x = 0;
     y = 0;
 }
 
-# ---- allocate vector arrays ---- #
-func allocvecarrays(n) {
-    P := struct VecPair;
-
-    P.A = [n];
-    P.B = [n];
+func new_vec_array(n) {
+    V := [n];
 
     i = 0;
     di ::= i + 1;
+
     loop {
-        if i >= n {
-            break;
-        }
-        P.A[i] = struct Vec2;
-        P.B[i] = struct Vec2;
+        if i >= n { break; }
+        V[i] = struct Vec2;
         i = di;
     }
 
-    return P;
+    return V;
 }
 
-
-# ---- init vectors ---- #
-func initvectors(P) {
-    A = P.A;
-    B = P.B;
-
-    A[0].x = 1;   A[0].y = 2;
-    A[1].x = 3;   A[1].y = 4;
-    A[2].x = 5;   A[2].y = 6;
-
-    B[0].x = 7;   B[0].y = 8;
-    B[1].x = 9;   B[1].y = 10;
-    B[2].x = 11;  B[2].y = 12;
-}
-
-
-# ---- allocate matrix ---- #
-func allocmatrix(A, B) {
-    D := [A];
+func new_matrix(rows, cols) {
+    M := [rows];
 
     i = 0;
     di ::= i + 1;
+
     loop {
-        if i >= D {
-            break;
-        }
-        D[i] = [B];
+        if i >= rows { break; }
+        M[i] = [cols];
         i = di;
     }
 
-    return D;
+    return M;
 }
 
-# ---- bind reactive dot products ---- #
-func binddots(D, A, B) {
+func init_vec_values(V, x0, y0, dx, dy) {
     i = 0;
     di ::= i + 1;
 
     loop {
-        if i >= A {
-            break;
-        }
+        if i >= V { break; }
+
+        V[i].x = x0 + i * dx;
+        V[i].y = y0 + i * dy;
+
+        i = di;
+    }
+}
+
+
+
+func bind_dot_products(M, A, B) {
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= A { break; }
 
         j = 0;
         dj ::= j + 1;
 
         loop {
-            if j >= B {
-                break;
-            }
+            if j >= B { break; }
 
             ii := i;
             jj := j;
 
-            D[ii][jj] ::= A[ii].x*B[jj].x + A[ii].y*B[jj].y;
+            M[ii][jj] ::=
+                A[ii].x * B[jj].x +
+                A[ii].y * B[jj].y;
 
             j = dj;
         }
@@ -95,26 +76,19 @@ func binddots(D, A, B) {
     }
 }
 
-
-# ---- print matrix ---- #
-func printmatrix(D) {
+func print_matrix(M) {
     i = 0;
     di ::= i + 1;
 
     loop {
-        if i >= D {
-            break;
-        }
+        if i >= M { break; }
 
         j = 0;
         dj ::= j + 1;
 
         loop {
-            if j >= D[i] {
-                break;
-            }
-
-            println D[i][j];
+            if j >= M[i] { break; }
+            println M[i][j];
             j = dj;
         }
 
@@ -122,19 +96,20 @@ func printmatrix(D) {
     }
 }
 
-# ---- demo ---- #
+A = new_vec_array(3);
+B = new_vec_array(3);
 
-P = allocvecarrays(3);
-initvectors(P);
+# A = [(1,2), (3,4), (5,6)] #
+init_vec_values(A, 1, 2, 2, 2);
 
-A = P.A;
-B = P.B;
+# B = [(7,8), (9,10), (11,12)] #
+init_vec_values(B, 7, 8, 2, 2);
 
-D = allocmatrix(A, B);
-binddots(D, A, B);
+M = new_matrix(A, B);
+bind_dot_products(M, A, B);
 
 # ---- initial matrix ---- #
-printmatrix(D);
+print_matrix(M);
 
 # ---- mutate vectors ---- #
 A[1].x = 100;
@@ -142,4 +117,4 @@ B[2].y = 1;
 println ' ';
 
 # ---- matrix updates automatically ---- #
-printmatrix(D);
+print_matrix(M);
