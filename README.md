@@ -176,7 +176,7 @@ That name:
 - cannot be reassigned
 - cannot be observed reactively
 
-**If the `:=` is binding an array or struct, the contents **are** mutable**
+If the `:=` is binding an array or struct, the contents **are** mutable
 
 #### Why `:=` exists at all
 Reactive bindings `::=` do not store values! They store relationships.
