@@ -1,30 +1,22 @@
-# ================= MATRIX STRUCT ================= #
-
 struct Matrix {
-    data;
+    data := [4];
 }
-
-# ================= BUILD MATRIX ================= #
 
 func build_matrix() {
     M := struct Matrix
-    M.data = [4];
 
-    i = 0;
-    di ::= i + 1;
+    x = 0;
+    di ::= x + 1;
     loop {
-        if i >= 4 { break; }
-        M.data[i] = i + 1;   # fill with 1,2,3,4...#
-        i = di;
+        if x >= 4 { break; }
+        M.data[x] = x + 1;   
+        x = di;
     }
     return M;
 }
 
-# ================= ADD MATRICES ================= #
-
 func add_matrix(a, b) {
     M := struct Matrix;
-    M.data = [4];
 
     i = 0;
     di ::= i + 1;
@@ -32,28 +24,36 @@ func add_matrix(a, b) {
     loop {
         if i >= 4 { break; }
         ii := i;      # capture index too #
-        # \/ THIS FIXED IT, TRY USING PARAMS, IT DOESNT WORK #
+        # THIS FIXED IT, TRY USING PARAMS (a.data[ii], b.data[ii]), IT DOESNT WORK #
         M.data[ii] ::= A.data[ii] + B.data[ii];
         i = di;
     }
     return M;
 }
 
+func print_matrix(M){
+    # print result #
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= 4 { break; }
+        println 
+        M.data[i];
+        i = di;
+    }
+}
+
 # ================= DEMO ================= #
 
 A = build_matrix();
 B = build_matrix();
-C = add_matrix(A, B);
+C ::= add_matrix(A, B);
+print_matrix(C);
 
-# print result #
-i = 0;
-di ::= i + 1;
+A.data[0] = 10;
 
-loop {
-    if i >= 4 { break; }
-    println C.data[i];
-    i = di;
-}
+print_matrix(C);
 
 #
 Current semantics (important):
