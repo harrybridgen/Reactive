@@ -187,9 +187,23 @@ pub fn compile(
         }
 
         AST::Program(stmts) => {
+            let mut has_main = false;
+
             for s in stmts {
+                if let AST::FuncDef { name, .. } = &s {
+                    if name == "main" {
+                        has_main = true;
+                    }
+                }
                 compile(s, code, labels, break_stack);
             }
+
+            if !has_main {
+                panic!("no `main` function defined");
+            }
+
+            code.push(Instruction::Call("main".to_string(), 0));
+            code.push(Instruction::Return);
         }
 
         AST::Print(e) => {
@@ -209,7 +223,21 @@ pub fn compile(
         }
     }
 }
-
+pub fn compile_module(
+    ast: AST,
+    code: &mut Vec<Instruction>,
+    labels: &mut LabelGenerator,
+    break_stack: &mut Vec<String>,
+) {
+    match ast {
+        AST::Program(stmts) => {
+            for s in stmts {
+                compile(s, code, labels, break_stack);
+            }
+        }
+        other => compile(other, code, labels, break_stack),
+    }
+}
 fn compile_lvalue(
     ast: AST,
     code: &mut Vec<Instruction>,

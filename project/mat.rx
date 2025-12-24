@@ -57,7 +57,7 @@ func print_matrix(M){
 
 
 # ================= DEMO ================= #
-
+func main(){
 A = build_matrix();
 B = build_matrix();
 C ::= add_matrix(A, B);
@@ -72,3 +72,4 @@ println "Mutate A"
 A.data[0] = 10;
 
 print_matrix(C);
+}

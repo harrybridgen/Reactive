@@ -77,6 +77,7 @@ pub enum Type {
 
     LazyValue(Box<AST>, HashMap<String, Type>),
     LValue(LValue),
+    Uninitialized,
 }
 
 #[derive(Debug, Clone)]

@@ -379,15 +379,44 @@ impl Parser {
         }
     }
 
+    fn parse_toplevel(&mut self) -> AST {
+        match self.peek() {
+            Some(Token::Import) => {
+                self.next();
+                let mut path = vec![self.expect_ident()];
+                while matches!(self.peek(), Some(Token::Dot)) {
+                    self.next();
+                    path.push(self.expect_ident());
+                }
+                AST::Import(path)
+            }
+
+            Some(Token::Func) => self.parse_func_def(),
+
+            Some(Token::Struct) if matches!(self.peek_n(2), Some(Token::LBrace)) => {
+                self.parse_struct_def()
+            }
+
+            Some(Token::Ident(_)) if matches!(self.peek_n(1), Some(Token::ImmutableAssign)) => {
+                let name = self.expect_ident();
+                self.expect(Token::ImmutableAssign);
+                let rhs = self.parse_ternary();
+                AST::ImmutableAssign(name, Box::new(rhs))
+            }
+
+            other => panic!("invalid top-level item: {:?}", other),
+        }
+    }
+
     fn parse_program(&mut self) -> AST {
-        let mut stmts = Vec::new();
+        let mut items = Vec::new();
         while self.peek().is_some() {
-            stmts.push(self.parse_statement());
+            items.push(self.parse_toplevel());
             if matches!(self.peek(), Some(Token::Semicolon)) {
                 self.next();
             }
         }
-        AST::Program(stmts)
+        AST::Program(items)
     }
 }
 

@@ -5,8 +5,11 @@ pub struct VM {
     // Operand stack
     stack: Vec<Type>,
 
-    // Global mutable environment
-    environment: HashMap<String, Type>,
+    // Global mutable environment (top-level only)
+    global_env: HashMap<String, Type>,
+
+    // Local mutable environment (function scope)
+    local_env: Option<HashMap<String, Type>>,
 
     // Immutable scopes (:= bindings, function parameters, and temporary reactive contexts)
     immutable_stack: Vec<HashMap<String, Type>>,
@@ -34,7 +37,8 @@ impl VM {
         let labels = Self::build_labels(&code);
         Self {
             stack: Vec::new(),
-            environment: HashMap::new(),
+            global_env: HashMap::new(),
+            local_env: None,
             immutable_stack: vec![HashMap::new()],
             pointer: 0,
             code,
@@ -68,18 +72,25 @@ impl VM {
                 Instruction::PushChar(c) => self.stack.push(Type::Char(c)),
                 Instruction::Load(name) => {
                     let v = self
-                        .find_immutable(&name)
+                        .lookup_var(&name)
                         .cloned()
-                        .or_else(|| self.environment.get(&name).cloned())
                         .unwrap_or_else(|| panic!("undefined variable: {name}"));
 
                     let value = self.force(v);
                     self.stack.push(value);
                 }
+
                 Instruction::Store(name) => {
                     self.ensure_mutable_binding(&name);
                     let v = self.pop();
-                    self.environment.insert(name, v);
+                    match &mut self.local_env {
+                        Some(env) => {
+                            env.insert(name, v);
+                        }
+                        None => {
+                            self.global_env.insert(name, v);
+                        }
+                    }
                 }
                 Instruction::StoreImmutable(name) => {
                     let v = self.pop();
@@ -96,8 +107,15 @@ impl VM {
                     self.ensure_mutable_binding(&name);
                     let frozen = self.freeze_ast(ast);
                     let captured = self.capture_immutables_for_ast(&frozen);
-                    self.environment
-                        .insert(name, Type::LazyValue(frozen, captured));
+                    match &mut self.local_env {
+                        Some(env) => {
+                            env.insert(name, Type::LazyValue(frozen, captured));
+                        }
+                        None => {
+                            self.global_env
+                                .insert(name, Type::LazyValue(frozen, captured));
+                        }
+                    }
                 }
                 Instruction::Import(path) => {
                     let module_name = path.join(".");
@@ -175,9 +193,8 @@ impl VM {
                     let idx = self.as_usize_nonneg(idx_val, "array index");
 
                     let target = self
-                        .find_immutable(&name)
+                        .lookup_var(&name)
                         .cloned()
-                        .or_else(|| self.environment.get(&name).cloned())
                         .unwrap_or_else(|| panic!("undefined variable: {name}"));
 
                     let arr = self.force(target);
@@ -203,9 +220,8 @@ impl VM {
                     let captured = self.capture_immutables_for_ast(&frozen);
 
                     let target = self
-                        .find_immutable(&name)
+                        .lookup_var(&name)
                         .cloned()
-                        .or_else(|| self.environment.get(&name).cloned())
                         .unwrap_or_else(|| panic!("undefined variable: {name}"));
 
                     let arr = self.force(target);
@@ -226,13 +242,14 @@ impl VM {
 
                 // ----- Functions -----
                 Instruction::StoreFunction(name, params, body) => {
-                    self.environment
+                    self.global_env
                         .insert(name, Type::Function { params, body });
                 }
                 Instruction::Call(name, argc) => {
                     let args = self.pop_args(argc);
 
-                    let f = self.environment.get(&name).cloned().unwrap_or_else(|| {
+                    let f = self.global_env.get(&name).cloned().unwrap_or_else(|| {
+
                         panic!(
                             "call error: `{}` is not defined (attempted to call with {} argument(s))",
                             name, argc
@@ -276,6 +293,9 @@ impl VM {
                                 .get(&field)
                                 .cloned()
                                 .unwrap_or_else(|| panic!("missing struct field `{field}`"));
+                            if matches!(v, Type::Uninitialized) {
+                                panic!("use of uninitialized struct field `{}`", field);
+                            }
 
                             let out = self.force_struct_field(id, v);
                             self.stack.push(out);
@@ -371,6 +391,11 @@ impl VM {
     // =========================
     // Instruction helpers
     // =========================
+    fn lookup_var(&self, name: &str) -> Option<&Type> {
+        self.find_immutable(name)
+            .or_else(|| self.local_env.as_ref().and_then(|e| e.get(name)))
+            .or_else(|| self.global_env.get(name))
+    }
 
     fn exec_add(&mut self) {
         let rhs = self.pop();
@@ -528,8 +553,12 @@ impl VM {
             Type::LValue(LValue::StructField { struct_id, field }) => {
                 let inst = &mut self.heap[struct_id];
 
-                if inst.fields.contains_key(&field) {
-                    panic!("cannot reassign immutable field `{}`", field);
+                match inst.fields.get(&field) {
+                    Some(Type::Uninitialized) => {}
+                    Some(_) => {
+                        panic!("cannot reassign immutable field `{}`", field);
+                    }
+                    None => unreachable!("field missing from struct"),
                 }
 
                 inst.fields.insert(field.clone(), stored);
@@ -759,20 +788,29 @@ impl VM {
         let mut imm = HashSet::new();
 
         // Initialize all declared fields
+        // Initialize all declared fields
         for (name, init) in &fields {
             match init {
                 Some(StructFieldInit::Immutable(_)) => {
+                    // immutable-with-initializer: the initializer will run later, but we want the slot
+                    // to exist and be considered immutable from the start.
                     imm.insert(name.clone());
-                    map.insert(name.clone(), Type::Integer(0));
+                    map.insert(name.clone(), Type::Uninitialized);
                 }
                 Some(StructFieldInit::Reactive(_)) => {
+                    // reactive initializer stored later; slot exists now
                     map.insert(
                         name.clone(),
                         Type::LazyValue(Box::new(AST::Number(0)), HashMap::new()),
                     );
                 }
-                _ => {
-                    map.insert(name.clone(), Type::Integer(0));
+                Some(StructFieldInit::Mutable(_)) => {
+                    // will be initialized later
+                    map.insert(name.clone(), Type::Uninitialized);
+                }
+                None => {
+                    // key fix: bare `x;` starts uninitialized, so `x := ...` can be a one-time init
+                    map.insert(name.clone(), Type::Uninitialized);
                 }
             }
         }
@@ -850,6 +888,7 @@ impl VM {
             Type::Function { params, body } => Type::Function { params, body },
             Type::LValue(_) => panic!("cannot clone lvalue"),
             Type::Char(c) => Type::Char(c),
+            Type::Uninitialized => Type::Uninitialized,
         }
     }
 
@@ -860,8 +899,12 @@ impl VM {
     fn call_function(&mut self, f: Type, args: Vec<Type>) -> Type {
         match f {
             Type::Function { params, body } => {
-                // Parameters are immutable bindings.
-                self.immutable_stack.push(HashMap::new());
+                let saved_local = self.local_env.take();
+                let saved_immutables =
+                    std::mem::replace(&mut self.immutable_stack, vec![HashMap::new()]);
+
+                self.local_env = Some(HashMap::new());
+
                 {
                     let scope = self.immutable_stack.last_mut().unwrap();
                     for (p, v) in params.into_iter().zip(args) {
@@ -869,13 +912,14 @@ impl VM {
                     }
                 }
 
-                // Compile function body into fresh bytecode.
                 let mut code = Vec::new();
                 let mut lg = crate::compiler::LabelGenerator::new();
                 let mut bs = Vec::new();
-                crate::compiler::compile(AST::Program(body), &mut code, &mut lg, &mut bs);
+                for stmt in body {
+                    crate::compiler::compile(stmt, &mut code, &mut lg, &mut bs);
+                }
+                code.push(Instruction::Return);
 
-                // Swap-in execution state (retains existing semantics).
                 let saved_code = std::mem::replace(&mut self.code, code);
                 let saved_labels =
                     std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
@@ -891,11 +935,11 @@ impl VM {
                     Type::Integer(0)
                 };
 
-                // Restore
                 self.code = saved_code;
                 self.labels = saved_labels;
                 self.pointer = saved_ptr;
-                self.immutable_stack.pop();
+                self.immutable_stack = saved_immutables;
+                self.local_env = saved_local;
 
                 ret
             }
@@ -915,7 +959,7 @@ impl VM {
         let mut code = Vec::new();
         let mut lg = crate::compiler::LabelGenerator::new();
         let mut bs = Vec::new();
-        crate::compiler::compile(ast, &mut code, &mut lg, &mut bs);
+        crate::compiler::compile_module(ast, &mut code, &mut lg, &mut bs);
 
         let saved_code = std::mem::replace(&mut self.code, code);
         let saved_labels = std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
@@ -942,7 +986,7 @@ impl VM {
                 if let Some(v) = self.find_immutable(&name).cloned() {
                     return v;
                 }
-                if let Some(v) = self.environment.get(&name).cloned() {
+                if let Some(v) = self.lookup_var(&name).cloned() {
                     return v;
                 }
 
@@ -1028,10 +1072,11 @@ impl VM {
                     vals.push(self.eval_value(a));
                 }
                 let f = self
-                    .environment
+                    .global_env
                     .get(&name)
                     .cloned()
                     .unwrap_or_else(|| panic!("call error: `{name}` is not defined"));
+
                 self.call_function(f, vals)
             }
 
@@ -1182,11 +1227,13 @@ impl VM {
             Type::Function { params, .. } => format!("Function(params={:?})", params),
             Type::LValue(lv) => format!("LValue({:?})", lv),
             Type::LazyValue(ast, captured) => format!("Lazy({:?}, cap={:?})", ast, captured.keys()),
+            Type::Uninitialized => "Uninitialized".to_string(),
         }
     }
 
     fn dump_env_keys(&self) -> Vec<String> {
-        let mut keys: Vec<_> = self.environment.keys().cloned().collect();
+        let mut keys: Vec<_> = self.global_env.keys().cloned().collect();
+
         keys.sort();
         keys
     }

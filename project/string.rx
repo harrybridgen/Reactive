@@ -9,6 +9,9 @@ struct Screen {
 }
 
 struct Text {
+    str;
+    len;
+    
     x = 0;
     y = 0;
     vx = 1;
@@ -74,14 +77,14 @@ func framebuffer(screen, text) {
         y = dy;
     }
 }
-func render() {
+func render(screen) {
     print "\033[2J";
     print "\033[H";
 
     y = 0;
     dy ::= y + 1;
 
-    loop {
+    loop { 
         if y >= screen.height { break; }
         println screen.buf[y];
         y = dy;
@@ -96,36 +99,36 @@ func delay(n) {
         d = dd;
     }
 }
+func main(){
+    text := new_text("HELLO REACTIVE");
+    screen := new_screen(50,8);
 
-text := new_text("HELLO REACTIVE");
-screen := new_screen(50,8);
+    framebuffer(screen, text);
+    loop {
+        render(screen);
+        delay(20000);
 
-framebuffer(screen, text);
+        text.x = text.dx;
+        text.y = text.dy;
 
-loop {
-    render();
-    delay(20000);
+        if text.x < 0 {
+            text.x = -text.x;
+            text.vx = -text.vx;
+        }
 
-    text.x = text.dx;
-    text.y = text.dy;
+        if (text.x + text.len) > screen.width {
+            text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
+            text.vx = -text.vx;
+        }
 
-    if text.x < 0 {
-        text.x = -text.x;
-        text.vx = -text.vx;
-    }
+        if text.y < 0 {
+            text.y = -text.y;
+            text.vy = -text.vy;
+        }
 
-    if (text.x + text.len) > screen.width {
-        text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
-        text.vx = -text.vx;
-    }
-
-    if text.y < 0 {
-        text.y = -text.y;
-        text.vy = -text.vy;
-    }
-
-    if text.y > (screen.height - 1) {
-        text.y = (screen.height - 1) - (text.y - (screen.height - 1));
-        text.vy = -text.vy;
+        if text.y > (screen.height - 1) {
+            text.y = (screen.height - 1) - (text.y - (screen.height - 1));
+            text.vy = -text.vy;
+        }
     }
 }
