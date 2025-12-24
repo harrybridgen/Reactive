@@ -45,7 +45,7 @@ The language has **three assignment forms**, each with a distinct meaning.
 
 Mutable variables created with `=` are local to the current function invocation, unless they refer to an existing global or heap location.
 
-```haskell
+```lua
 func main(){
     x = 10;
     println x; # 10 #
@@ -54,7 +54,7 @@ func main(){
 
 Mutables can be passed into functions and returned, as usual in a C-like imperative language.
 
-```haskell
+```lua
 func foo(x, y){
     z = x + y;
     return z;
@@ -71,7 +71,7 @@ func main(){
 Inside structs, `=` creates a per-instance mutable field.
 Each struct instance owns its own copy of the field.
 
-```haskell
+```lua
 struct A {
     x = 0;
 }
@@ -89,7 +89,7 @@ Struct fields are not shared between instances.
 
 When used inside arrays, `=` assigns the location of the index in the array to a value.
 
-```haskell
+```lua
 func main(){
     arr = [2]
     arr[0] = 1;
@@ -103,7 +103,7 @@ func main(){
 `::=` defines a **relationship** between locations.  
 It stores an expression and its dependencies, not a value.
 
-```haskell
+```lua
 func main(){
     x = 1;
     y ::= x + 1;
@@ -118,7 +118,7 @@ In the example above, when we call `println y;` we are essentially calculating `
 
 If any dependency changes, the result updates automatically.
 
-```haskell
+```lua
 func main(){
     x = 1;
     y ::= x + 1;
@@ -143,7 +143,7 @@ This of this as "advancing" the relation. In this case, it adds `1` onto `y`.
 
 They are commonly used to build **progression variables** in loops:
 
-```haskell
+```lua
 x = 0;
 dx ::= x + 1;
 
@@ -158,14 +158,14 @@ Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
 
 Reactive assignments work uniformly for **variables, struct fields, array elemements**
 
-```haskell
-struct  Counter {
+```lua
+struct Counter {
     x = 1;
     step = 1;
 }
 
 func main(){
-    c = struct  Counter;
+    c = struct Counter;
     c.next ::= c.x + c.step;
 
     println c.next; # 2 #
@@ -176,7 +176,7 @@ func main(){
 
 Reactive assignments may use ternary expressions on the right-hand side.
 
-```haskell
+```lua
 func main(){
     arr =[2]
     arr[1] ::= arr[0] +  2;
@@ -219,7 +219,7 @@ _If the `:=` is binding an array or struct, the contents **are** mutable_
 Reactive bindings `::=` do not store values! They store relationships.
 This means that:
 
-```haskell
+```lua
 arr[i] ::= arr[i - 1] + 1;
 ```
 
@@ -232,7 +232,7 @@ So if `i` keeps changing, the dependency graph becomes self-referential, unstabl
 
 Take this code:
 
-```haskell
+```lua
 func main(){
     arr = [3];
     i = 0;
@@ -270,7 +270,7 @@ Because `::=` doesn’t store a value it stores “whatever `i` is later”.
 
 So, you need to use the `:=` imutable bind to "capture" the value of `i`
 
-```haskell
+```lua
 func main(){
     arr = [3];
     i = 0;
@@ -304,7 +304,7 @@ Without `:=`, all reactive assignments would refer to the same moving variable, 
 
 Character literals use single quotes:
 
-```haskell
+```lua
 func main(){
     c = 'A';
     println c;   # A #
@@ -313,7 +313,7 @@ func main(){
 
 Characters behave like integers but preserve character semantics:
 
-```haskell
+```lua
 func main(){
     x = 'A';
     y ::= x + 1;
@@ -333,7 +333,7 @@ Rules:
 
 Strings use double quotes and are compiled as arrays of characters:
 
-```haskell
+```lua
 func main(){
     s := "HELLO";
     println s;      # HELLO #
@@ -348,7 +348,7 @@ Strings are:
 - mutable
 - usable anywhere arrays are allowed
 
-```haskell
+```lua
 func main(){
     s = "HELLO";
     s[0] = 'X';
@@ -360,7 +360,7 @@ func main(){
 
 Reactive bindings work naturally with characters and strings:
 
-```haskell
+```lua
 func main(){
     text := "HELLO";
 
@@ -379,7 +379,7 @@ func main(){
 
 Strings are normal heap values:
 
-```haskell
+```lua
 func main(){
     struct Label {
         text;
@@ -394,7 +394,7 @@ func main(){
 
 Returned strings are shared by reference:
 
-```haskell
+```lua
 func make() {
     return "HI";
 }
@@ -414,7 +414,7 @@ func main(){
 - strings print as text, not arrays
 - characters print as characters, not numbers
 
-```haskell
+```lua
 func main(){
     println 'A';      # A #
     println "ABC";    # ABC #
@@ -436,7 +436,7 @@ Reactive fields may depend on other fields in the same struct.
 
 ### Creating Struct Instances
 
-```haskell
+```lua
 struct Counter {
     x = 0;
     step := 1;
@@ -470,7 +470,7 @@ Fields in a struct must be declared in the struct definition.
 You can initialize the fields with a value, or assign values to them later.
 All unassigned fields in a struct have the type Uninitialized until they receive a value.
 
-```haskell
+```lua
 struct Empty {}
 
 func main(){
@@ -485,7 +485,7 @@ Reactive fields `::=` capture free variables from the surrounding environment at
 
 This means that a reactive field inside a struct may capture global immutable bindings if a name is visible at definition time.
 
-```haskell
+```lua
 x := 10;
 
 struct Example {
@@ -519,7 +519,7 @@ They may store integers, structs, or other arrays.
 
 Arrays are created using a size expression.
 
-```haskell
+```lua
 func main(){
     arr = [2]; # arr is an array of 2 elements #
     arr[1] = 10; # assign index 1 to int 10 #
@@ -532,7 +532,7 @@ When used as integers, arrays evaluate to their length.
 
 Array elements are accessed with brackets:
 
-```haskell
+```lua
 func main(){
     arr = [2];
     arr[1] = 10;
@@ -551,7 +551,7 @@ Bounds are checked at runtime.
 
 Arrays may contain other arrays, allowing arbitrary nesting.
 
-```haskell
+```lua
 # 2x2 Matrix #
 func main(){
     matrix = [2];
@@ -569,7 +569,7 @@ func main(){
 
 Reactive assignments to array elements capture relationships between values.
 
-```haskell
+```lua
 func main(){
     base = 0;
     arr = [2]
@@ -590,7 +590,7 @@ Changing any dependency automatically updates dependent elements.
 Arrays may contain structs, and struct fields may contain arrays.
 Field access (`.`) and indexing (`[]`) can be freely combined.
 
-```haskell
+```lua
 # A container holding a 2D array of cells #
 struct Cell {
     y = 0;
@@ -629,7 +629,7 @@ Functions encapsulate reusable logic and may return **integers, arrays, or struc
 
 Functions are **first-class values** stored in the global environment and invoked by name.
 
-```haskell
+```lua
 func add(a, b) {
     return a + b;
 }
@@ -646,7 +646,7 @@ Calling a function:
 3.  Executes the function body
 4.  Returns a value (or `0` if no return is executed)
 
-```haskell
+```lua
 func f(x) {
     x = 10;   # error: x is immutable #
 }
@@ -660,7 +660,7 @@ Returns are **eager**
 
 Returned expressions are evaluated **immediately**, not reactively.
 
-```haskell
+```lua
 func f(x) {
     y ::= x + 1;
     return y;
@@ -681,7 +681,7 @@ Reactive relationships do **not escape** the function unless explicitly attached
 
 Arrays and structs are heap-allocated and returned **by reference**.
 
-```haskell
+```lua
 struct Counter {
     x = 0;
     step := 1;
@@ -708,7 +708,7 @@ This sharing is intentional and allows mutation and reactivity across aliases.
 
 Returning an immutable binding yields a **mutable value** to the caller.
 
-```haskell
+```lua
 func f() {
     x := 5;
     return x;
@@ -724,7 +724,7 @@ func main(){
 
 Reactive bindings (::=) may reference expressions that evaluate to heap-allocated values, including structs and arrays returned from functions.
 
-```haskell
+```lua
 struct Pair{
     x = 0;
     y = 0;
@@ -768,7 +768,7 @@ This means:
 - the heap object returned may change
 - but reactivity is driven by expression re-evaluation, not pointer tracking
 
-```haskell
+```lua
 struct Counter {
     x = 1;
     step = 1;
@@ -791,7 +791,7 @@ Each read of counter re-evaluates buildcounter(10) and discards any previous res
 
 If you wanted to make counter NOT revaluate, use the `:=` immutable binding:
 
-```haskell
+```lua
 struct Counter {
     x = 1;
     step = 1;
@@ -826,7 +826,7 @@ Both coexist cleanly in the language.
 
 The language supports file-based imports using dot-separated paths.
 
-```haskell
+```lua
 import std.maths;
 ```
 
@@ -840,7 +840,7 @@ import std.maths;
 
 Imports are resolved relative to the program root by translating dots into folders.
 
-```haskell
+```lua
 import game.entities.player;
 ```
 
@@ -870,7 +870,7 @@ project/
 
 game/entities/player.hs:
 
-```haskell
+```lua
 struct Player {
     x = 0;
     y = 0;
@@ -887,7 +887,7 @@ func makeplayer(a, b) {
 
 main.hs:
 
-```haskell
+```lua
 import game.entities.player;
 
 func main(){
@@ -920,7 +920,7 @@ import std.maths;
 
 ### Reactive variables
 
-```haskell
+```lua
 func main(){
     x = 1;
     y ::= x + 1;
@@ -933,7 +933,7 @@ func main(){
 
 ### Struct with Reactive Fields
 
-```haskell
+```lua
 struct Counter {
     x = 0;
     step := 1;
@@ -951,7 +951,7 @@ func main(){
 
 ### Factorial via Dependency Graph
 
-```haskell
+```lua
 func main(){
     fact = [6];   # we want factorials up to 5 #
 
@@ -977,7 +977,7 @@ func main(){
 
 ### Functions Returning Structs
 
-```haskell
+```lua
 struct Counter {
     x = 0;
     step := 1;
@@ -1006,7 +1006,7 @@ func main(){
 
 ### Arrays and lazy elements
 
-```haskell
+```lua
 func main(){
     arr = [5];
     x = 2;
@@ -1021,7 +1021,7 @@ func main(){
 
 ### Simple Counting Loop
 
-```haskell
+```lua
 func main(){
     x = 0;
     dx ::= x + 1;
@@ -1040,7 +1040,7 @@ func main(){
 
 ### Array Dependency Chain
 
-```haskell
+```lua
 func main(){
     arr = [5];
 
@@ -1063,7 +1063,7 @@ func main(){
 
 ### Nested Relational Arrays
 
-```haskell
+```lua
 func main(){
     x = [1];
     y = [1];
@@ -1079,7 +1079,7 @@ func main(){
 
 ### 3D Matrix Relations
 
-```haskell
+```lua
 func main(){
     # create a 2x2x2 array #
     arr = [2];
@@ -1107,7 +1107,7 @@ func main(){
 
 ### Matrix Multiplication with Relations
 
-```haskell
+```lua
 struct Mat2 {
     m := [2];
 }
@@ -1170,7 +1170,7 @@ func main(){
 
 ### Bank Account with reactive fields
 
-```haskell
+```lua
 # Account struct with reactive fields #
 struct Account {
     balance = 0;
@@ -1229,7 +1229,7 @@ func main(){
 
 ### Reactive Two Sum
 
-```haskell
+```lua
 import std.hashmap;
 
 struct Pair {
@@ -1288,7 +1288,7 @@ func main(){
 
 ### Reactive Fib in a Struct
 
-```haskell
+```lua
 struct Fibonacci {
     size := 10;
 
@@ -1352,7 +1352,7 @@ func main(){
 
 ### Reactive Dot-Product Matrix
 
-```haskell
+```lua
 struct Vec2 {
     x = 0;
     y = 0;
@@ -1480,7 +1480,7 @@ func main(){
 
 ### Bouncing String via a Constraint-Driven Reactive Framebuffer
 
-```haskell
+```lua
 struct Screen {
     width;
     height;
@@ -1617,7 +1617,7 @@ func main(){
 
 ## Grammar
 
-```haskell
+```lua
 program
     ::= statement (";" statement)* ";"?
 
