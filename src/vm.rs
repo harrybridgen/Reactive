@@ -307,18 +307,26 @@ impl VM {
                     let val = self.pop();
                     let obj = self.pop();
 
-                    match self.force(obj) {
-                        Type::StructRef(id) => {
-                            if self.heap[id].immutables.contains(&field) {
-                                panic!("cannot assign to immutable field `{}`", field);
-                            }
-
-                            let stored = self.force_to_storable(val);
-                            self.heap[id].fields.insert(field, stored);
-                        }
+                    let struct_id = match self.force(obj) {
+                        Type::StructRef(id) => id,
                         other => panic!("type error: FieldSet on non-struct {:?}", other),
+                    };
+                    {
+                        let inst = &self.heap[struct_id];
+
+                        if !inst.fields.contains_key(&field) {
+                            panic!("unknown struct field `{}`", field);
+                        }
+
+                        if inst.immutables.contains(&field) {
+                            panic!("cannot assign to immutable field `{}`", field);
+                        }
                     }
+
+                    let stored = self.force_to_storable(val);
+                    self.heap[struct_id].fields.insert(field, stored);
                 }
+
                 Instruction::FieldSetReactive(field, ast) => {
                     let obj = self.pop();
 
@@ -531,10 +539,17 @@ impl VM {
             }
 
             Type::LValue(LValue::StructField { struct_id, field }) => {
-                if self.heap[struct_id].immutables.contains(&field) {
+                let inst = &mut self.heap[struct_id];
+
+                if !inst.fields.contains_key(&field) {
+                    panic!("unknown struct field `{}`", field);
+                }
+
+                if inst.immutables.contains(&field) {
                     panic!("cannot assign to immutable field `{}`", field);
                 }
-                self.heap[struct_id].fields.insert(field, stored);
+
+                inst.fields.insert(field, stored);
             }
 
             other => panic!(
@@ -555,10 +570,8 @@ impl VM {
 
                 match inst.fields.get(&field) {
                     Some(Type::Uninitialized) => {}
-                    Some(_) => {
-                        panic!("cannot reassign immutable field `{}`", field);
-                    }
-                    None => unreachable!("field missing from struct"),
+                    Some(_) => panic!("cannot reassign immutable field `{}`", field),
+                    None => panic!("unknown struct field `{}`", field),
                 }
 
                 inst.fields.insert(field.clone(), stored);
@@ -585,6 +598,10 @@ impl VM {
 
             Type::LValue(LValue::StructField { struct_id, field }) => {
                 let inst = &mut self.heap[struct_id];
+
+                if !inst.fields.contains_key(&field) {
+                    panic!("unknown struct field `{}`", field);
+                }
 
                 if inst.immutables.contains(&field) {
                     panic!("cannot reassign immutable field `{}`", field);
@@ -734,7 +751,6 @@ impl VM {
     fn force_struct_field(&mut self, struct_id: usize, v: Type) -> Type {
         match v {
             Type::LazyValue(ast, captured) => {
-                // Evaluate reactive fields with struct fields temporarily bound as immutables.
                 self.immutable_stack.push(captured);
                 let out = self.eval_reactive_field_in_struct(struct_id, *ast);
                 self.immutable_stack.pop();
@@ -900,8 +916,8 @@ impl VM {
         match f {
             Type::Function { params, body } => {
                 let saved_local = self.local_env.take();
-                let saved_immutables =
-                    std::mem::replace(&mut self.immutable_stack, vec![HashMap::new()]);
+                let saved_immutables = self.immutable_stack.clone();
+                self.immutable_stack.push(HashMap::new());
 
                 self.local_env = Some(HashMap::new());
 

@@ -14,6 +14,8 @@ This is a small expression-oriented language compiled to bytecode and executed o
 
 Arrays (including strings) evaluate to their length when used as integers.
 
+Whenever an array is used in a numeric context (arithmetic, comparison, loop conditions), it coerces to its length.
+
 ## Expressions
 
 - Arithmetic: `+ - * /`
@@ -25,6 +27,7 @@ Arrays (including strings) evaluate to their length when used as integers.
 
 ## Control Flow
 
+- Program starts in the `main` function.
 - `if { } else { }` conditional execution
 - `return x;` returns a value from a function
 - `loop { }` infinite loop
@@ -40,65 +43,60 @@ The language has **three assignment forms**, each with a distinct meaning.
 
 `=` creates or mutates a **mutable location**.
 
-At the top level, mutable variables are stored in the global environment.
+Mutable variables created with `=` are local to the current function invocation, unless they refer to an existing global or heap location.
 
 ```haskell
-x = 10;
-arr = [5];
+func  main(){
+    x = 10;
+    println x; # 10 #
+}
+```
 
-println x; # 10 #
-println arr; # 5 (length) #
-println arr[3] # 0 (3rd index init 0) #
+Mutables can be passed into functions and returned, as usual in a C-like imperative language.
+
+```haskell
+func foo(x, y){
+    z = x + y;
+    return z;
+}
+
+func main(){
+    x = 1;
+    y = 2;
+    z = foo(x, y);
+    println  z; # 3 #
+}
 ```
 
 Inside structs, `=` creates a per-instance mutable field.
 Each struct instance owns its own copy of the field.
 
 ```haskell
-struct A {
+struct  A {
     x = 0;
 }
 
-a = struct A;
-b = struct A;
+func  main(){
+    a = struct A;
+    b = struct A;
 
-a.x = 5;
-println b.x;   # 0 #
+    a.x = 5;
+    println b.x; # 0 #
+}
 ```
 
 Struct fields are not shared between instances.
 
-Inside functions, `=` mutates the global environment.
+When used inside arrays, `=` assigns the location of the index in the array to a value.
 
 ```haskell
-func foo(){
-    x = 10;
+func main(){
+    arr = [2]
+    arr[0] = 1;
+
+    println arr[0]; # 1 #
 }
-
-x = 1;
-foo();
-
-println x; # 10, not 1 #
 ```
-
-This behavior is intentional: functions do not create local mutable variables.
-
-If you want to compute a value without mutating a global variable, use `:=`.
-`:=` creates an immutable local binding instead of a mutable location.
-
-```haskell
-func foo() {
-    x := x + 1;
-    return x;
-}
-
-x = 1;
-println foo();   # 2 #
-
-println x;  # 1, not 2 #
-```
-
-Here `x` inside the function is a captured value, not a mutable location
 
 ### `::=` Reactive Assignment (relationships)
 
@@ -106,14 +104,36 @@ Here `x` inside the function is a captured value, not a mutable location
 It stores an expression and its dependencies, not a value.
 
 ```haskell
-x = 1;
-y ::= x + 1;
+func main(){
+    x = 1;
+    y ::= x + 1;
 
-println y; # 2 #
+    println y; # 2 #
+}
 ```
 
-The expression is evaluated **when read**.  
+The expression is evaluated **when read**.
+
+In the example above, when we call `println y;` we are essentially calculating `x + 1`, where `x` is the current value of `x`, _at this specific time_.
+
 If any dependency changes, the result updates automatically.
+
+```haskell
+func main(){
+    x = 1;
+    y ::= x + 1;
+
+    println  y; # 2 #
+
+    x  =  y;
+
+    print  y; # 3 #
+}
+```
+
+In the example above, when we assign `x = y;` we are assigning the current value produced by the relation y (which is x + 1) back into `x`. This causes `x == 2`, which then causes the relation `y` to be equal to `2 + 1` when evaluated.
+
+This of this as "advancing" the relation. In this case, it adds `1` onto `y`.
 
 `::=` Reactive assignments:
 
@@ -139,28 +159,32 @@ Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
 Reactive assignments work uniformly for **variables, struct fields, array elemements**
 
 ```haskell
-struct Counter {
+struct  Counter {
     x = 1;
     step = 1;
 }
 
-c = struct Counter;
-c.next ::= c.x + c.step;
+func  main(){
+    c = struct  Counter;
+    c.next ::= c.x + c.step;
 
-println c.next; # 2 #
-c.x = c.next;
-println c.next; # 3 #
+    println  c.next; # 2 #
+    c.x  =  c.next;
+    println  c.next; # 3 #
+}
 ```
 
 Reactive assignments may use ternary expressions on the right-hand side.
 
 ```haskell
-arr = [2]
-arr[1] ::= arr[0] + 2;
-x ::= arr[1] > 1 ? 10 : 20;
+func main(){
+    arr =[2]
+    arr[1] ::= arr[0] +  2;
+    x ::= arr[1] >  1 ? 10 : 20;
 
-println arr[0]; # 0 #
-print x; # 10 #
+    println arr[0]; # 0 #
+    print x; # 10 #
+}
 ```
 
 - Relationships attach to the underlying field or element, so all aliases observe the same behavior.
@@ -178,7 +202,7 @@ print x; # 10 #
 - participate in the reactive graph
 - update when things change
 
-- `:=` takes a snapshot of a value and gives it a name.
+`:=` takes a snapshot of a value and gives it a name
 
 That name:
 
@@ -188,7 +212,7 @@ That name:
 - cannot be reassigned
 - cannot be observed reactively
 
-**If the `:=` is binding an array or struct, the contents **are** mutable**
+_If the `:=` is binding an array or struct, the contents **are** mutable_
 
 #### Why `:=` exists at all
 
@@ -209,18 +233,20 @@ So if `i` keeps changing, the dependency graph becomes self-referential, unstabl
 Take this code:
 
 ```haskell
-arr = [3];
-i = 0;
+func main(){
+    arr = [3];
+    i = 0;
 
-loop {
-    arr[i] ::= i * 10;
-    i = i + 1;
-    if i >= 3 { break; }
+    loop {
+        arr[i] ::=  i  *  10;
+        i  =  i  +  1;
+        if  i  >=  3 { break; }
+    }
+
+    println  arr[0];
+    println  arr[1];
+    println  arr[2];
 }
-
-print arr[0];
-print arr[1];
-print arr[2];
 ```
 
 Becomes:
@@ -245,19 +271,21 @@ Because `::=` doesn’t store a value it stores “whatever `i` is later”.
 So, you need to use the `:=` imutable bind to "capture" the value of `i`
 
 ```haskell
-arr = [3];
-i = 0;
+func main(){
+    arr = [3];
+    i = 0;
 
-loop {
-    j := i; # capture the current value #
-    arr[j] ::= j * 10;
-    i = i + 1;
-    if i >= 3 { break; }
+    loop {
+        j := i; # capture the current value #
+        arr[j] ::= j * 10;
+        i = i + 1;
+        if i >= 3 { break; }
+    }
+
+    print arr[0];
+    print arr[1];
+    print arr[2];
 }
-
-print arr[0];
-print arr[1];
-print arr[2];
 ```
 
 Here, `j` freezes the value of `i` for each iteration.
@@ -277,19 +305,23 @@ Without `:=`, all reactive assignments would refer to the same moving variable, 
 Character literals use single quotes:
 
 ```haskell
-c = 'A';
-println c;   # A #
+func main(){
+    c = 'A';
+    println c;   # A #
+}
 ```
 
 Characters behave like integers but preserve character semantics:
 
 ```haskell
-x = 'A';
-y ::= x + 1;
+func main(){
+    x = 'A';
+    y ::= x + 1;
 
-println y;   # B #
-x = 'Z';
-println y;   # [ #
+    println y;   # B #
+    x = 'Z';
+    println y;   # [ #
+}
 ```
 
 Rules:
@@ -302,10 +334,12 @@ Rules:
 Strings use double quotes and are compiled as arrays of characters:
 
 ```haskell
-s := "HELLO";
-println s;      # HELLO #
-println s[1];   # E #
-println s+0;    # 5 (coerce s into len int)#
+func main(){
+    s := "HELLO";
+    println s;      # HELLO #
+    println s[1];   # E #
+    println s+0;    # 5 (coerce s into len int)#
+}
 ```
 
 Strings are:
@@ -315,9 +349,11 @@ Strings are:
 - usable anywhere arrays are allowed
 
 ```haskell
-s = "HELLO";
-s[0] = 'X';
-println s;   # XELLO #
+func main(){
+    s = "HELLO";
+    s[0] = 'X';
+    println s;   # XELLO #
+}
 ```
 
 ### Reactivity with Text
@@ -325,22 +361,18 @@ println s;   # XELLO #
 Reactive bindings work naturally with characters and strings:
 
 ```haskell
-text := "HELLO";
+func main(){
+    text := "HELLO";
 
-i = 0;
-di ::= i + 1;
+    i = 0;
+    di ::= i + 1;
 
-c ::= text[i];
+    c ::= text[i];
 
-println c;   # H #
-i = di;
-println c;   # E #
-```
-
-Reactivity applies to characters and indices, not whole strings:
-
-```haskell
-x ::= "HELLO";   # invalid #
+    println c;   # H #
+    i = di;
+    println c;   # E #
+}
 ```
 
 ### Strings in Structs and Functions
@@ -348,14 +380,16 @@ x ::= "HELLO";   # invalid #
 Strings are normal heap values:
 
 ```haskell
-struct Label {
-    text;
-}
+func main(){
+    struct Label {
+        text;
+    }
 
-l = struct Label;
-l.text = "OK";
-l.text[1] = '!';
-println l.text;  # O! #
+    l = struct Label;
+    l.text = "OK";
+    l.text[1] = '!';
+    println l.text;  # O! #
+}
 ```
 
 Returned strings are shared by reference:
@@ -365,11 +399,13 @@ func make() {
     return "HI";
 }
 
-a = make();
-b = a;
-b[0] = 'X';
+func main(){
+    a = make();
+    b = a;
+    b[0] = 'X';
 
-println a;  # XI #
+    println a;  # XI #
+}
 ```
 
 ### Printing Strings
@@ -379,24 +415,16 @@ println a;  # XI #
 - characters print as characters, not numbers
 
 ```haskell
-println 'A';      # A #
-println "ABC";    # ABC #
-println "A"[0]+1; # B #
+func main(){
+    println 'A';      # A #
+    println "ABC";    # ABC #
+    println "A"[0]+1; # B #
+}
 ```
 
 ## Structs
 
 Structs define heap-allocated records with named fields.
-
-### Struct Definition
-
-```haskell
-struct Counter {
-    x = 0;
-    step := 1;
-    next ::= x + step;
-}
-```
 
 ### Field Kinds
 
@@ -405,50 +433,97 @@ struct Counter {
 - ::= reactive field
 
 Reactive fields may depend on other fields in the same struct.
-Reactive fields are evaluated with the struct’s fields temporarily bound as immutable variables.
 
 ### Creating Struct Instances
 
 ```haskell
-c = struct Counter;
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+    foo;
+}
+
+func main(){
+    c = struct Counter;
+    println c.next; # 1 #
+    c.x = 10;
+    println c.next; # 11 #
+}
+
 ```
 
-### Field Access and Assignment
+In the example above, we are defining:
 
-```haskell
-println c.x;
-c.x = 10;
-println c.next;
-```
+- a `Counter` struct with:
+- a mutable variable `x`
+- an immutable variable `step`
+- a relational variable `next` which depends on `x + step`
+- an uninitialized variable `foo`
 
-### Open Structs
+In `main` we construct the struct and assign it to `c`.
+Then, mutate the `x` variable within `c`, which causes `next` to update automatically on read.
 
-Structs are **open heap objects**.
+### Closed Structs
 
-Fields do **not** need to be declared in the struct definition.
-New fields may be added dynamically at runtime.
+Fields in a struct must be declared in the struct definition.
+You can initialize the fields with a value, or assign values to them later.
+All unassigned fields in a struct have the type Uninitialized until they receive a value.
 
 ```haskell
 struct Empty {}
 
-e := struct Empty;
-e.foo = 1;
-e.bar = 2;
-
-println e.foo;  # 1 #
+func main(){
+    e := struct Empty;
+    e.foo = 1; # Error ! #
+}
 ```
 
-The struct definition serves as an optional initializer, not a schema.
+### Reactive Field Capture and Globals
+
+Reactive fields `::=` capture free variables from the surrounding environment at the point the relationship is defined, not when it is evaluated.
+
+This means that a reactive field inside a struct may capture global immutable bindings if a name is visible at definition time.
+
+```haskell
+x := 10;
+
+struct Example {
+    y;
+    x;
+    sum ::= x + y;
+}
+
+func main(){
+    e = struct Example;
+    e.y = 1;
+    e.x = 1;
+    println e.sum;  # 11 #
+}
+```
+
+In the example above, sum captures the global immutable `x` when the struct is defined.
+Even though the struct also declares a field named `x`, that field does not participate in reactive capture.
+
+At evaluation time:
+
+- `y` resolves to the struct field `e.y`
+- `x` resolves to the captured global immutable `x := 10`
+
+As a result, `sum` evaluates to `10 + 1`.
 
 ## Arrays
 
 Arrays are fixed-size, heap-allocated containers of values.
 They may store integers, structs, or other arrays.
 
-Arrays are created using a size expression:
+Arrays are created using a size expression.
 
 ```haskell
-arr = [5];
+func main(){
+    arr = [2]; # arr is an array of 2 elements #
+    arr[1] = 10; # assign index 1 to int 10 #
+}
 ```
 
 When used as integers, arrays evaluate to their length.
@@ -458,11 +533,14 @@ When used as integers, arrays evaluate to their length.
 Array elements are accessed with brackets:
 
 ```haskell
-arr = [2];
-arr[0] = 10;
-arr[1] ::= arr[0] + 1;
-x := arr[1];
-print x; # 11 #
+func main(){
+    arr = [2];
+    arr[1] = 10;
+
+    x = arr[1];
+
+    print x; # 10 #
+}
 ```
 
 Array elements support both mutable (`=`) and reactive (`::=`) assignment.
@@ -475,12 +553,16 @@ Arrays may contain other arrays, allowing arbitrary nesting.
 
 ```haskell
 # 2x2 Matrix #
-matrix = [2];
-matrix[0] = [2];
-matrix[1] = [2];
-matrix[1][1] = 5;
-c = matrix[1][1];
-println c; # 5 #
+func main(){
+    matrix = [2];
+
+    matrix[0] = [2];
+    matrix[1] = [2];
+
+    matrix[1][1] = 5;
+
+    println matrix[1][1]; # 5 #
+}
 ```
 
 ### Reactive Array Relationships
@@ -488,12 +570,17 @@ println c; # 5 #
 Reactive assignments to array elements capture relationships between values.
 
 ```haskell
-base = 0;
-arr = [2]
-arr[0] ::= base;
-arr[1] ::= arr[0] + 1;
-base = arr[1];
-println arr[1]; # 2 #
+func main(){
+    base = 0;
+    arr = [2]
+
+    arr[0] ::= base;
+    arr[1] ::= arr[0] + 1;
+
+    base = arr[1];
+
+    println arr[1]; # 2 #
+}
 ```
 
 Changing any dependency automatically updates dependent elements.
@@ -514,22 +601,24 @@ struct Container {
     m := [2];
 }
 
-c = struct Container;
+func main(){
+    c = struct Container;
 
-# allocate 2x2 array of Cells #
-c.m[0] = [2];
-c.m[1] = [2];
+    # allocate 2x2 array of Cells #
+    c.m[0] = [2];
+    c.m[1] = [2];
 
-c.m[0][0] = struct Cell;
-c.m[0][1] = struct Cell;
+    c.m[0][0] = struct Cell;
+    c.m[0][1] = struct Cell;
 
-c.m[0][0].y = 5;
+    c.m[0][0].y = 5;
 
-println c.m[0][0].y;   # 5 #
-println c.m[0][0].yy;  # 10 #
+    println c.m[0][0].y;   # 5 #
+    println c.m[0][0].yy;  # 10 #
 
-c.m[0][0].y = 7;
-println c.m[0][0].yy;  # 14 #
+    c.m[0][0].y = 7;
+    println c.m[0][0].yy;  # 14 #
+}
 ```
 
 ## Functions
@@ -577,11 +666,13 @@ func f(x) {
     return y;
 }
 
-a = 10;
-b = f(a);
-a = 20;
+func main(){
+    a = 10;
+    b = f(a);
+    a = 20;
 
-println b;  # 11 #
+    println b;  # 11 #
+}
 ```
 
 Reactive relationships do **not escape** the function unless explicitly attached to a location outside.
@@ -602,11 +693,13 @@ func make() {
     return s;
 }
 
-c1 = make();
-c2 = c1;
+func main(){
+    c1 = make();
+    c2 = c1;
 
-c1.x = 10;
-println c2.x;  # 10 #
+    c1.x = 10;
+    println c2.x;  # 10 #
+}
 ```
 
 This sharing is intentional and allows mutation and reactivity across aliases.
@@ -621,19 +714,34 @@ func f() {
     return x;
 }
 
-y = f();
-y = 10;   # allowed
+func main(){
+    y = f();
+    y = 10;   # allowed #
+}
 ```
-
-Immutability applies only to the _binding_, not the value.
 
 ### Reactive Bindings and Functions Returning Heap Objects
 
 Reactive bindings (::=) may reference expressions that evaluate to heap-allocated values, including structs and arrays returned from functions.
 
 ```haskell
-result ::= twosum(nums, 9); # returns pair struct #
-println result.x;
+struct Pair{
+    x = 0;
+    y = 0;
+    xy ::= x + y;
+}
+
+func newpair(x,y){
+    pair = struct Pair;
+    pair.x = x;
+    pair.y = y;
+    return pair;
+}
+
+func main(){
+    result ::= newpair(1, 2); # returns pair struct #
+    println result.xy; # 3 #
+}
 ```
 
 This is valid.
@@ -672,9 +780,11 @@ func buildcounter(start) {
     return c;
 }
 
-counter ::= buildcounter(10);
-counter.x = 20;
-println counter.x; # PRINTS 10, NOT 20 #
+func main(){
+    counter ::= buildcounter(10);
+    counter.x = 20;
+    println counter.x; # PRINTS 10, NOT 20 #
+}
 ```
 
 Each read of counter re-evaluates buildcounter(10) and discards any previous result.
@@ -692,10 +802,11 @@ func buildcounter(start) {
     c.x = start;
     return c;
 }
-
-counter := buildcounter(10); # swapped ::= for := #
-counter.x = 20;
-println counter.x; # PRINTS 20 #
+func main(){
+    counter := buildcounter(10); # swapped ::= for := #
+    counter.x = 20;
+    println counter.x; # PRINTS 20 #
+}
 ```
 
 ### Reactive Struct Fields vs Reactive Struct-Producing Expressions
@@ -705,18 +816,6 @@ You may bind:
 - reactive fields inside structs
 - reactive expressions that return structs
 - Both are valid and supported.
-
-Recommended patterns:
-
-```haskell
-# Reactive field binding #
-counter := struct Counter;
-counter.next ::= counter.x + 1;
-
-# Reactive expression returning a struct
-result ::= twosum(nums, 9);
-println result.p1;
-```
 
 Reactive fields attach to heap locations.
 Reactive expressions attach to evaluation context.
@@ -778,10 +877,10 @@ struct Player {
     xy ::= x + y;
 }
 
-func makeplayer(x, y) {
+func makeplayer(a, b) {
     p := struct Player;
-    p.x = x;
-    p.y = y;
+    p.x = a;
+    p.y = b;
     return p;
 }
 ```
@@ -791,9 +890,11 @@ main.hs:
 ```haskell
 import game.entities.player;
 
-player := makeplayer(10, 5);
-
-println player.xy; # 15 #
+func main(){
+    player := makeplayer(10, 5);
+    player.x = 5;
+    println player.xy; # 10 #
+}
 ```
 
 ### Standard Library (std)
@@ -820,12 +921,14 @@ import std.maths;
 ### Reactive variables
 
 ```haskell
-x = 1;
-y ::= x + 1;
+func main(){
+    x = 1;
+    y ::= x + 1;
 
-println y;   # 2 #
-x = 10;
-println y;   # 11 #
+    println y;   # 2 #
+    x = 10;
+    println y;   # 11 #
+}
 ```
 
 ### Struct with Reactive Fields
@@ -837,35 +940,39 @@ struct Counter {
     next ::= x + step;
 }
 
-c = struct Counter;
+func main(){
+    c = struct Counter;
 
-println c.next; # 1 #
-c.x = 10;
-println c.next; # 11 #
+    println c.next; # 1 #
+    c.x = 10;
+    println c.next; # 11 #
+}
 ```
 
 ### Factorial via Dependency Graph
 
 ```haskell
-fact = [6];   # we want factorials up to 5 #
+func main(){
+    fact = [6];   # we want factorials up to 5 #
 
-fact[0] ::= 1;
-fact[1] ::= 1;
+    fact[0] ::= 1;
+    fact[1] ::= 1;
 
-x = 1;
-dx ::= x + 1;
+    x = 1;
+    dx ::= x + 1;
 
-loop {
-    if x >= fact - 1 {
-        break;
+    loop {
+        if x >= fact - 1 {
+            break;
+        }
+
+        i := x;
+        fact[i + 1] ::= fact[i] * (i + 1);
+        x = dx;
     }
 
-    i := x;
-    fact[i + 1] ::= fact[i] * (i + 1);
-    x = dx;
+    println fact[5];  # 120 #
 }
-
-println fact[5];  # 120 #
 ```
 
 ### Functions Returning Structs
@@ -888,101 +995,113 @@ func advance(c) {
     return c.x;
 }
 
-counter = makecounter(10);
+func main(){
+    counter = makecounter(10);
 
-println advance(counter); # 11 #
-println counter.next;     # 12 #
+    println advance(counter); # 11 #
+    println counter.next;     # 12 #
+}
 
 ```
 
 ### Arrays and lazy elements
 
 ```haskell
-arr = [5];
-x = 2;
+func main(){
+    arr = [5];
+    x = 2;
 
-arr[0] ::= x * 10;
-println arr[0];  # 20  #
+    arr[0] ::= x * 10;
+    println arr[0];  # 20  #
 
-x = 7;
-println arr[0];  # 70 #
+    x = 7;
+    println arr[0];  # 70 #
+}
 ```
 
 ### Simple Counting Loop
 
 ```haskell
-x = 0;
-dx ::= x + 1;
+func main(){
+    x = 0;
+    dx ::= x + 1;
 
-loop {
-    println x;
+    loop {
+        println x;
 
-    if x >= 4 {
-        break;
+        if x >= 4 {
+            break;
+        }
+
+        x = dx; # advances x by +1 #
     }
-
-    x = dx; # advances x by +1 #
 }
 ```
 
 ### Array Dependency Chain
 
 ```haskell
-arr = [5];
+func main(){
+    arr = [5];
 
-base = 1;
+    base = 1;
 
-# relation between current and previous index is +1 #
-arr[0] ::= base;
-arr[1] ::= arr[0] + 1;
-arr[2] ::= arr[1] + 1;
-arr[3] ::= arr[2] + 1;
-arr[4] ::= arr[3] + 1;
+    # relation between current and previous index is +1 #
+    arr[0] ::= base;
+    arr[1] ::= arr[0] + 1;
+    arr[2] ::= arr[1] + 1;
+    arr[3] ::= arr[2] + 1;
+    arr[4] ::= arr[3] + 1;
 
-println arr[4];   # 5 #
+    println arr[4];   # 5 #
 
-base = 10;
+    base = 10;
 
-println arr[4];   # 14 #
+    println arr[4];   # 14 #
+}
 ```
 
 ### Nested Relational Arrays
 
 ```haskell
-x = [1];
-y = [1];
-z = [1];
+func main(){
+    x = [1];
+    y = [1];
+    z = [1];
 
-x[0] = y;
-y[0] ::= z[0] + 1;
+    x[0] = y;
+    y[0] ::= z[0] + 1;
 
-z[0] = 5;
-println x[0][0]; # 6 #
+    z[0] = 5;
+    println x[0][0]; # 6 #
+}
 ```
 
 ### 3D Matrix Relations
 
 ```haskell
-# create a 2x2x2 array #
-arr = [2];
-arr[0] = [2];
-arr[1] = [2];
+func main(){
+    # create a 2x2x2 array #
+    arr = [2];
+    arr[0] = [2];
+    arr[1] = [2];
 
-arr[0][0] = [2];
-arr[0][1] = [2];
-arr[1][0] = [2];
-arr[1][1] = [2];
+    arr[0][0] = [2];
+    arr[0][1] = [2];
+    arr[1][0] = [2];
+    arr[1][1] = [2];
 
-# establish a 3D dependency #
-arr[0][0][0] ::= arr[1][1][1];
+    # establish a 3D dependency #
+    arr[0][0][0] ::= arr[1][1][1];
 
-# set source value #
-arr[1][1][1] = 7;
-println arr[0][0][0];   # 7 #
+    # set source value #
+    arr[1][1][1] = 7;
+    println arr[0][0][0];   # 7 #
 
-# change source again #
-arr[1][1][1] = 42;
-println arr[0][0][0];   # 42 #
+    # change source again #
+    arr[1][1][1] = 42;
+    println arr[0][0][0];   # 42 #
+}
 
 ```
 
@@ -1022,29 +1141,31 @@ func mat2mul(A, B) {
     return C;
 }
 
-A = mat2(1, 2,
-         3, 4);
+func main(){
+    A = mat2(1, 2,
+            3, 4);
 
-B = mat2(5, 6,
-         7, 8);
+    B = mat2(5, 6,
+            7, 8);
 
-C = mat2mul(A, B);
+    C = mat2mul(A, B);
 
-# ---- initial product ---- #
-println C.m[0][0];  # 19 #
-println C.m[0][1];  # 22 #
-println C.m[1][0];  # 43 #
-println C.m[1][1];  # 50 #
+    # ---- initial product ---- #
+    println C.m[0][0];  # 19 #
+    println C.m[0][1];  # 22 #
+    println C.m[1][0];  # 43 #
+    println C.m[1][1];  # 50 #
 
-println ' ';
-# ---- mutate input matrix ---- #
-A.m[0][0] = 10;
+    println ' ';
+    # ---- mutate input matrix ---- #
+    A.m[0][0] = 10;
 
-# ---- product updates automatically ---- #
-println C.m[0][0];  # 10*5 + 2*7 = 64 #
-println C.m[0][1];  # 10*6 + 2*8 = 76 #
-println C.m[1][0];  # unchanged: 43 #
-println C.m[1][1];  # unchanged: 50 #
+    # ---- product updates automatically ---- #
+    println C.m[0][0];  # 10*5 + 2*7 = 64 #
+    println C.m[0][1];  # 10*6 + 2*8 = 76 #
+    println C.m[1][0];  # unchanged: 43 #
+    println C.m[1][1];  # unchanged: 50 #
+}
 ```
 
 ### Bank Account with reactive fields
@@ -1088,21 +1209,22 @@ func applyinterest(a) {
 }
 
 # ---- demo ---- #
+func main(){
+    acct = makeaccount(1000);
 
-acct = makeaccount(1000);
+    println acct.balance;    # 1000 #
+    println acct.interest;   # 50 #
+    println acct.projected;  # 1050 #
 
-println acct.balance;    # 1000 #
-println acct.interest;   # 50 #
-println acct.projected;  # 1050 #
+    deposit(acct, 500);
+    println acct.projected;  # 1575 #
 
-deposit(acct, 500);
-println acct.projected;  # 1575 #
+    applyinterest(acct);
+    println acct.balance;    # 1575 #
 
-applyinterest(acct);
-println acct.balance;    # 1575 #
-
-withdraw(acct, 200);
-println acct.projected;  # 1443 #
+    withdraw(acct, 200);
+    println acct.projected;  # 1443 #
+}
 ```
 
 ### Reactive Two Sum
@@ -1143,23 +1265,25 @@ func twosum(arr, target) {
 }
 
 # ---- test ---- #
-nums = [4];
-nums[0] = 2;
-nums[1] = 7;
-nums[2] = 11;
-nums[3] = 15;
+func main(){
+    nums = [4];
+    nums[0] = 2;
+    nums[1] = 7;
+    nums[2] = 11;
+    nums[3] = 15;
 
-result ::= twosum(nums, 9);
+    result ::= twosum(nums, 9);
 
-println result.p1; # 0 #
-println result.p2; # 1 #
+    println result.p1; # 0 #
+    println result.p2; # 1 #
 
-nums[0] = 12;
-nums[2] = 1;
-nums[3] = 8
+    nums[0] = 12;
+    nums[2] = 1;
+    nums[3] = 8
 
-println result.p1; # 2 #
-println result.p2; # 3 #
+    println result.p1; # 2 #
+    println result.p2; # 3 #
+}
 ```
 
 ### Reactive Fib in a Struct
@@ -1212,16 +1336,17 @@ func printfib(f) {
     }
 }
 
+func main(){
+    fib = struct Fibonacci;
+    initfib(fib);
 
-fib = struct Fibonacci;
-initfib(fib);
+    printfib(fib);
 
-printfib(fib);
+    fib.n0 = 89;
+    fib.n1 = 144;
 
-fib.n0 = 89;
-fib.n1 = 144;
-
-printfib(fib);
+    printfib(fib);
+}
 
 ```
 
@@ -1326,28 +1451,30 @@ func print_matrix(M) {
     }
 }
 
-A = new_vec_array(3);
-B = new_vec_array(3);
+func main(){
+    A = new_vec_array(3);
+    B = new_vec_array(3);
 
-# A = [(1,2), (3,4), (5,6)] #
-init_vec_values(A, 1, 2, 2, 2);
+    # A = [(1,2), (3,4), (5,6)] #
+    init_vec_values(A, 1, 2, 2, 2);
 
-# B = [(7,8), (9,10), (11,12)] #
-init_vec_values(B, 7, 8, 2, 2);
+    # B = [(7,8), (9,10), (11,12)] #
+    init_vec_values(B, 7, 8, 2, 2);
 
-M = new_matrix(A, B);
-bind_dot_products(M, A, B);
+    M = new_matrix(A, B);
+    bind_dot_products(M, A, B);
 
-# ---- initial matrix ---- #
-print_matrix(M);
+    # ---- initial matrix ---- #
+    print_matrix(M);
 
-# ---- mutate vectors ---- #
-A[1].x = 100;
-B[2].y = 1;
-println ' ';
+    # ---- mutate vectors ---- #
+    A[1].x = 100;
+    B[2].y = 1;
+    println ' ';
 
-# ---- matrix updates automatically ---- #
-print_matrix(M);
+    # ---- matrix updates automatically ---- #
+    print_matrix(M);
+}
 
 ```
 
@@ -1429,7 +1556,7 @@ func framebuffer(screen, text) {
         y = dy;
     }
 }
-func render() {
+func render(screen) {
     print "\033[2J";
     print "\033[H";
 
@@ -1452,36 +1579,38 @@ func delay(n) {
     }
 }
 
-text := make_text("HELLO REACTIVE");
-screen := make_screen(31,5);
+func main(){
+    text := make_text("HELLO REACTIVE");
+    screen := make_screen(31,5);
 
-framebuffer(screen, text);
+    framebuffer(screen, text);
 
-loop {
-    render();
-    delay(20000);
+    loop {
+        render(screen);
+        delay(20000);
 
-    text.x = text.dx;
-    text.y = text.dy;
+        text.x = text.dx;
+        text.y = text.dy;
 
-    if text.x < 0 {
-        text.x = -text.x;
-        text.vx = -text.vx;
-    }
+        if text.x < 0 {
+            text.x = -text.x;
+            text.vx = -text.vx;
+        }
 
-    if (text.x + text.len) > screen.width {
-        text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
-        text.vx = -text.vx;
-    }
+        if (text.x + text.len) > screen.width {
+            text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
+            text.vx = -text.vx;
+        }
 
-    if text.y < 0 {
-        text.y = -text.y;
-        text.vy = -text.vy;
-    }
+        if text.y < 0 {
+            text.y = -text.y;
+            text.vy = -text.vy;
+        }
 
-    if text.y > (screen.height - 1) {
-        text.y = (screen.height - 1) - (text.y - (screen.height - 1));
-        text.vy = -text.vy;
+        if text.y > (screen.height - 1) {
+            text.y = (screen.height - 1) - (text.y - (screen.height - 1));
+            text.vy = -text.vy;
+        }
     }
 }
 ```

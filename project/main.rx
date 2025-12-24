@@ -1,8 +1,18 @@
-struct Thing{
-    x;
+struct Player {
+    x = 0;
+    y = 0;
+    xy ::= x + y;
 }
+
+func makeplayer(x, y) {
+    p := struct Player;
+    p.x = x;
+    p.y = y;
+    return p;
+}
+
 func main(){
-    mything = struct Thing;
-    mything.x := 1;
-    print mything.x;
+    player := makeplayer(10, 5);
+    player.x = 5;
+    println player.xy; # 10 #
 }
