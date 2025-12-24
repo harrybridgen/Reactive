@@ -1,5 +1,5 @@
 use super::VM;
-use crate::grammar::{AST, Operator, Type};
+use crate::grammar::{AST, LValue, Operator, Type};
 use std::collections::{HashMap, HashSet};
 
 impl VM {
