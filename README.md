@@ -894,10 +894,10 @@ struct Player {
     xy ::= x + y;
 }
 
-func makeplayer(a, b) {
+func makeplayer(x, y) {
     p := struct Player;
-    p.x = a;
-    p.y = b;
+    p.x = x;
+    p.y = y;
     return p;
 }
 ```
