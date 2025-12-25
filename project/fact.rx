@@ -1,0 +1,23 @@
+func fact(n){
+    facts := [n + 1];
+    facts[0] = 1;
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= n { break };
+
+        idx := i;
+        facts[idx + 1] ::= (idx + 1 ) * facts[idx];
+
+        i = di;
+    }
+    return facts;
+}
+
+func main() {
+    n = 7;
+    arr ::= fact(n);
+    println arr[7];
+    n = 10;
+    println arr[10];
+}

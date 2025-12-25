@@ -70,7 +70,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
                     chars.next();
                     tokens.push(Token::NotEqual);
                 }
-                _ => tokens.push(Token::Not),
+                _ => panic!("Error"),
             },
 
             '>' => match chars.peek() {
