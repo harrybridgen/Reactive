@@ -1,4 +1,4 @@
 # TOKENS #
-K_Number := 1;
+TK_Number := 1;
 TK_Add    := 2;
 TK_Sub    := 2;
