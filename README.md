@@ -363,9 +363,7 @@ Rules
 
 - Arithmetic operators (+ - \* / %) always produce integers
 - char values coerce to integers when used in numeric contexts
-- No implicit int → char conversion exists
 - (char) must be used explicitly to produce a character
-- Printing respects the value’s actual type:
 - char prints as a character
 - int prints as a number
 
