@@ -9,7 +9,7 @@ struct Parser {
 
 func new_parser(tokens, len){
     p := struct Parser;
-    p.tokens = tokens;
+    p.tokens := tokens;
     p.len = len;
     p.pos = 0;
     return p;
@@ -27,28 +27,46 @@ func advance(p) {
 func parse_number(p) {
     t := p.tokens[p.pos];
     advance(p);
-    return t.ival;
+    n := nodeNum(t.ival);
+    return n;
 }
 
 func parse_expr(p) {
-    value = parse_number(p);
-    
+    expr := parse_number(p);
+
     loop {
         if p.pos >= p.len { break; }
+
         if peek(p) == TK_Add {
             advance(p);
-            rhs = parse_number(p);
-            value = value + rhs;
+            rhs := parse_number(p);
+            expr = nodeOper(AST_Add, expr, rhs);
         }
         else if peek(p) == TK_Sub {
             advance(p);
-            rhs = parse_number(p);
-            value = value - rhs;
+            rhs := parse_number(p);
+            expr = nodeOper(AST_Sub, expr, rhs);
         }
         else {
             break;
         }
     }
 
-    return value;
+    return expr;
 }
+
+func nodeOper(kind, left, right) {
+    n := struct AST;
+    n.kind = kind;
+    n.left = left;
+    n.right = right;
+    return n;
+}
+
+func nodeNum(val) {
+    n := struct AST;
+    n.kind = AST_Number;
+    n.literal = val;
+    return n;
+}
+

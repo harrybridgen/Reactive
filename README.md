@@ -21,14 +21,14 @@ Whenever an array is used in a numeric context (arithmetic, comparison, loop con
 - Arithmetic: `+ - * /`
 - Modulo `%`
 - Comparison: `> < >= <= == !=`
-- Logic: `&& ||`
+- Logic: `&& || !`
 - No boolean type: `0` is false, non-zero is true
 - Ternary `x ? y : z;`
 
 ## Control Flow
 
 - Program starts in the `main` function.
-- `if { } else { }` conditional execution
+- `if { } if else {} else { }` conditional execution
 - `return x;` returns a value from a function
 - `loop { }` infinite loop
 - `break` exits the nearest loop
@@ -314,23 +314,60 @@ func main(){
 }
 ```
 
-Characters behave like integers but preserve character semantics:
+Characters are a distinct value kind that:
+
+- print as characters
+- can be indexed from strings
+- can be explicitly cast to and from integers
+
+However, all arithmetic is numeric.
+
+### Characters in Expressions
+
+Characters do not preserve character semantics through arithmetic.
 
 ```lua
 func main(){
     x = 'A';
     y ::= x + 1;
 
-    println y;   # B #
+    println y;   # 66 #
     x = 'Z';
-    println y;   # [ #
+    println y;   # 91 #
+    println (char) y;   # [ #
 }
 ```
 
-Rules:
+In the example above:
 
-- `char + int => char`
-- `char` coerces to integer only when required
+- 'A' coerces to 65
+- 'Z' coerces to 90
+- arithmetic produces integers
+- casting is required to interpret results as characters
+
+### Explicit Casting
+
+Casting is the only way to convert between characters and integers:
+
+```haskell
+func main(){
+    n := (int)'A';
+    c := (char)(n + 1);
+
+    println n;  # 65 #
+    println c;  # B #
+}
+```
+
+Rules
+
+- Arithmetic operators (+ - \* / %) always produce integers
+- char values coerce to integers when used in numeric contexts
+- No implicit int → char conversion exists
+- (char) must be used explicitly to produce a character
+- Printing respects the value’s actual type:
+- char prints as a character
+- int prints as a number
 
 ### Strings
 
@@ -341,7 +378,7 @@ func main(){
     s := "HELLO";
     println s;      # HELLO #
     println s[1];   # E #
-    println s+0;    # 5 (coerce s into len int)#
+    println (int) s;    # 5 (coerce s into len int)#
 }
 ```
 
@@ -416,12 +453,14 @@ func main(){
 - print / println automatically detect strings and characters
 - strings print as text, not arrays
 - characters print as characters, not numbers
+- arithmetic always produces integers
+- casting is required to print arithmetic results as characters
 
 ```lua
 func main(){
     println 'A';      # A #
     println "ABC";    # ABC #
-    println "A"[0]+1; # B #
+    println (char)("A"[0]+1); # B #
 }
 ```
 
@@ -644,7 +683,7 @@ func main(){
 
 Functions encapsulate reusable logic and may return **integers, arrays, or structs**.
 
-Functions are **first-class values** stored in the global environment and invoked by name.
+Functions are named callable values stored in the global environment.
 
 ```lua
 func add(a, b) {

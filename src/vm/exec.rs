@@ -187,19 +187,22 @@ impl VM {
     // =========================================================
 
     fn exec_add(&mut self) {
-        let rhs = self.pop();
-        let lhs = self.pop();
-        let value = self.add_values(lhs, rhs);
-        self.stack.push(value);
+        let a = self.pop_int();
+        let b = self.pop_int();
+        self.stack.push(Type::Integer(b + a));
     }
 
     fn exec_sub(&mut self) {
-        let rhs = self.pop();
-        let lhs = self.pop();
-        let value = self.sub_values(lhs, rhs);
-        self.stack.push(value);
+        let a = self.pop_int();
+        let b = self.pop_int();
+        self.stack.push(Type::Integer(b - a));
     }
 
+    fn exec_modulo(&mut self) {
+        let a = self.pop_int();
+        let b = self.pop_int();
+        self.stack.push(Type::Integer(b % a));
+    }
     fn exec_mul(&mut self) {
         let a = self.pop_int();
         let b = self.pop_int();
@@ -212,46 +215,9 @@ impl VM {
         self.stack.push(Type::Integer(b / a));
     }
 
-    fn exec_modulo(&mut self) {
-        let rhs = self.pop();
-        let lhs = self.pop();
-        let modu = self.mod_values(lhs, rhs);
-        self.stack.push(modu);
-    }
-
     fn exec_cmp<F: FnOnce(i32, i32) -> i32>(&mut self, f: F) {
         let a = self.pop_int();
         let b = self.pop_int();
         self.stack.push(Type::Integer(f(b, a)));
-    }
-
-    fn add_values(&mut self, lhs: Type, rhs: Type) -> Type {
-        let lhs = self.force(lhs);
-        let rhs = self.force(rhs);
-
-        let a = self.as_int(lhs);
-        let b = self.as_int(rhs);
-
-        Type::Integer(a + b)
-    }
-
-    fn sub_values(&mut self, lhs: Type, rhs: Type) -> Type {
-        let lhs = self.force(lhs);
-        let rhs = self.force(rhs);
-
-        let a = self.as_int(lhs);
-        let b = self.as_int(rhs);
-
-        Type::Integer(a - b)
-    }
-
-    fn mod_values(&mut self, lhs: Type, rhs: Type) -> Type {
-        let lhs = self.force(lhs);
-        let rhs = self.force(rhs);
-
-        let a = self.as_int(lhs);
-        let b = self.as_int(rhs);
-
-        Type::Integer(a % b)
     }
 }

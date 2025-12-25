@@ -167,39 +167,26 @@ impl VM {
                 let lv = self.eval_value(*l);
                 let rv = self.eval_value(*r);
 
-                match (&op, self.force(lv), self.force(rv)) {
-                    (Operator::Addition, Type::Char(c), Type::Integer(n))
-                    | (Operator::Addition, Type::Integer(n), Type::Char(c)) => {
-                        Type::Char((c as i32 + n) as u32)
-                    }
-                    (Operator::Subtraction, Type::Char(c), Type::Integer(n))
-                    | (Operator::Subtraction, Type::Integer(n), Type::Char(c)) => {
-                        Type::Char((c as i32 - n) as u32)
-                    }
-                    (Operator::Modulo, Type::Char(c), Type::Integer(n))
-                    | (Operator::Modulo, Type::Integer(n), Type::Char(c)) => {
-                        Type::Char((c as i32 % n) as u32)
-                    }
-                    (op, a, b) => {
-                        let ai = self.as_int(a);
-                        let bi = self.as_int(b);
-                        Type::Integer(match op {
-                            Operator::Addition => ai + bi,
-                            Operator::Subtraction => ai - bi,
-                            Operator::Multiplication => ai * bi,
-                            Operator::Division => ai / bi,
-                            Operator::Greater => (ai > bi) as i32,
-                            Operator::Less => (ai < bi) as i32,
-                            Operator::Equal => (ai == bi) as i32,
-                            Operator::NotEqual => (ai != bi) as i32,
-                            Operator::GreaterEqual => (ai >= bi) as i32,
-                            Operator::LessEqual => (ai <= bi) as i32,
-                            Operator::And => ((ai > 0) && (bi > 0)) as i32,
-                            Operator::Or => ((ai > 0) || (bi > 0)) as i32,
-                            Operator::Modulo => ai % bi,
-                        })
-                    }
-                }
+                let v = self.force(lv);
+                let a = self.as_int(v);
+                let v1 = self.force(rv);
+                let b = self.as_int(v1);
+
+                Type::Integer(match op {
+                    Operator::Addition => a + b,
+                    Operator::Subtraction => a - b,
+                    Operator::Multiplication => a * b,
+                    Operator::Division => a / b,
+                    Operator::Modulo => a % b,
+                    Operator::Greater => (a > b) as i32,
+                    Operator::Less => (a < b) as i32,
+                    Operator::Equal => (a == b) as i32,
+                    Operator::NotEqual => (a != b) as i32,
+                    Operator::GreaterEqual => (a >= b) as i32,
+                    Operator::LessEqual => (a <= b) as i32,
+                    Operator::And => ((a > 0) && (b > 0)) as i32,
+                    Operator::Or => ((a > 0) || (b > 0)) as i32,
+                })
             }
 
             other => panic!("eval_value(): unsupported AST variant: {:?}", other),

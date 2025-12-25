@@ -2,3 +2,22 @@
 TK_Number := 1;
 TK_Add := 2;
 TK_Sub := 3;
+
+# AST #
+struct AST {
+    kind;
+    left;
+    right;
+    literal = 0;
+    value ::= 
+        kind == AST_Number ? literal :
+        kind == AST_Add    ? left.value + right.value :
+        kind == AST_Sub    ? left.value - right.value :
+        0;
+}
+
+
+# AST NODE TYPES #
+AST_Number := 1;
+AST_Add := 2;
+AST_Sub := 3;

@@ -1,24 +1,11 @@
 import compiler.tokenizer;
 import compiler.parser;
 
-src := "2+3+8-11";
+src := "2+3+8-11+3+2+60";
 
 func main() {
     lexer := tokenize(src);
-
-    i = 0;
-    loop {
-        if i >= lexer.len { break; }
-
-        t := lexer.tokens[i];
-        print_token(t);
-
-        i = i + 1;
-    }
-
-    println '=';
-
     parser := new_parser(lexer.tokens, lexer.len);
-    result := parse_expr(parser);
-    println result;
+    ast := parse_expr(parser);
+    println ast.value;
 }

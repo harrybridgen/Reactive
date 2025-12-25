@@ -1,51 +1,7 @@
-import std.char;
+func main(){
+    n := (int)'A';
+    c := (char)(n + 1);
 
-func main() {
-    println "== digit tests ==";
-    println is_digit('0');   # 1 #
-    println is_digit('9');   # 1 #
-    println is_digit('a');   # 0 #
-
-    println "== alpha tests ==";
-    println is_alpha('a');   # 1 #
-    println is_alpha('Z');   # 1 #
-    println is_alpha('_');   # 1 #
-    println is_alpha('9');   # 0 #
-
-    println "== alnum tests ==";
-    println is_alnum('a');   # 1 #
-    println is_alnum('9');   # 1 #
-
-    println "== space tests ==";
-    println is_space(' ');   # 1 #
-    println is_space('\n');  # 1 #
-    println is_space('a');   # 0 #
-
-    println "== case tests ==";
-    println is_lower('a');   # 1 #
-    println is_lower('A');   # 0 #
-    println is_upper('Z');   # 1 #
-    println is_upper('z');   # 0 #
-
-    println "== to_lower / to_upper ==";
-    println to_lower('A');   # a #
-    println to_lower('z');   # z #
-    println to_upper('a');   # A #
-    println to_upper('Z');   # Z #
-
-    println "== digit_to_int ==";
-    println digit_to_int('0');  # 0 #
-    println digit_to_int('5');  # 5 #
-    println digit_to_int('9');  # 9 #
-
-    println "== int_to_char ==";
-    println int_to_char(65);    # A #
-    println int_to_char(97);    # a #
-    println int_to_char(48);    # 0 #
-
-    println "== round trip ==";
-    c := '7';
-    n := digit_to_int(c);
-    println n;                 # 7 #
-    println int_to_char(n + 48); # 7 #
+    println n;  # 65 #
+    println c;  # B #
 }
