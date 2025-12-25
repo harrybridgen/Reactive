@@ -1,0 +1,14 @@
+import compiler.tokenizer;
+import compiler.parser;
+
+src := "2+6";
+
+func main() {
+    lexer := tokenize(src);
+    parser := new_parser(lexer.tokens, lexer.len);
+    result := parse_expr(parser);
+    
+    print src;
+    print " = ";
+    println result;
+}

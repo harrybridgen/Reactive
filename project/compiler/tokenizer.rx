@@ -1,9 +1,6 @@
-import std.char;
+import compiler.grammar;
 
 MAX_TOKENS := 16;
-
-TK_Number := 1;
-TK_Add    := 2;
 
 struct Token {
     kind = 0;
@@ -66,63 +63,4 @@ func tokenize(src) {
     }
 
     return r;
-}
-
-struct Parser {
-    tokens;
-    len = 0;
-    pos = 0;
-}
-
-func new_parser(tokens, len){
-    p := struct Parser;
-    p.tokens = tokens;
-    p.len = len;
-    p.pos = 0;
-    return p;
-}
-
-func peek(p) {
-    if p.pos >= p.len { return 0; }
-    return p.tokens[p.pos].kind;
-}
-
-func advance(p) {
-    p.pos = p.pos + 1;
-}
-
-func parse_number(p) {
-    t := p.tokens[p.pos];
-    advance(p);
-    return t.ival;
-}
-
-func parse_expr(p) {
-    value = parse_number(p);
-    
-    loop {
-        if p.pos >= p.len { break; }
-
-        if peek(p) == TK_Add {
-            advance(p);
-            rhs = parse_number(p);
-            val = digit_to_int(value + rhs);
-        }
-        else {
-            break;
-        }
-    }
-
-    return val;
-}
-
-src := "2+6";
-
-func main() {
-    lexer := tokenize(src);
-    parser := new_parser(lexer.tokens, lexer.len);
-    result := parse_expr(parser);
-    print src;
-    print " = ";
-    println result;
 }
