@@ -1,7 +1,7 @@
 import compiler.tokenizer;
 import compiler.parser;
 
-src := "2+3+8-9";
+src := "2+3+8-11";
 
 func main() {
     lexer := tokenize(src);
