@@ -119,15 +119,24 @@ pub fn compile(
             let end_lbl = labels.fresh("ifend");
 
             code.push(Instruction::JumpIfZero(else_lbl.clone()));
+
+            // THEN block scope
+            code.push(Instruction::PushImmutableContext);
             for s in then_block {
                 compile(s, code, labels, break_stack);
             }
+            code.push(Instruction::PopImmutableContext);
+
             code.push(Instruction::Jump(end_lbl.clone()));
 
             code.push(Instruction::Label(else_lbl));
+
+            // ELSE block scope
+            code.push(Instruction::PushImmutableContext);
             for s in else_block {
                 compile(s, code, labels, break_stack);
             }
+            code.push(Instruction::PopImmutableContext);
 
             code.push(Instruction::Label(end_lbl));
         }

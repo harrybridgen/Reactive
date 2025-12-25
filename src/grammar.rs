@@ -28,7 +28,6 @@ pub enum Token {
     NotEqual,
     And,
     Or,
-    Not,
 
     // assignment
     Assign,

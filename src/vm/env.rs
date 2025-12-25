@@ -3,8 +3,10 @@ use crate::grammar::Type;
 
 impl VM {
     pub(crate) fn lookup_var(&self, name: &str) -> Option<&Type> {
-        self.find_immutable(name)
-            .or_else(|| self.local_env.as_ref().and_then(|e| e.get(name)))
+        self.local_env
+            .as_ref()
+            .and_then(|e| e.get(name))
+            .or_else(|| self.find_immutable(name))
             .or_else(|| self.global_env.get(name))
     }
 

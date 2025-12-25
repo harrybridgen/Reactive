@@ -1,0 +1,12 @@
+func to_int(c) {
+    return c - '0';
+}
+func to_char(x) {
+    return x + 0;
+}
+func is_digit(c) {
+    return c >= '0' && c <= '9';
+}
+func is_space(c) {
+    return c == ' ' || c == '\n' || c == '\t' || c == '\r';
+}

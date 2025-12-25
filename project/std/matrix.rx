@@ -1,0 +1,54 @@
+
+struct Matrix {
+    rows;
+    cols;
+    data;
+}
+
+func mat_new(rows, cols) {
+    m := struct Matrix;
+
+    # dimensions are immutable identity #
+    m.rows := rows;
+    m.cols := cols;
+
+    # allocate outer array (rows) #
+    m.data = [rows];
+
+    r = 0;
+    dr ::= r + 1;
+
+    loop {
+        if r >= rows { break; }
+
+        # allocate each row #
+        m.data[r] = [cols];
+
+        r = dr;
+    }
+
+    return m;
+}
+
+func mat_print(m) {
+    r = 0;
+    dr ::= r + 1;
+
+    loop {
+        if r >= m.rows { break; }
+
+        c = 0;
+        dc ::= c + 1;
+
+        loop {
+            if c >= m.cols { break; }
+            print m.data[r][c];
+            print " ";
+            c = dc;
+        }
+
+        println "";
+        r = dr;
+    }
+}
+
