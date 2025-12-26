@@ -8,6 +8,7 @@ pub fn compile(
     code: &mut Vec<Instruction>,
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
 ) {
     match ast {
         // ---------- literals ----------
@@ -19,24 +20,24 @@ pub fn compile(
 
         // ---------- expressions ----------
         AST::ArrayNew(size) => {
-            compile(*size, code, labels, break_stack);
+            compile(*size, code, labels, break_stack, continue_stack);
             code.push(Instruction::ArrayNew);
         }
 
         AST::Index(base, index) => {
-            compile(*base, code, labels, break_stack);
-            compile(*index, code, labels, break_stack);
+            compile(*base, code, labels, break_stack, continue_stack);
+            compile(*index, code, labels, break_stack, continue_stack);
             code.push(Instruction::ArrayGet);
         }
 
         AST::FieldAccess(base, field) => {
-            compile(*base, code, labels, break_stack);
+            compile(*base, code, labels, break_stack, continue_stack);
             code.push(Instruction::FieldGet(field));
         }
 
         AST::Operation(l, op, r) => {
-            compile(*l, code, labels, break_stack);
-            compile(*r, code, labels, break_stack);
+            compile(*l, code, labels, break_stack, continue_stack);
+            compile(*r, code, labels, break_stack, continue_stack);
             emit_operator(op, code);
         }
 
@@ -45,17 +46,17 @@ pub fn compile(
             then_expr,
             else_expr,
         } => {
-            compile(*cond, code, labels, break_stack);
+            compile(*cond, code, labels, break_stack, continue_stack);
 
             let else_lbl = labels.fresh("ternary_else");
             let end_lbl = labels.fresh("ternary_end");
 
             code.push(Instruction::JumpIfZero(else_lbl.clone()));
-            compile(*then_expr, code, labels, break_stack);
+            compile(*then_expr, code, labels, break_stack, continue_stack);
             code.push(Instruction::Jump(end_lbl.clone()));
 
             code.push(Instruction::Label(else_lbl));
-            compile(*else_expr, code, labels, break_stack);
+            compile(*else_expr, code, labels, break_stack, continue_stack);
 
             code.push(Instruction::Label(end_lbl));
         }
@@ -63,19 +64,19 @@ pub fn compile(
         AST::Call { name, args } => {
             let argc = args.len();
             for a in args {
-                compile(a, code, labels, break_stack);
+                compile(a, code, labels, break_stack, continue_stack);
             }
             code.push(Instruction::Call(name, argc));
         }
 
         // ---------- assignments ----------
         AST::Assign(name, expr) => {
-            compile(*expr, code, labels, break_stack);
+            compile(*expr, code, labels, break_stack, continue_stack);
             code.push(Instruction::Store(name));
         }
 
         AST::ImmutableAssign(name, expr) => {
-            compile(*expr, code, labels, break_stack);
+            compile(*expr, code, labels, break_stack, continue_stack);
             code.push(Instruction::StoreImmutable(name));
         }
 
@@ -85,13 +86,13 @@ pub fn compile(
         }
 
         AST::AssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack);
-            compile(*value, code, labels, break_stack);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack);
+            compile(*value, code, labels, break_stack, continue_stack);
             code.push(Instruction::StoreThrough);
         }
 
         AST::ReactiveAssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack);
             let reactive = compile_reactive_expr(*value);
             code.push(Instruction::StoreThroughReactive(reactive));
         }
@@ -103,12 +104,12 @@ pub fn compile(
             kind,
         } => match kind {
             FieldAssignKind::Normal => {
-                compile(*base, code, labels, break_stack);
-                compile(*value, code, labels, break_stack);
+                compile(*base, code, labels, break_stack, continue_stack);
+                compile(*value, code, labels, break_stack, continue_stack);
                 code.push(Instruction::FieldSet(field));
             }
             FieldAssignKind::Reactive => {
-                compile(*base, code, labels, break_stack);
+                compile(*base, code, labels, break_stack, continue_stack);
                 let reactive = compile_reactive_expr(*value);
                 code.push(Instruction::FieldSetReactive(field, reactive));
             }
@@ -119,7 +120,7 @@ pub fn compile(
 
         // ---------- control ----------
         AST::IfElse(cond, then_block, else_block) => {
-            compile(*cond, code, labels, break_stack);
+            compile(*cond, code, labels, break_stack, continue_stack);
 
             let else_lbl = labels.fresh("else");
             let end_lbl = labels.fresh("ifend");
@@ -129,7 +130,7 @@ pub fn compile(
             // THEN block scope
             code.push(Instruction::PushImmutableContext);
             for s in then_block {
-                compile(s, code, labels, break_stack);
+                compile(s, code, labels, break_stack, continue_stack);
             }
             code.push(Instruction::PopImmutableContext);
 
@@ -140,7 +141,7 @@ pub fn compile(
             // ELSE block scope
             code.push(Instruction::PushImmutableContext);
             for s in else_block {
-                compile(s, code, labels, break_stack);
+                compile(s, code, labels, break_stack, continue_stack);
             }
             code.push(Instruction::PopImmutableContext);
 
@@ -151,13 +152,14 @@ pub fn compile(
             let start = labels.fresh("loop_start");
             let end = labels.fresh("loop_end");
             break_stack.push(end.clone());
+            continue_stack.push(start.clone());
 
             code.push(Instruction::PushImmutableContext);
             code.push(Instruction::Label(start.clone()));
             code.push(Instruction::ClearImmutableContext);
 
             for s in body {
-                compile(s, code, labels, break_stack);
+                compile(s, code, labels, break_stack, continue_stack);
             }
 
             code.push(Instruction::Jump(start));
@@ -165,6 +167,7 @@ pub fn compile(
             code.push(Instruction::PopImmutableContext);
 
             break_stack.pop();
+            continue_stack.pop();
         }
 
         AST::Break => {
@@ -175,9 +178,17 @@ pub fn compile(
             code.push(Instruction::Jump(target));
         }
 
+        AST::Continue => {
+            let target = continue_stack
+                .last()
+                .expect("continue used outside of loop")
+                .clone();
+            code.push(Instruction::Jump(target));
+        }
+
         AST::Return(expr) => {
             if let Some(e) = expr {
-                compile(*e, code, labels, break_stack);
+                compile(*e, code, labels, break_stack, continue_stack);
             } else {
                 code.push(Instruction::Push(0));
             }
@@ -212,7 +223,7 @@ pub fn compile(
                         has_main = true;
                     }
                 }
-                compile(s, code, labels, break_stack);
+                compile(s, code, labels, break_stack, continue_stack);
             }
 
             if !has_main {
@@ -224,22 +235,22 @@ pub fn compile(
         }
 
         AST::Print(e) => {
-            compile(*e, code, labels, break_stack);
+            compile(*e, code, labels, break_stack, continue_stack);
             code.push(Instruction::Print);
         }
 
         AST::Println(e) => {
-            compile(*e, code, labels, break_stack);
+            compile(*e, code, labels, break_stack, continue_stack);
             code.push(Instruction::Println);
         }
 
         AST::ImmutableAssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack);
-            compile(*value, code, labels, break_stack);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack);
+            compile(*value, code, labels, break_stack, continue_stack);
             code.push(Instruction::StoreThroughImmutable);
         }
         AST::Cast { target, expr } => {
-            compile(*expr, code, labels, break_stack);
+            compile(*expr, code, labels, break_stack, continue_stack);
             code.push(Instruction::Cast(target));
         }
     }
@@ -249,9 +260,16 @@ fn compile_function_body(body: Vec<AST>) -> Vec<Instruction> {
     let mut code = Vec::new();
     let mut labels = LabelGenerator::new();
     let mut break_stack = Vec::new();
+    let mut continue_stack = Vec::new();
 
     for stmt in body {
-        compile(stmt, &mut code, &mut labels, &mut break_stack);
+        compile(
+            stmt,
+            &mut code,
+            &mut labels,
+            &mut break_stack,
+            &mut continue_stack,
+        );
     }
 
     code.push(Instruction::Return);
@@ -285,12 +303,18 @@ fn compile_expr_to_code(ast: AST) -> Vec<Instruction> {
     let mut code = Vec::new();
     let mut labels = LabelGenerator::new();
     let mut break_stack = Vec::new();
+    let mut continue_stack = Vec::new();
 
-    compile(ast, &mut code, &mut labels, &mut break_stack);
+    compile(
+        ast,
+        &mut code,
+        &mut labels,
+        &mut break_stack,
+        &mut continue_stack,
+    );
     code.push(Instruction::Return);
     code
 }
-
 fn compile_reactive_expr(ast: AST) -> ReactiveExpr {
     let mut names = HashSet::new();
     collect_free_vars(&ast, &mut names);
@@ -354,6 +378,7 @@ fn collect_free_vars(ast: &AST, out: &mut HashSet<String>) {
         | AST::IfElse(_, _, _)
         | AST::Loop(_)
         | AST::Break
+        | AST::Continue
         | AST::Return(_)
         | AST::Print(_)
         | AST::Println(_)
@@ -369,14 +394,15 @@ pub fn compile_module(
     code: &mut Vec<Instruction>,
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
 ) {
     match ast {
         AST::Program(stmts) => {
             for s in stmts {
-                compile(s, code, labels, break_stack);
+                compile(s, code, labels, break_stack, continue_stack);
             }
         }
-        other => compile(other, code, labels, break_stack),
+        other => compile(other, code, labels, break_stack, continue_stack),
     }
 }
 fn compile_lvalue(
@@ -384,6 +410,7 @@ fn compile_lvalue(
     code: &mut Vec<Instruction>,
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
 ) {
     match ast {
         AST::Var(name) => {
@@ -391,13 +418,13 @@ fn compile_lvalue(
         }
 
         AST::Index(base, index) => {
-            compile_lvalue(*base, code, labels, break_stack);
-            compile(*index, code, labels, break_stack);
+            compile_lvalue(*base, code, labels, break_stack, continue_stack);
+            compile(*index, code, labels, break_stack, continue_stack);
             code.push(Instruction::ArrayLValue);
         }
 
         AST::FieldAccess(base, field) => {
-            compile_lvalue(*base, code, labels, break_stack);
+            compile_lvalue(*base, code, labels, break_stack, continue_stack);
             code.push(Instruction::FieldLValue(field));
         }
 

@@ -368,6 +368,10 @@ impl Parser {
                 self.next();
                 AST::Break
             }
+            Some(Token::Continue) => {
+                self.next();
+                AST::Continue
+            }
 
             Some(Token::If) => self.parse_if(),
 

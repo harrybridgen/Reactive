@@ -137,6 +137,7 @@ fn read_ident(first: char, chars: &mut Peekable<Chars>) -> Token {
         "break" => Token::Break,
         "func" => Token::Func,
         "return" => Token::Return,
+        "continue" => Token::Continue,
         "struct" => Token::Struct,
         "import" => Token::Import,
         _ => Token::Ident(s),

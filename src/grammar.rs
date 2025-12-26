@@ -58,6 +58,7 @@ pub enum Token {
     Import,
     Print,
     Println,
+    Continue,
 }
 
 //
@@ -105,6 +106,7 @@ pub enum AST {
     IfElse(Box<AST>, Vec<AST>, Vec<AST>),
     Loop(Vec<AST>),
     Break,
+    Continue,
     Return(Option<Box<AST>>),
 
     // IO

@@ -34,8 +34,14 @@ fn main() {
     let mut bytecode: Vec<Instruction> = Vec::new();
     let mut label_gen = LabelGenerator::new();
     let mut break_stack = Vec::new();
-
-    compile(ast, &mut bytecode, &mut label_gen, &mut break_stack);
+    let mut continue_stack = Vec::new();
+    compile(
+        ast,
+        &mut bytecode,
+        &mut label_gen,
+        &mut break_stack,
+        &mut continue_stack,
+    );
 
     let mut vm = VM::new(bytecode);
     vm.run();

@@ -1,5 +1,5 @@
 use super::VM;
-use crate::grammar::{AST, CastType, Instruction, ReactiveExpr, Type};
+use crate::grammar::{CastType, Instruction, ReactiveExpr, Type};
 
 impl VM {
     pub fn run(&mut self) {

@@ -1,13 +1,20 @@
-func f(a) {
-    return a;
-}
+func main(){
+    x = 0;
+    dx ::= x + 1;
 
-func main() {
-    y = 1;
-    x ::= f(y);
+    loop {
+        x = dx;
 
-    println x;   # 1 #
+        if x > 10 { break; }
 
-    y = 2;
-    println x;   # 2 #
+
+        if x % 2 == 0 {
+            continue;
+        }
+        else if x == 5 {
+            break;
+        }
+
+        println x;
+    }
 }
