@@ -1,3 +1,15 @@
 func main() {
-    print(1);
+
+    ex := struct Example;
+    ex.y = 10;
+    println ex.sum;
+
+}
+
+x := 10;
+
+struct Example {
+    y;
+    xx ::= x;
+    sum ::= xx + y;
 }

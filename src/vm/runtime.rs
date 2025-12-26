@@ -519,6 +519,13 @@ impl VM {
             fields: map,
             immutables: imm.clone(),
         });
+        let saved_local = self.local_env.take();
+        let saved_immutables = std::mem::take(&mut self.immutable_stack);
+        let saved_globals = std::mem::take(&mut self.global_env);
+
+        self.local_env = None;
+        self.immutable_stack = vec![HashMap::new()];
+        self.global_env = HashMap::new();
 
         // Apply initializers (mutable/immutable are eager, reactive stores relationship)
         for (name, init) in fields {
@@ -538,6 +545,9 @@ impl VM {
                 self.heap[id].fields.insert(name, cloned);
             }
         }
+        self.local_env = saved_local;
+        self.immutable_stack = saved_immutables;
+        self.global_env = saved_globals;
 
         Type::StructRef(id)
     }

@@ -1,14 +1,13 @@
 import compiler.grammar;
 import std.char;
 
-MAX_TOKENS := 64;
-
 struct Lexer {
-    tokens := [MAX_TOKENS]
+    tokens;
     len = 0;
 }
-func tokenize(src) {
+func tokenize() {
     r := struct Lexer;
+    r.tokens := [(int) len];
 
     i = 0;
     di ::= i + 1;
