@@ -2,6 +2,8 @@
 /reactive
 /rx-vscode/.vscode
 /rx-vscode/node_modules
-/rx-vscode/*.vsix
+/rx-vscode/out
 /rx-vscode/*.vsix
 /rx-vscode/vsc-extension-quickstart.md
+/rx-vscode/package-lock.json
+.vscode

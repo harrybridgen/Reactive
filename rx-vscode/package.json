@@ -3,16 +3,28 @@
   "displayName": "Reactive",
   "description": "Syntax highlighting for Reactive language",
   "version": "0.0.1",
-  "engines": {
-    "vscode": "^1.75.0"
-  },
-  "categories": ["Programming Languages"],
+"engines": {
+  "vscode": "^1.107.0"
+},
+  "categories": [
+    "Programming Languages"
+  ],
+
+  "main": "./out/extension.js",
+  "activationEvents": [
+    "onLanguage:reactive"
+  ],
+
   "contributes": {
     "languages": [
       {
         "id": "reactive",
-        "aliases": ["Reactive"],
-        "extensions": [".rx"],
+        "aliases": [
+          "Reactive"
+        ],
+        "extensions": [
+          ".rx"
+        ],
         "configuration": "./language-configuration.json"
       }
     ],
@@ -23,5 +35,10 @@
         "path": "./syntaxes/reactive.tmLanguage.json"
       }
     ]
+  },
+
+  "devDependencies": {
+    "@types/vscode": "^1.107.0",
+    "typescript": "^5.9.3"
   }
 }

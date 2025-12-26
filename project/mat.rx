@@ -13,7 +13,7 @@ func build_matrix() {
     di ::= x + 1;
     loop {
         if x >= 4 { break; }
-        M.data[x] = x + 1;   
+        M.data[x] = x + 1;
         x = di;
     }
     return M;
@@ -27,7 +27,7 @@ func add_matrix(a, b) {
 
     loop {
         if i >= 4 { break; }
-        ii := i;  
+        ii := i;
         M.data[ii] ::= a.data[ii] + b.data[ii];
         i = di;
     }
@@ -58,18 +58,18 @@ func print_matrix(M){
 
 # ================= DEMO ================= #
 func main(){
-A = build_matrix();
-B = build_matrix();
-C ::= add_matrix(A, B);
+    A = build_matrix();
+    B = build_matrix();
+    C ::= add_matrix(A, B);
 
-print_matrix(A);
-println "+";
-print_matrix(B);
-println "=";
-print_matrix(C);
+    print_matrix(A);
+    println "+";
+    print_matrix(B);
+    println "=";
+    print_matrix(C);
 
-println "Mutate A"
-A.data[0] = 10;
+    println "Mutate A"
+    A.data[0] = 10;
 
-print_matrix(C);
+    print_matrix(C);
 }
