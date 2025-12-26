@@ -5,9 +5,9 @@ struct Lexer {
     tokens;
     len = 0;
 }
-func tokenize() {
+func tokenize(src) {
     r := struct Lexer;
-    r.tokens := [(int) len];
+    r.tokens := [(int) src];
 
     i = 0;
     di ::= i + 1;

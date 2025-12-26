@@ -1,10 +1,11 @@
 import compiler.tokenizer;
 import compiler.parser;
 
-SRC := "1+2+3+4*5-(6+7*8-9)+10*(11-3)";
-LEN := (int) src;
+
 
 func main() {
+    src := "1+2+3+4*5-(6+7*8-9)+10*(11-3)";
+
     lexer := tokenize(src);
     parser := new_parser(lexer.tokens, lexer.len);
     ast := parse_expr(parser);
