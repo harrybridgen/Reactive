@@ -1,13 +1,12 @@
 import compiler.grammar;
 import std.char;
 
-MAX_TOKENS := 16;
+MAX_TOKENS := 64;
 
 struct Lexer {
     tokens := [MAX_TOKENS]
     len = 0;
 }
-
 func tokenize(src) {
     r := struct Lexer;
 
@@ -29,20 +28,37 @@ func tokenize(src) {
             loop {
                 if i >= src { break; }
                 if !is_digit(src[i]) { break; }
-                val = val * 10 + (digit_to_int(src[i]));
+                val = val * 10 + digit_to_int(src[i]);
                 i = di;
             }
-            t := tokenNum(TK_Number, r, val)
+
+            tokenNum(TK_Number, r, val);
         }
+
         else if c == '+' {
-            t := tokenOper(TK_Add, r);
+            tokenOper(TK_Add, r);
             i = di;
         }
         else if c == '-' {
-            t := tokenOper(TK_Sub, r);
+            tokenOper(TK_Sub, r);
             i = di;
         }
-
+        else if c == '*' {
+            tokenOper(TK_Mul, r);
+            i = di;
+        }
+        else if c == '/' {
+            tokenOper(TK_Div, r);
+            i = di;
+        }
+        else if c == '(' {
+            tokenOper(TK_LParen, r);
+            i = di;
+        }
+        else if c == ')' {
+            tokenOper(TK_RParen, r);
+            i = di;
+        }
         else {
             println "error: unknown character";
             break;
@@ -51,6 +67,7 @@ func tokenize(src) {
 
     return r;
 }
+
 
 func print_token(t) {
     if t.kind == TK_Number {
@@ -61,6 +78,18 @@ func print_token(t) {
     }
     else if t.kind == TK_Sub {
         println "-";
+    }
+    else if t.kind == TK_Mul {
+        println "*";
+    }
+    else if t.kind == TK_Div {
+        println "/";
+    }
+    else if t.kind == TK_LParen {
+        println "(";
+    }
+    else if t.kind == TK_RParen {
+        println ")";
     }
     else {
         println "Could not print symbol";

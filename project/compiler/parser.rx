@@ -29,21 +29,58 @@ func parse_number(p) {
     n := nodeNum(t.ival);
     return n;
 }
-
-func parse_expr(p) {
-    expr := parse_number(p);
+func parse_primary(p) {
+    if peek(p) == TK_Number {
+        return parse_number(p);
+    }
+    else if peek(p) == TK_LParen {
+        advance(p);
+        expr := parse_expr(p);
+        if peek(p) != TK_RParen {
+            println "error: expected LBracket";
+            return 0;
+        }
+        advance(p);
+        return expr;
+    }
+    else {
+        println "error: expected primary expression";
+        return 0;
+    }
+}
+func parse_mul(p) {
+    expr := parse_primary(p);
 
     loop {
-        if p.pos >= p.len { break; }
+        if peek(p) == TK_Mul {
+            advance(p);
+            rhs := parse_primary(p);
+            expr = nodeOper(AST_Mul, expr, rhs);
+        }
+        else if peek(p) == TK_Div {
+            advance(p);
+            rhs := parse_primary(p);
+            expr = nodeOper(AST_Div, expr, rhs);
+        }
+        else {
+            break;
+        }
+    }
 
+    return expr;
+}
+func parse_expr(p) {
+    expr := parse_mul(p);
+
+    loop {
         if peek(p) == TK_Add {
             advance(p);
-            rhs := parse_number(p);
+            rhs := parse_mul(p);
             expr = nodeOper(AST_Add, expr, rhs);
         }
         else if peek(p) == TK_Sub {
             advance(p);
-            rhs := parse_number(p);
+            rhs := parse_mul(p);
             expr = nodeOper(AST_Sub, expr, rhs);
         }
         else {
@@ -53,4 +90,5 @@ func parse_expr(p) {
 
     return expr;
 }
+
 

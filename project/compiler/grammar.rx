@@ -1,7 +1,13 @@
 # TOKENS #
 TK_Number := 1;
-TK_Add := 2;
-TK_Sub := 3;
+TK_Add    := 2;
+TK_Sub    := 3;
+TK_Mul    := 4;
+TK_Div    := 5;
+
+TK_LParen := 6;
+TK_RParen := 7;
+
 struct Token {
     kind = 0;
     ival = 0;
@@ -26,6 +32,11 @@ func tokenNum(kind, r, val){
 AST_Number := 1;
 AST_Add := 2;
 AST_Sub := 3;
+AST_Mul    := 4;
+AST_Div    := 5;
+
+AST_LParen := 6;
+AST_RParen := 7;
 struct AST {
     kind;
     left;
@@ -35,7 +46,10 @@ struct AST {
     kind == AST_Number ? literal :
     kind == AST_Add    ? left.value + right.value :
     kind == AST_Sub    ? left.value - right.value :
+    kind == AST_Mul    ? left.value * right.value :
+    kind == AST_Div    ? left.value / right.value :
     0;
+
 }
 func nodeOper(kind, left, right) {
     n := struct AST;
