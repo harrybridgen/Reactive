@@ -33,6 +33,7 @@ Whenever an array is used in a numeric context (arithmetic, comparison, loop con
 - `return x;` returns a value from a function
 - `loop { }` infinite loop
 - `break` exits the nearest loop
+- `continue` skip to the next iteration of loop
 
 Each loop iteration creates a fresh immutable `:=` scope, while mutable and reactive locations persist.
 
