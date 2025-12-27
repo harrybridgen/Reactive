@@ -11,10 +11,6 @@
   ],
 
   "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:reactive"
-  ],
-
   "contributes": {
     "languages": [
       {
