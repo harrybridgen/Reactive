@@ -29,6 +29,7 @@ Whenever an array is used in a numeric context (arithmetic, comparison, loop con
 
 - Program starts in the `main` function.
 - `if { } if else {} else { }` conditional execution
+- `match` pattern-based branching on constant values
 - `return x;` returns a value from a function
 - `loop { }` infinite loop
 - `break` exits the nearest loop

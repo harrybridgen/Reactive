@@ -281,7 +281,59 @@ impl Parser {
 
         AST::IfElse(Box::new(cond), then_block, else_block)
     }
+    fn parse_match(&mut self) -> AST {
+        self.next();
+        let expr = self.parse_ternary();
 
+        self.expect(Token::LBrace);
+
+        let mut arms = Vec::new();
+        let mut default = None;
+
+        while !matches!(self.peek(), Some(Token::RBrace)) {
+            let pattern = match self.peek() {
+                Some(Token::Ident(name)) if name == "_" => {
+                    self.next();
+                    crate::grammar::MatchPattern::Wildcard
+                }
+                _ => crate::grammar::MatchPattern::Expr(self.parse_ternary()),
+            };
+
+            self.expect(Token::Arrow);
+
+            let body = if matches!(self.peek(), Some(Token::LBrace)) {
+                self.parse_block()
+            } else {
+                let stmt = self.parse_statement();
+                if matches!(self.peek(), Some(Token::Semicolon)) {
+                    self.next();
+                }
+                vec![stmt]
+            };
+
+            match pattern {
+                crate::grammar::MatchPattern::Wildcard => {
+                    if default.is_some() {
+                        panic!("multiple wildcard arms in match");
+                    }
+                    default = Some(body);
+                }
+                pattern => arms.push(crate::grammar::MatchArm { pattern, body }),
+            }
+
+            if matches!(self.peek(), Some(Token::Semicolon)) {
+                self.next();
+            }
+        }
+
+        self.expect(Token::RBrace);
+
+        AST::Match {
+            expr: Box::new(expr),
+            arms,
+            default,
+        }
+    }
     fn parse_func_def(&mut self) -> AST {
         self.next();
         let name = self.expect_ident();
@@ -374,6 +426,7 @@ impl Parser {
             }
 
             Some(Token::If) => self.parse_if(),
+            Some(Token::Match) => self.parse_match(),
 
             Some(Token::Print) => {
                 self.next();

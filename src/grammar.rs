@@ -59,6 +59,8 @@ pub enum Token {
     Print,
     Println,
     Continue,
+    Match,
+    Arrow,
 }
 
 //
@@ -108,6 +110,11 @@ pub enum AST {
     Break,
     Continue,
     Return(Option<Box<AST>>),
+    Match {
+        expr: Box<AST>,
+        arms: Vec<MatchArm>,
+        default: Option<Vec<AST>>,
+    },
 
     // IO
     Print(Box<AST>),
@@ -145,7 +152,17 @@ pub enum AST {
     // modules
     Import(Vec<String>),
 }
+#[derive(Debug, Clone)]
+pub enum MatchPattern {
+    Wildcard,
+    Expr(AST),
+}
 
+#[derive(Debug, Clone)]
+pub struct MatchArm {
+    pub pattern: MatchPattern,
+    pub body: Vec<AST>,
+}
 //
 // ----------------------------- STRUCT FIELDS -----------------------------
 //

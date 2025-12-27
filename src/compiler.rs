@@ -1,6 +1,6 @@
 use crate::grammar::{
-    AST, CompiledStructFieldInit, FieldAssignKind, Instruction, Operator, ReactiveExpr,
-    StructFieldInit,
+    AST, CompiledStructFieldInit, FieldAssignKind, Instruction, MatchArm, MatchPattern, Operator,
+    ReactiveExpr, StructFieldInit,
 };
 use std::collections::HashSet;
 pub fn compile(
@@ -29,7 +29,19 @@ pub fn compile(
             compile(*index, code, labels, break_stack, continue_stack);
             code.push(Instruction::ArrayGet);
         }
-
+        AST::Match {
+            expr,
+            arms,
+            default,
+        } => compile_match(
+            *expr,
+            arms,
+            default,
+            code,
+            labels,
+            break_stack,
+            continue_stack,
+        ),
         AST::FieldAccess(base, field) => {
             compile(*base, code, labels, break_stack, continue_stack);
             code.push(Instruction::FieldGet(field));
@@ -255,7 +267,64 @@ pub fn compile(
         }
     }
 }
+fn compile_match(
+    expr: AST,
+    arms: Vec<MatchArm>,
+    default: Option<Vec<AST>>,
+    code: &mut Vec<Instruction>,
+    labels: &mut LabelGenerator,
+    break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
+) {
+    let match_temp = labels.fresh("__match_val");
+    code.push(Instruction::PushImmutableContext);
+    compile(expr, code, labels, break_stack, continue_stack);
+    code.push(Instruction::StoreImmutable(match_temp.clone()));
 
+    let end_label = labels.fresh("match_end");
+
+    for MatchArm { pattern, body } in arms {
+        let skip_label = labels.fresh("match_next");
+
+        code.push(Instruction::Load(match_temp.clone()));
+        compile_match_pattern(pattern, code, labels, break_stack, continue_stack);
+        code.push(Instruction::Equal);
+        code.push(Instruction::JumpIfZero(skip_label.clone()));
+
+        code.push(Instruction::PushImmutableContext);
+        for stmt in body {
+            compile(stmt, code, labels, break_stack, continue_stack);
+        }
+        code.push(Instruction::PopImmutableContext);
+        code.push(Instruction::Jump(end_label.clone()));
+
+        code.push(Instruction::Label(skip_label));
+    }
+
+    if let Some(body) = default {
+        code.push(Instruction::PushImmutableContext);
+        for stmt in body {
+            compile(stmt, code, labels, break_stack, continue_stack);
+        }
+        code.push(Instruction::PopImmutableContext);
+    }
+
+    code.push(Instruction::Label(end_label));
+    code.push(Instruction::PopImmutableContext);
+}
+
+fn compile_match_pattern(
+    pattern: MatchPattern,
+    code: &mut Vec<Instruction>,
+    labels: &mut LabelGenerator,
+    break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
+) {
+    match pattern {
+        MatchPattern::Expr(ast) => compile(ast, code, labels, break_stack, continue_stack),
+        MatchPattern::Wildcard => panic!("internal error: wildcard pattern should be default arm"),
+    }
+}
 fn compile_function_body(body: Vec<AST>) -> Vec<Instruction> {
     let mut code = Vec::new();
     let mut labels = LabelGenerator::new();
@@ -371,6 +440,24 @@ fn collect_free_vars(ast: &AST, out: &mut HashSet<String>) {
             collect_free_vars(value, out);
         }
         AST::Cast { expr, .. } => collect_free_vars(expr, out),
+        AST::Match {
+            expr,
+            arms,
+            default,
+        } => {
+            collect_free_vars(expr, out);
+            for arm in arms {
+                collect_match_pattern_vars(&arm.pattern, out);
+                for stmt in &arm.body {
+                    collect_free_vars(stmt, out);
+                }
+            }
+            if let Some(body) = default {
+                for stmt in body {
+                    collect_free_vars(stmt, out);
+                }
+            }
+        }
         AST::Number(_)
         | AST::Char(_)
         | AST::StringLiteral(_)
@@ -386,6 +473,12 @@ fn collect_free_vars(ast: &AST, out: &mut HashSet<String>) {
         | AST::StructDef { .. }
         | AST::StructNew(_)
         | AST::Import(_) => {}
+    }
+}
+fn collect_match_pattern_vars(pattern: &MatchPattern, out: &mut HashSet<String>) {
+    match pattern {
+        MatchPattern::Expr(ast) => collect_free_vars(ast, out),
+        MatchPattern::Wildcard => {}
     }
 }
 

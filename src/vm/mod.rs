@@ -45,10 +45,6 @@ pub struct VM {
 
     // call stack
     call_stack: Vec<CallFrame>,
-
-    // Debugging
-    debug: bool,
-    debug_reactive_ctx: Vec<String>,
 }
 
 impl VM {
@@ -67,8 +63,6 @@ impl VM {
             array_heap: Vec::new(),
             array_immutables: Vec::new(),
             imported_modules: HashSet::new(),
-            debug: true,
-            debug_reactive_ctx: Vec::new(),
             call_stack: Vec::new(),
         }
     }

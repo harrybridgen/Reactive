@@ -1,20 +1,14 @@
-func main(){
-    x = 0;
-    dx ::= x + 1;
-
-    loop {
-        x = dx;
-
-        if x > 10 { break; }
-
-
-        if x % 2 == 0 {
-            continue;
-        }
-        else if x == 5 {
-            break;
-        }
-
-        println x;
+func classify(x){
+    match x {
+        0 => println "zero";
+        1 => println "one";
+        2 => println "two";
+        _ => println "other";
     }
+}
+
+func main(){
+    classify(0);
+    classify(2);
+    classify(10);
 }

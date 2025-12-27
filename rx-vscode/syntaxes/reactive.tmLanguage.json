@@ -32,7 +32,7 @@
       "patterns": [
         {
           "name": "keyword.control.flow.reactive.bold",
-          "match": "\\b(if|else|loop|break|return)\\b"
+          "match": "\\b(if|else|loop|break|return|continue|match)\\b"
         },
         {
           "name": "keyword.declaration.reactive",
