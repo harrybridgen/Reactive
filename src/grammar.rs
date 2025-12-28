@@ -59,6 +59,8 @@ pub enum Token {
     Print,
     Println,
     Continue,
+    Assert,
+    Error,
 }
 
 //
@@ -111,6 +113,8 @@ pub enum AST {
     // IO
     Print(Box<AST>),
     Println(Box<AST>),
+    Assert(Box<AST>),
+    Error(String),
 
     // functions
     FuncDef {
@@ -305,6 +309,8 @@ pub enum Instruction {
     // io
     Print,
     Println,
+    Assert,
+    Error(String),
 
     // modules
     Import(Vec<String>),

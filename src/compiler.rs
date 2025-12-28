@@ -244,6 +244,15 @@ pub fn compile(
             code.push(Instruction::Println);
         }
 
+        AST::Assert(expr) => {
+            compile(*expr, code, labels, break_stack, continue_stack);
+            code.push(Instruction::Assert);
+        }
+
+        AST::Error(message) => {
+            code.push(Instruction::Error(message));
+        }
+
         AST::ImmutableAssignTarget(target, value) => {
             compile_lvalue(*target, code, labels, break_stack, continue_stack);
             compile(*value, code, labels, break_stack, continue_stack);
@@ -371,6 +380,7 @@ fn collect_free_vars(ast: &AST, out: &mut HashSet<String>) {
             collect_free_vars(value, out);
         }
         AST::Cast { expr, .. } => collect_free_vars(expr, out),
+        AST::Assert(expr) => collect_free_vars(expr, out),
 
         AST::Number(_)
         | AST::Char(_)
@@ -383,6 +393,7 @@ fn collect_free_vars(ast: &AST, out: &mut HashSet<String>) {
         | AST::Return(_)
         | AST::Print(_)
         | AST::Println(_)
+        | AST::Error(_)
         | AST::FuncDef { .. }
         | AST::StructDef { .. }
         | AST::StructNew(_)

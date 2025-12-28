@@ -385,6 +385,19 @@ impl Parser {
                 AST::Println(Box::new(self.parse_ternary()))
             }
 
+            Some(Token::Assert) => {
+                self.next();
+                AST::Assert(Box::new(self.parse_ternary()))
+            }
+
+            Some(Token::Error) => {
+                self.next();
+                match self.next() {
+                    Some(Token::StringLiteral(s)) => AST::Error(s.clone()),
+                    other => panic!("error expects a string literal, got {:?}", other),
+                }
+            }
+
             Some(Token::Loop) => {
                 self.next();
                 AST::Loop(self.parse_block())

@@ -15,6 +15,7 @@ struct CallFrame {
     immutable_stack: Vec<HashMap<String, Type>>,
 
     stack_base: usize,
+    function_name: String,
 }
 pub struct VM {
     // Operand stack
@@ -75,5 +76,14 @@ impl VM {
             }
         }
         labels
+    }
+
+    pub(crate) fn runtime_error(&self, message: &str) -> ! {
+        println!("Runtime error: {message}");
+        println!("Stack trace (most recent call last):");
+        for frame in self.call_stack.iter().rev() {
+            println!("  at {}()", frame.function_name);
+        }
+        std::process::exit(1);
     }
 }

@@ -140,6 +140,8 @@ fn read_ident(first: char, chars: &mut Peekable<Chars>) -> Token {
         "continue" => Token::Continue,
         "struct" => Token::Struct,
         "import" => Token::Import,
+        "assert" => Token::Assert,
+        "error" => Token::Error,
         _ => Token::Ident(s),
     }
 }

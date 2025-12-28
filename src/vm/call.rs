@@ -13,18 +13,18 @@ impl VM {
         let args = self.pop_args(argc);
 
         let f = self.global_env.get(&name).cloned().unwrap_or_else(|| {
-            panic!(
+            self.runtime_error(&format!(
                 "call error: `{}` is not defined (attempted to call with {} argument(s))",
                 name, argc
-            )
+            ))
         });
 
         let ret = match f {
-            Type::Function { .. } => self.call_function(f, args),
-            other => panic!(
+            Type::Function { .. } => self.call_function(name, f, args),
+            other => self.runtime_error(&format!(
                 "call error: `{}` is not a function (found {:?})",
                 name, other
-            ),
+            )),
         };
 
         self.stack.push(ret);
@@ -33,7 +33,7 @@ impl VM {
     // =========================================================
     // Function execution
     // =========================================================
-    pub(crate) fn call_function(&mut self, f: Type, args: Vec<Type>) -> Type {
+    pub(crate) fn call_function(&mut self, name: String, f: Type, args: Vec<Type>) -> Type {
         match f {
             Type::Function { params, code } => {
                 // Build immutable stack: global + params
@@ -52,7 +52,7 @@ impl VM {
                 let labels = Self::build_labels(&code);
 
                 // Push call frame
-                self.push_frame(code, labels, local_env, imm_stack);
+                self.push_frame(name, code, labels, local_env, imm_stack);
 
                 // Execute
                 self.run();
@@ -60,12 +60,13 @@ impl VM {
                 // Pop frame and return value
                 self.pop_frame()
             }
-            _ => panic!("attempted to call non-function"),
+            _ => self.runtime_error("attempted to call non-function"),
         }
     }
 
     fn push_frame(
         &mut self,
+        function_name: String,
         code: Vec<Instruction>,
         labels: HashMap<String, usize>,
         local_env: Option<HashMap<String, Type>>,
@@ -80,6 +81,7 @@ impl VM {
             immutable_stack: std::mem::replace(&mut self.immutable_stack, immutable_stack),
 
             stack_base: self.stack.len(),
+            function_name,
         };
 
         self.pointer = 0;
@@ -87,7 +89,10 @@ impl VM {
     }
 
     fn pop_frame(&mut self) -> Type {
-        let frame = self.call_stack.pop().expect("call stack underflow");
+        let frame = match self.call_stack.pop() {
+            Some(frame) => frame,
+            None => self.runtime_error("call stack underflow"),
+        };
 
         let ret = if self.stack.len() > frame.stack_base {
             self.stack.pop().unwrap()
@@ -111,7 +116,7 @@ impl VM {
         let file_path = format!("project/{}.rx", path.join("/"));
 
         let source = std::fs::read_to_string(&file_path)
-            .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));
+            .unwrap_or_else(|_| self.runtime_error(&format!("could not import module `{}`", file_path)));
 
         let tokens = crate::tokenizer::tokenize(&source);
         let ast = crate::parser::parse(tokens);

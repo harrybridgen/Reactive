@@ -10,7 +10,10 @@ impl VM {
     // =========================================================
 
     pub(crate) fn pop(&mut self) -> Type {
-        self.stack.pop().expect("stack underflow")
+        match self.stack.pop() {
+            Some(value) => value,
+            None => self.runtime_error("stack underflow"),
+        }
     }
 
     pub(crate) fn pop_int(&mut self) -> i32 {
@@ -36,14 +39,14 @@ impl VM {
             Type::Integer(n) => n,
             Type::Char(c) => c as i32,
             Type::ArrayRef(id) => self.array_heap[id].len() as i32,
-            other => panic!("type error: cannot coerce {:?} to int", other),
+            other => self.runtime_error(&format!("type error: cannot coerce {:?} to int", other)),
         }
     }
 
     pub(crate) fn as_usize_nonneg(&mut self, v: Type, what: &str) -> usize {
         let i = self.as_int(v);
         if i < 0 {
-            panic!("{what} out of bounds: {i} is negative");
+            self.runtime_error(&format!("{what} out of bounds: {i} is negative"));
         }
         i as usize
     }
@@ -84,7 +87,7 @@ impl VM {
                     print!("{}", self.array_heap[id].len());
                 }
             }
-            other => panic!("cannot print value {:?}", other),
+            other => self.runtime_error(&format!("cannot print value {:?}", other)),
         }
 
         if newline {
@@ -117,13 +120,18 @@ impl VM {
             Type::ArrayRef(id) => {
                 let len = self.array_heap[id].len();
                 if idx >= len {
-                    panic!("array index out of bounds: index {idx}, length {len}");
+                    self.runtime_error(&format!(
+                        "array index out of bounds: index {idx}, length {len}"
+                    ));
                 }
                 let elem = self.array_heap[id][idx].clone();
                 let f = self.force(elem);
                 self.stack.push(f);
             }
-            other => panic!("type error: attempted to index non-array value {:?}", other),
+            other => self.runtime_error(&format!(
+                "type error: attempted to index non-array value {:?}",
+                other
+            )),
         }
     }
 
@@ -138,7 +146,7 @@ impl VM {
         let target = self
             .lookup_var(&name)
             .cloned()
-            .unwrap_or_else(|| panic!("undefined variable: {name}"));
+            .unwrap_or_else(|| self.runtime_error(&format!("undefined variable: {name}")));
 
         let arr = self.force(target);
 
@@ -146,11 +154,13 @@ impl VM {
             Type::ArrayRef(id) => {
                 let len = self.array_heap[id].len();
                 if idx >= len {
-                    panic!("array assignment out of bounds: index {idx}, length {len}");
+                    self.runtime_error(&format!(
+                        "array assignment out of bounds: index {idx}, length {len}"
+                    ));
                 }
                 self.array_heap[id][idx] = val;
             }
-            other => panic!("type error: StoreIndex on non-array {:?}", other),
+            other => self.runtime_error(&format!("type error: StoreIndex on non-array {:?}", other)),
         }
     }
 
@@ -166,7 +176,7 @@ impl VM {
         let target = self
             .lookup_var(&name)
             .cloned()
-            .unwrap_or_else(|| panic!("undefined variable: {name}"));
+            .unwrap_or_else(|| self.runtime_error(&format!("undefined variable: {name}")));
 
         let arr = self.force(target);
 
@@ -174,11 +184,16 @@ impl VM {
             Type::ArrayRef(id) => {
                 let len = self.array_heap[id].len();
                 if idx >= len {
-                    panic!("reactive array assignment out of bounds: index {idx}, length {len}");
+                    self.runtime_error(&format!(
+                        "reactive array assignment out of bounds: index {idx}, length {len}"
+                    ));
                 }
                 self.array_heap[id][idx] = value;
             }
-            other => panic!("type error: StoreIndexReactive on non-array {:?}", other),
+            other => self.runtime_error(&format!(
+                "type error: StoreIndexReactive on non-array {:?}",
+                other
+            )),
         }
     }
 
@@ -191,7 +206,9 @@ impl VM {
             LValue::ArrayElem { array_id, index } => {
                 let len = self.array_heap[array_id].len();
                 if index >= len {
-                    panic!("array lvalue read out of bounds: index {index}, length {len}");
+                    self.runtime_error(&format!(
+                        "array lvalue read out of bounds: index {index}, length {len}"
+                    ));
                 }
                 self.array_heap[array_id][index].clone()
             }
@@ -199,7 +216,7 @@ impl VM {
                 .fields
                 .get(&field)
                 .cloned()
-                .unwrap_or_else(|| panic!("missing struct field `{field}`")),
+                .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{field}`"))),
         }
     }
 
@@ -240,7 +257,8 @@ impl VM {
                             index: idx,
                         }));
                     }
-                    other => panic!("indexing non-array (found {:?})", other),
+                    other => self
+                        .runtime_error(&format!("indexing non-array (found {:?})", other)),
                 }
             }
 
@@ -249,7 +267,7 @@ impl VM {
                     .fields
                     .get(&field)
                     .cloned()
-                    .unwrap_or_else(|| panic!("missing struct field `{field}`"));
+                    .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{field}`")));
 
                 let arr_val = self.force(field_val);
                 match arr_val {
@@ -259,11 +277,14 @@ impl VM {
                             index: idx,
                         }));
                     }
-                    other => panic!("indexing non-array struct field (found {:?})", other),
+                    other => self.runtime_error(&format!(
+                        "indexing non-array struct field (found {:?})",
+                        other
+                    )),
                 }
             }
 
-            other => panic!("invalid ArrayLValue base {:?}", other),
+            other => self.runtime_error(&format!("invalid ArrayLValue base {:?}", other)),
         }
     }
 
@@ -286,11 +307,14 @@ impl VM {
                             field,
                         }));
                     }
-                    other => panic!("FieldLValue on non-struct array element {:?}", other),
+                    other => self.runtime_error(&format!(
+                        "FieldLValue on non-struct array element {:?}",
+                        other
+                    )),
                 }
             }
 
-            other => panic!("invalid FieldLValue base {:?}", other),
+            other => self.runtime_error(&format!("invalid FieldLValue base {:?}", other)),
         }
     }
 
@@ -303,12 +327,12 @@ impl VM {
         match target {
             Type::LValue(LValue::ArrayElem { array_id, index }) => {
                 if self.array_immutables[array_id].contains(&index) {
-                    panic!("cannot reassign immutable array element");
+                    self.runtime_error("cannot reassign immutable array element");
                 }
 
                 let len = self.array_heap[array_id].len();
                 if index >= len {
-                    panic!("array assignment out of bounds");
+                    self.runtime_error("array assignment out of bounds");
                 }
 
                 self.array_heap[array_id][index] = stored;
@@ -318,20 +342,20 @@ impl VM {
                 let inst = &mut self.heap[struct_id];
 
                 if !inst.fields.contains_key(&field) {
-                    panic!("unknown struct field `{}`", field);
+                    self.runtime_error(&format!("unknown struct field `{}`", field));
                 }
 
                 if inst.immutables.contains(&field) {
-                    panic!("cannot assign to immutable field `{}`", field);
+                    self.runtime_error(&format!("cannot assign to immutable field `{}`", field));
                 }
 
                 inst.fields.insert(field, stored);
             }
 
-            other => panic!(
+            other => self.runtime_error(&format!(
                 "internal error: StoreThrough target is not an lvalue (got {:?})",
                 other
-            ),
+            )),
         }
     }
 
@@ -344,12 +368,12 @@ impl VM {
         match target {
             Type::LValue(LValue::ArrayElem { array_id, index }) => {
                 if self.array_immutables[array_id].contains(&index) {
-                    panic!("cannot reassign immutable array element");
+                    self.runtime_error("cannot reassign immutable array element");
                 }
 
                 let len = self.array_heap[array_id].len();
                 if index >= len {
-                    panic!("reactive array assignment out of bounds");
+                    self.runtime_error("reactive array assignment out of bounds");
                 }
 
                 self.array_heap[array_id][index] = value;
@@ -359,21 +383,21 @@ impl VM {
                 let inst = &mut self.heap[struct_id];
 
                 if !inst.fields.contains_key(&field) {
-                    panic!("unknown struct field `{}`", field);
+                    self.runtime_error(&format!("unknown struct field `{}`", field));
                 }
 
                 if inst.immutables.contains(&field) {
-                    panic!("cannot reassign immutable field `{}`", field);
+                    self.runtime_error(&format!("cannot reassign immutable field `{}`", field));
                 }
 
                 inst.immutables.insert(field.clone());
                 inst.fields.insert(field, value);
             }
 
-            other => panic!(
+            other => self.runtime_error(&format!(
                 "StoreThroughReactive target is not an lvalue (got {:?})",
                 other
-            ),
+            )),
         }
     }
 
@@ -388,8 +412,11 @@ impl VM {
 
                 match inst.fields.get(&field) {
                     Some(Type::Uninitialized) => {}
-                    Some(_) => panic!("cannot reassign immutable field `{}`", field),
-                    None => panic!("unknown struct field `{}`", field),
+                    Some(_) => self.runtime_error(&format!(
+                        "cannot reassign immutable field `{}`",
+                        field
+                    )),
+                    None => self.runtime_error(&format!("unknown struct field `{}`", field)),
                 }
 
                 inst.fields.insert(field.clone(), stored);
@@ -400,14 +427,14 @@ impl VM {
                 let imm = &mut self.array_immutables[array_id];
 
                 if imm.contains(&index) {
-                    panic!("cannot reassign immutable array element");
+                    self.runtime_error("cannot reassign immutable array element");
                 }
 
                 self.array_heap[array_id][index] = stored;
                 imm.insert(index);
             }
 
-            _ => panic!("immutable assignment only allowed on lvalues"),
+            _ => self.runtime_error("immutable assignment only allowed on lvalues"),
         }
     }
 
@@ -422,20 +449,20 @@ impl VM {
                 let v = self
                     .heap
                     .get(id)
-                    .unwrap_or_else(|| panic!("invalid StructRef id={id}"))
+                    .unwrap_or_else(|| self.runtime_error(&format!("invalid StructRef id={id}")))
                     .fields
                     .get(&field)
                     .cloned()
-                    .unwrap_or_else(|| panic!("missing struct field `{field}`"));
+                    .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{field}`")));
 
                 if matches!(v, Type::Uninitialized) {
-                    panic!("use of uninitialized struct field `{}`", field);
+                    self.runtime_error(&format!("use of uninitialized struct field `{}`", field));
                 }
 
                 let out = self.force_struct_field(id, v);
                 self.stack.push(out);
             }
-            other => panic!("type error: FieldGet on non-struct {:?}", other),
+            other => self.runtime_error(&format!("type error: FieldGet on non-struct {:?}", other)),
         }
     }
 
@@ -445,18 +472,18 @@ impl VM {
 
         let struct_id = match self.force(obj) {
             Type::StructRef(id) => id,
-            other => panic!("type error: FieldSet on non-struct {:?}", other),
+            other => self.runtime_error(&format!("type error: FieldSet on non-struct {:?}", other)),
         };
 
         {
             let inst = &self.heap[struct_id];
 
             if !inst.fields.contains_key(&field) {
-                panic!("unknown struct field `{}`", field);
+                self.runtime_error(&format!("unknown struct field `{}`", field));
             }
 
             if inst.immutables.contains(&field) {
-                panic!("cannot assign to immutable field `{}`", field);
+                self.runtime_error(&format!("cannot assign to immutable field `{}`", field));
             }
         }
 
@@ -470,14 +497,20 @@ impl VM {
         match self.force(obj) {
             Type::StructRef(id) => {
                 if self.heap[id].immutables.contains(&field) {
-                    panic!("cannot reactively assign to immutable field `{}`", field);
+                    self.runtime_error(&format!(
+                        "cannot reactively assign to immutable field `{}`",
+                        field
+                    ));
                 }
                 let captured = self.capture_immutables(&expr.captures);
                 self.heap[id]
                     .fields
                     .insert(field, Type::LazyValue(expr, captured));
             }
-            other => panic!("type error: FieldSetReactive on non-struct {:?}", other),
+            other => self.runtime_error(&format!(
+                "type error: FieldSetReactive on non-struct {:?}",
+                other
+            )),
         }
     }
 
@@ -543,10 +576,10 @@ impl VM {
         self.immutable_stack.push(HashMap::new());
 
         {
-            let scope = self
-                .immutable_stack
-                .last_mut()
-                .expect("internal error: no immutable scope for struct eval");
+            let scope = match self.immutable_stack.last_mut() {
+                Some(scope) => scope,
+                None => self.runtime_error("internal error: no immutable scope for struct eval"),
+            };
             let keys: Vec<String> = self.heap[struct_id].fields.keys().cloned().collect();
             for key in keys {
                 scope.insert(
@@ -572,10 +605,10 @@ impl VM {
         self.immutable_stack.push(HashMap::new());
 
         {
-            let scope = self
-                .immutable_stack
-                .last_mut()
-                .expect("internal error: no immutable scope for struct eval");
+            let scope = match self.immutable_stack.last_mut() {
+                Some(scope) => scope,
+                None => self.runtime_error("internal error: no immutable scope for struct eval"),
+            };
             let keys: Vec<String> = self.heap[struct_id].fields.keys().cloned().collect();
             for key in keys {
                 scope.insert(
@@ -612,7 +645,7 @@ impl VM {
             Type::LazyValue(expr, captured) => Type::LazyValue(expr, captured),
             Type::Integer(n) => Type::Integer(n),
             Type::Function { params, code } => Type::Function { params, code },
-            Type::LValue(_) => panic!("cannot clone lvalue"),
+            Type::LValue(_) => self.runtime_error("cannot clone lvalue"),
             Type::Char(c) => Type::Char(c),
             Type::Uninitialized => Type::Uninitialized,
         }

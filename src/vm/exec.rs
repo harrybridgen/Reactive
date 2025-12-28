@@ -10,10 +10,9 @@ impl VM {
                 Instruction::Push(n) => self.stack.push(Type::Integer(n)),
                 Instruction::PushChar(c) => self.stack.push(Type::Char(c)),
                 Instruction::Load(name) => {
-                    let v = self
-                        .lookup_var(&name)
-                        .cloned()
-                        .unwrap_or_else(|| panic!("undefined variable: {name}"));
+                    let v = self.lookup_var(&name).cloned().unwrap_or_else(|| {
+                        self.runtime_error(&format!("undefined variable: {name}"))
+                    });
 
                     let value = self.force(v);
                     self.stack.push(value);
@@ -42,6 +41,15 @@ impl VM {
                     let v = self.pop();
                     self.print_value(v, true);
                 }
+                Instruction::Assert => {
+                    let v = self.pop_int();
+                    if v == 0 {
+                        self.runtime_error("assertion failed");
+                    }
+                }
+                Instruction::Error(message) => {
+                    self.runtime_error(&message);
+                }
                 Instruction::ArrayNew => self.exec_array_new(),
                 Instruction::ArrayGet => self.exec_array_get(),
                 Instruction::StoreIndex(name) => self.exec_store_index(name),
@@ -57,11 +65,9 @@ impl VM {
                     self.struct_defs.insert(name, fields);
                 }
                 Instruction::NewStruct(name) => {
-                    let def = self
-                        .struct_defs
-                        .get(&name)
-                        .cloned()
-                        .unwrap_or_else(|| panic!("unknown struct type `{name}`"));
+                    let def = self.struct_defs.get(&name).cloned().unwrap_or_else(|| {
+                        self.runtime_error(&format!("unknown struct type `{name}`"))
+                    });
                     let inst = self.instantiate_struct(def);
                     self.stack.push(inst);
                 }
@@ -75,31 +81,31 @@ impl VM {
                 }
                 Instruction::PopImmutableContext => {
                     if self.immutable_stack.len() <= 1 {
-                        panic!("internal error: cannot pop root immutable context");
+                        self.runtime_error("internal error: cannot pop root immutable context");
                     }
                     self.immutable_stack.pop();
                 }
                 Instruction::ClearImmutableContext => {
-                    self.immutable_stack
-                        .last_mut()
-                        .expect("internal error: no immutable scope")
-                        .clear();
+                    if let Some(scope) = self.immutable_stack.last_mut() {
+                        scope.clear();
+                    } else {
+                        self.runtime_error("internal error: no immutable scope");
+                    }
                 }
                 Instruction::Label(_) => {}
                 Instruction::Jump(label) => {
                     self.pointer = *self
                         .labels
                         .get(&label)
-                        .unwrap_or_else(|| panic!("unknown label `{label}`"));
+                        .unwrap_or_else(|| self.runtime_error(&format!("unknown label `{label}`")));
                     continue;
                 }
                 Instruction::JumpIfZero(label) => {
                     let n = self.pop_int();
                     if n == 0 {
-                        self.pointer = *self
-                            .labels
-                            .get(&label)
-                            .unwrap_or_else(|| panic!("unknown label `{label}`"));
+                        self.pointer = *self.labels.get(&label).unwrap_or_else(|| {
+                            self.runtime_error(&format!("unknown label `{label}`"))
+                        });
                         continue;
                     }
                 }
@@ -126,7 +132,7 @@ impl VM {
                         CastType::Char => {
                             let n = self.as_int(v);
                             if n < 0 || n > 0x10FFFF {
-                                panic!("invalid char code {}", n);
+                                self.runtime_error(&format!("invalid char code {}", n));
                             }
                             self.stack.push(Type::Char(n as u32));
                         }
@@ -156,12 +162,12 @@ impl VM {
 
     fn exec_store_immutable(&mut self, name: String) {
         let v = self.pop();
-        let scope = self
-            .immutable_stack
-            .last_mut()
-            .expect("internal error: no immutable scope");
+        let scope = match self.immutable_stack.last_mut() {
+            Some(scope) => scope,
+            None => self.runtime_error("internal error: no immutable scope"),
+        };
         if scope.contains_key(&name) {
-            panic!("cannot reassign immutable variable `{name}`");
+            self.runtime_error(&format!("cannot reassign immutable variable `{name}`"));
         }
         scope.insert(name, v);
     }
@@ -210,6 +216,9 @@ impl VM {
 
     fn exec_div(&mut self) {
         let a = self.pop_int();
+        if a == 0 {
+            self.runtime_error("division by zero");
+        }
         let b = self.pop_int();
         self.stack.push(Type::Integer(b / a));
     }

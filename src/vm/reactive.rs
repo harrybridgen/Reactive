@@ -26,7 +26,7 @@ impl VM {
                         .fields
                         .get(&field)
                         .cloned()
-                        .unwrap_or_else(|| panic!("missing struct field `{}`", field));
+                        .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{}`", field)));
 
                     self.force_struct_field(struct_id, val)
                 }
