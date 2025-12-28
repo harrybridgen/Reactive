@@ -1,11 +1,11 @@
 import std.file;
-
+import std.maths;
 func main() {
     # ensure clean state #
     if file_exists("test_io.txt") {
         file_remove("test_io.txt");
     }
-
+    y = abs(-1);
     # write file #
     n := file_write("test_io.txt", "hello world");
     println n;          # expect 11 #
