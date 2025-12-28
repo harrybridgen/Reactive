@@ -36,18 +36,19 @@ func parse_primary(p) {
     else if peek(p) == TK_LParen {
         advance(p);
         expr := parse_expr(p);
+
         if peek(p) != TK_RParen {
-            println "error: expected LBracket";
-            return 0;
+            error "parser: expected ')'";
         }
+
         advance(p);
         return expr;
     }
     else {
-        println "error: expected primary expression";
-        return 0;
+        error "parser: expected primary expression";
     }
 }
+
 func parse_mul(p) {
     expr := parse_primary(p);
 
@@ -89,6 +90,16 @@ func parse_expr(p) {
     }
 
     return expr;
+}
+func parse(tokens, len) {
+    p := new_parser(tokens, len);
+    ast := parse_expr(p);
+
+    if p.pos != p.len {
+        error "parser: unexpected trailing tokens";
+    }
+
+    return ast;
 }
 
 

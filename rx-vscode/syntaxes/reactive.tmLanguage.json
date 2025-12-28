@@ -40,7 +40,7 @@
         },
         {
           "name": "keyword.other.io.reactive",
-          "match": "\\b(print|println)\\b"
+          "match": "\\b(print|println|assert|error)\\b"
         }
       ]
     },

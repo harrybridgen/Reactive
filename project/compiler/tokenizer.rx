@@ -60,8 +60,7 @@ func tokenize(src) {
             tokenNum(TK_Number, r, val);
         }
         else {
-            print "error: unknown character";
-            break;
+            error "lexer: unknown character";
         }
     }
 
