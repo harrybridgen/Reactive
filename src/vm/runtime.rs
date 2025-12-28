@@ -645,6 +645,7 @@ impl VM {
             Type::LazyValue(expr, captured) => Type::LazyValue(expr, captured),
             Type::Integer(n) => Type::Integer(n),
             Type::Function { params, code } => Type::Function { params, code },
+            Type::NativeFunction(name) => Type::NativeFunction(name),
             Type::LValue(_) => self.runtime_error("cannot clone lvalue"),
             Type::Char(c) => Type::Char(c),
             Type::Uninitialized => Type::Uninitialized,

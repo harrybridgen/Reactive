@@ -1,0 +1,80 @@
+#
+=========================================
+Filesystem (native)
+=========================================
+
+Declarations for VM-backed filesystem
+functions. Importing this module enables
+the native implementations.
+=========================================
+#
+
+#
+-----------------------------------------
+file_read
+-----------------------------------------
+Read a file into a string.
+
+Args:
+path : string
+
+Returns:
+string contents
+-----------------------------------------
+#
+func file_read(path) {
+    return internal_file_read(path);
+}
+
+#
+-----------------------------------------
+file_write
+-----------------------------------------
+Write a string to a file.
+
+Args:
+path : string
+contents : string
+
+Returns:
+number of chars written
+-----------------------------------------
+#
+func file_write(path, contents) {
+    return internal_file_write(path, contents);
+}
+
+#
+-----------------------------------------
+file_exists
+-----------------------------------------
+Check whether a file exists.
+
+Args:
+path : string
+
+Returns:
+1 if exists
+0 otherwise
+-----------------------------------------
+#
+func file_exists(path) {
+    return internal_file_exists(path);
+}
+
+#
+-----------------------------------------
+file_remove
+-----------------------------------------
+Remove a file.
+
+Args:
+path : string
+
+Returns:
+1 on success
+-----------------------------------------
+#
+func file_remove(path) {
+    return internal_file_remove(path);
+}

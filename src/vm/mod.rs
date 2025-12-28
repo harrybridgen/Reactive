@@ -1,11 +1,14 @@
 pub mod call;
 pub mod env;
 pub mod exec;
+pub mod native;
 pub mod reactive;
 pub mod runtime;
 
 use crate::grammar::{CompiledStructFieldInit, Instruction, StructInstance, Type};
 use std::collections::{HashMap, HashSet};
+
+type NativeFunction = fn(&mut VM, Vec<Type>) -> Type;
 struct CallFrame {
     code: Vec<Instruction>,
     labels: HashMap<String, usize>,
@@ -46,12 +49,15 @@ pub struct VM {
 
     // call stack
     call_stack: Vec<CallFrame>,
+
+    // native function registry
+    native_functions: HashMap<String, NativeFunction>,
 }
 
 impl VM {
     pub fn new(code: Vec<Instruction>) -> Self {
         let labels = Self::build_labels(&code);
-        Self {
+        let vm = Self {
             stack: Vec::new(),
             global_env: HashMap::new(),
             local_env: None,
@@ -65,7 +71,9 @@ impl VM {
             array_immutables: Vec::new(),
             imported_modules: HashSet::new(),
             call_stack: Vec::new(),
-        }
+            native_functions: HashMap::new(),
+        };
+        vm
     }
 
     fn build_labels(code: &[Instruction]) -> HashMap<String, usize> {

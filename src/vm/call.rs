@@ -21,6 +21,7 @@ impl VM {
 
         let ret = match f {
             Type::Function { .. } => self.call_function(name, f, args),
+            Type::NativeFunction(native_name) => self.call_native(native_name, args),
             other => self.runtime_error(&format!(
                 "call error: `{}` is not a function (found {:?})",
                 name, other
@@ -64,6 +65,26 @@ impl VM {
         }
     }
 
+    fn call_native(&mut self, name: String, args: Vec<Type>) -> Type {
+        let f = self
+            .native_functions
+            .get(&name)
+            .copied()
+            .unwrap_or_else(|| {
+                self.runtime_error(&format!(
+                    "call error: native function `{}` is not registered",
+                    name
+                ))
+            });
+
+        self.push_native_frame(name);
+        let result = f(self, args);
+        if self.call_stack.pop().is_none() {
+            self.runtime_error("call stack underflow after native call");
+        }
+        result
+    }
+
     fn push_frame(
         &mut self,
         function_name: String,
@@ -85,6 +106,19 @@ impl VM {
         };
 
         self.pointer = 0;
+        self.call_stack.push(frame);
+    }
+
+    fn push_native_frame(&mut self, function_name: String) {
+        let frame = CallFrame {
+            code: Vec::new(),
+            labels: HashMap::new(),
+            pointer: 0,
+            local_env: None,
+            immutable_stack: Vec::new(),
+            stack_base: self.stack.len(),
+            function_name,
+        };
         self.call_stack.push(frame);
     }
 
@@ -113,10 +147,14 @@ impl VM {
     // Module imports
     // =========================================================
     pub(crate) fn import_module(&mut self, path: Vec<String>) {
+        if path.len() == 2 && path[0] == "std" && path[1] == "file" {
+            self.install_native_fs();
+        }
         let file_path = format!("project/{}.rx", path.join("/"));
 
-        let source = std::fs::read_to_string(&file_path)
-            .unwrap_or_else(|_| self.runtime_error(&format!("could not import module `{}`", file_path)));
+        let source = std::fs::read_to_string(&file_path).unwrap_or_else(|_| {
+            self.runtime_error(&format!("could not import module `{}`", file_path))
+        });
 
         let tokens = crate::tokenizer::tokenize(&source);
         let ast = crate::parser::parse(tokens);

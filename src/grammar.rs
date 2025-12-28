@@ -220,6 +220,7 @@ pub enum Type {
         params: Vec<String>,
         code: Vec<Instruction>,
     },
+    NativeFunction(String),
 
     LazyValue(ReactiveExpr, HashMap<String, Type>),
     LValue(LValue),

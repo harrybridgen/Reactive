@@ -1,27 +1,32 @@
-import std.linkedlist;
+import std.file;
 
 func main() {
-    l = list();
+    # ensure clean state #
+    if file_exists("test_io.txt") {
+        file_remove("test_io.txt");
+    }
 
-    println l.empty;   # 1 #
-    println l.size;    # 0 #
+    # write file #
+    n := file_write("test_io.txt", "hello world");
+    println n;          # expect 11 #
 
-    push_front(l, 10);
-    push_front(l, 20);
-    push_front(l, 30);
+    # check existence #
+    if !file_exists("test_io.txt") {
+        error "file should exist after write";
+    }
 
-    println l.empty;   # 0 #
-    println l.size;    # 3 #
+    # read file #
+    text := file_read("test_io.txt");
+    println text;       # expect "hello world" #
 
-    println peek_front(l);  # 30 #
+    # remove file #
+    ok := file_remove("test_io.txt");
+    println ok;         # expect 1 #
 
-    x = pop_front(l);
-    println x;              # 30 #
-    println l.size;         # 2 #
+    # ensure removal #
+    if file_exists("test_io.txt") {
+        error "file should not exist after remove";
+    }
 
-    println pop_front(l);   # 20 #
-    println pop_front(l);   # 10 #
-    println pop_front(l);   # 0 (empty) #
-
-    println l.empty;        # 1 #
+    println "io test passed";
 }
