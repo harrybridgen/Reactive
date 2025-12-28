@@ -1,6 +1,5 @@
 use std::env;
 use std::fs;
-use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
 use reactive_language::bytecode::read_instructions_from_file;
