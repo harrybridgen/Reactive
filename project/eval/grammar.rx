@@ -1,4 +1,3 @@
-# TOKENS #
 TK_Number := 1;
 TK_Add    := 2;
 TK_Sub    := 3;
@@ -28,7 +27,6 @@ func tokenNum(kind, r, val){
     r.len = r.len + 1;
 }
 
-# AST #
 AST_Number := 1;
 AST_Add := 2;
 AST_Sub := 3;

@@ -1,6 +1,7 @@
 # Reactive Language
 
 This is a small expression-oriented language compiled to bytecode and executed on a stack-based virtual machine.
+The Rust compiler/VM live in `src/`, and a bootstrapped Reactive compiler lives in `project/bootstrap/`.
 
 ## Values and Types
 
@@ -10,7 +11,7 @@ This is a small expression-oriented language compiled to bytecode and executed o
 - **Arrays**: Fixed-size, zero-initialized arrays of values (integers, characters, structs, or arrays).
 - **Lazy values**: Expressions stored as ASTs and evaluated on access
 - **Structs**: Heap-allocated records with named fields
-- **Functions**: Callable units that may return integers, arrays, or structs
+- **Functions**: Callable units that may return integers, characters, arrays, or structs
 
 Arrays (including strings) evaluate to their length when used as integers.
 
@@ -23,12 +24,13 @@ Whenever an array is used in a numeric context (arithmetic, comparison, loop con
 - Comparison: `> < >= <= == !=`
 - Logic: `&& || !`
 - No boolean type: `0` is false, non-zero is true
+- Casts: `(int) expr`, `(char) expr`
 - Ternary `x ? y : z;`
 
 ## Control Flow
 
 - Program starts in the `main` function.
-- `if { } if else {} else { }` conditional execution
+- `if { } else if { } else { }` conditional execution
 - `return x;` returns a value from a function
 - `loop { }` infinite loop
 - `break` exits the nearest loop
@@ -134,7 +136,7 @@ func main(){
 
 In the example above, when we assign `x = y;` we are assigning the current value produced by the relation y (which is x + 1) back into `x`. This causes `x == 2`, which then causes the relation `y` to be equal to `2 + 1` when evaluated.
 
-This of this as "advancing" the relation. In this case, it adds `1` onto `y`.
+Think of this as "advancing" the relation. In this case, it adds `1` onto `y`.
 
 `::=` Reactive assignments:
 
@@ -159,7 +161,7 @@ func main(){
 
 Here, `dx` defines how `x` advances, while `=` controls when the update occurs.
 
-Reactive assignments work uniformly for **variables, struct fields, array elemements**
+Reactive assignments work uniformly for **variables, struct fields, array elements**
 
 ```lua
 struct Counter {
@@ -227,8 +229,8 @@ This means that:
 arr[i] ::= arr[i - 1] + 1;
 ```
 
-does not mean: “use the current value of i”
-It means: “use whatever `i` refers to when this expression is evaluated”
+does not mean: use the current value of `i`
+It means: use whatever `i` refers to when this expression is evaluated
 
 So if `i` keeps changing, the dependency graph becomes self-referential, unstable, or incorrect.
 
@@ -270,7 +272,7 @@ arr[2] = 20
 ```
 
 Why?
-Because `::=` doesn’t store a value it stores “whatever `i` is later”.
+Because `::=` doesn't store a value it stores whatever `i` is later.
 
 So, you need to use the `:=` immutable bind to "capture" the value of `i`
 
@@ -570,7 +572,7 @@ func main(){
 ## Arrays
 
 Arrays are fixed-size, heap-allocated containers of values.
-They may store integers, structs, or other arrays.
+They may store integers, characters, structs, or other arrays.
 
 Arrays are created using a size expression.
 
@@ -599,7 +601,7 @@ func main(){
 ```
 
 Array elements support both mutable (`=`) and reactive (`::=`) assignment.
-Array values can be retrived by both `::=` and `=` variables.
+Array values can be retrieved by both `::=` and `=` variables.
 Bounds are checked at runtime.
 
 ### Nested Arrays
@@ -680,7 +682,7 @@ func main(){
 
 ### Function Values and Calls
 
-Functions encapsulate reusable logic and may return **integers, arrays, or structs**.
+Functions encapsulate reusable logic and may return **integers, characters, arrays, or structs**.
 
 Functions are named callable values stored in the global environment.
 
@@ -844,7 +846,7 @@ func main(){
 
 Each read of counter re-evaluates buildcounter(10) and discards any previous result.
 
-If you wanted to make counter NOT revaluate, use the `:=` immutable binding:
+If you wanted to make counter NOT re-evaluate, use the `:=` immutable binding:
 
 ```lua
 struct Counter {
@@ -913,17 +915,17 @@ Example project layout:
 
 ```
 project/
-├── main.hs
-├── std/
-│   └── maths.hs
-└── game/
-    └── entities/
-        └── player.hs
+  main.rx
+  std/
+    maths.rx
+  game/
+    entities/
+      player.rx
 ```
 
 ### Example
 
-game/entities/player.hs:
+game/entities/player.rx:
 
 ```lua
 struct Player {
@@ -940,7 +942,7 @@ func makeplayer(x, y) {
 }
 ```
 
-main.hs:
+main.rx:
 
 ```lua
 import game.entities.player;
@@ -959,16 +961,59 @@ There is no special treatment for standard modules.
 
 ```
 std/
-├── maths.hs
-├── vector.hs
-├── foo.hs
-└── bar.hs
+  maths.rx
+  vector.rx
+  foo.rx
+  bar.rx
 ```
 
 Modules are imported like any other file:
 
 ```
 import std.maths;
+```
+
+### Filesystem (std.file)
+
+Importing `std.file` registers native filesystem functions:
+
+- `file_read(path)` -> string
+- `file_write(path, contents)` -> number of chars written
+- `file_exists(path)` -> 1 if exists, 0 otherwise
+- `file_remove(path)` -> 1 on success
+
+```lua
+import std.file;
+
+func main(){
+    path := "notes.txt";
+    file_write(path, "hello");
+
+    if file_exists(path) {
+        println file_read(path);
+    }
+
+    file_remove(path);
+}
+```
+
+## Errors, Assert, and Stack Traces
+
+`assert` and `error` stop execution and print a stack trace.
+
+- `assert expr;` fails if `expr` evaluates to 0
+- `error "message";` always fails (string literal only)
+- stack traces include function names from most recent call to oldest
+
+```lua
+func div(a, b) {
+    assert b != 0;
+    return a / b;
+}
+
+func main(){
+    div(10, 0);
+}
 ```
 
 ## Examples
@@ -1683,9 +1728,12 @@ statement
      | if_statement
      | loop_statement
      | break_statement
+     | continue_statement
      | return_statement
      | print_statement
      | println_statement
+     | assert_statement
+     | error_statement
      | assignment
      | reactive_assignment
      | immutable_assignment
@@ -1725,13 +1773,16 @@ params
     ::= identifier ("," identifier)*
 
 if_statement
-    ::= "if" expression block ("else" block)?
+    ::= "if" expression block ("else" (if_statement | block))?
 
 loop_statement
     ::= "loop" block
 
 break_statement
     ::= "break"
+
+continue_statement
+    ::= "continue"
 
 return_statement
     ::= "return"
@@ -1745,6 +1796,12 @@ print_statement
 
 println_statement
     ::= "println" expression
+
+assert_statement
+    ::= "assert" expression
+
+error_statement
+    ::= "error" string
 
 expression
     ::= ternary
@@ -1765,7 +1822,13 @@ additive
     ::= multiplicative (("+" | "-") multiplicative)*
 
 multiplicative
-    ::= postfix (("*" | "/" | "%") postfix)*
+    ::= unary (("*" | "/" | "%") unary)*
+
+unary
+    ::= "-" unary
+     | "!" unary
+     | cast
+     | postfix
 
 postfix
     ::= factor postfix_op*
@@ -1784,9 +1847,11 @@ factor
      | char
      | identifier
      | "struct" identifier
-     | "-" factor
      | "(" expression ")"
      | "[" expression "]"
+
+cast
+    ::= "(" ("int" | "char") ")" factor
 
 identifier
     ::= [a-zA-Z][a-zA-Z0-9_]*

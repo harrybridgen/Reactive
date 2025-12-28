@@ -1,4 +1,4 @@
-import compiler.grammar;
+import eval.grammar;
 
 struct Parser {
     tokens;

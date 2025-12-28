@@ -1,32 +1,4 @@
-import std.file;
 import std.maths;
 func main() {
-    # ensure clean state #
-    if file_exists("test_io.txt") {
-        file_remove("test_io.txt");
-    }
-    y = abs(-1);
-    # write file #
-    n := file_write("test_io.txt", "hello world");
-    println n;          # expect 11 #
-
-    # check existence #
-    if !file_exists("test_io.txt") {
-        error "file should exist after write";
-    }
-
-    # read file #
-    text := file_read("test_io.txt");
-    println text;       # expect "hello world" #
-
-    # remove file #
-    ok := file_remove("test_io.txt");
-    println ok;         # expect 1 #
-
-    # ensure removal #
-    if file_exists("test_io.txt") {
-        error "file should not exist after remove";
-    }
-
-    println "io test passed";
+    println abs(-1);
 }

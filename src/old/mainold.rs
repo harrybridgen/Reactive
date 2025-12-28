@@ -3,8 +3,8 @@ use std::fs;
 use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 
-use reactive_language::bytecode::read_instructions_from_file;
-use reactive_language::compiler::{LabelGenerator, compile_module};
+use reactive_language::bytecode::{read_instructions_from_file, write_instructions_to_file};
+use reactive_language::compiler::{LabelGenerator, compile};
 use reactive_language::grammar::Instruction;
 use reactive_language::parser::parse;
 use reactive_language::tokenizer::tokenize;
@@ -12,6 +12,11 @@ use reactive_language::vm::VM;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    if args.is_empty() {
+        interactive_run();
+        return;
+    }
+
     match args[0].as_str() {
         "compile" => {
             if args.len() < 2 || args.len() > 3 {
@@ -27,7 +32,9 @@ fn main() {
                 out.set_extension("rxb");
                 out
             };
-            run_bootstrap_compiler(&input_path, &output_path);
+            let code = compile_source(&input_path);
+            write_instructions_to_file(output_path.to_str().unwrap(), &code)
+                .unwrap_or_else(|e| exit_error(&format!("failed to write bytecode: {}", e)));
         }
         "run" => {
             if args.len() != 2 {
@@ -56,6 +63,24 @@ fn main() {
             }
         }
     }
+}
+
+fn interactive_run() {
+    print!("Enter file name (relative to root/project/, .rx optional, nothing for main): ");
+    io::stdout().flush().unwrap();
+
+    let mut input_name = String::new();
+    io::stdin().read_line(&mut input_name).unwrap();
+    let mut name = input_name.trim().to_string();
+
+    if name.is_empty() {
+        name = "main".to_string();
+    }
+
+    let input_path = resolve_source_path(&name);
+    let code = compile_source(&input_path);
+    let mut vm = VM::new(code);
+    vm.run();
 }
 
 fn resolve_source_path(name: &str) -> PathBuf {
@@ -97,68 +122,24 @@ fn ensure_extension(path: &Path, expected: &str) -> Result<(), String> {
     }
 }
 
-fn run_bootstrap_compiler(input_path: &Path, output_path: &Path) {
-    let compiler_path = PathBuf::from("project")
-        .join("bootstrap")
-        .join("compiler.rx");
-    let source = fs::read_to_string(&compiler_path).unwrap_or_else(|e| {
-        exit_error(&format!(
-            "failed to read `{}`: {}",
-            compiler_path.display(),
-            e
-        ))
-    });
-
-    let tokens = tokenize(&source);
+fn compile_source(path: &Path) -> Vec<Instruction> {
+    let input = fs::read_to_string(path)
+        .unwrap_or_else(|e| exit_error(&format!("failed to read `{}`: {}", path.display(), e)));
+    let tokens = tokenize(&input);
     let ast = parse(tokens);
 
     let mut bytecode: Vec<Instruction> = Vec::new();
     let mut label_gen = LabelGenerator::new();
     let mut break_stack = Vec::new();
     let mut continue_stack = Vec::new();
-
-    compile_module(
+    compile(
         ast,
         &mut bytecode,
         &mut label_gen,
         &mut break_stack,
         &mut continue_stack,
     );
-
-    let mut arg_labels = LabelGenerator::new();
-    let input_str = input_path.to_string_lossy();
-    let output_str = output_path.to_string_lossy();
-    emit_string_literal(&mut bytecode, &mut arg_labels, &input_str);
-    emit_string_literal(&mut bytecode, &mut arg_labels, &output_str);
-    bytecode.push(Instruction::Call("compile_file".to_string(), 2));
-    bytecode.push(Instruction::Return);
-
-    let mut vm = VM::new(bytecode);
-    vm.run();
-}
-
-fn emit_string_literal(code: &mut Vec<Instruction>, labels: &mut LabelGenerator, value: &str) {
-    code.push(Instruction::Push(value.chars().count() as i32));
-    code.push(Instruction::ArrayNew);
-
-    let tmp = labels.fresh("__bootstrap_str");
-    code.push(Instruction::Store(tmp.clone()));
-
-    for (i, ch) in value.chars().enumerate() {
-        code.push(Instruction::Load(tmp.clone()));
-        code.push(Instruction::Push(i as i32));
-        code.push(Instruction::ArrayLValue);
-        code.push(Instruction::PushChar(ch as u32));
-        code.push(Instruction::StoreThrough);
-    }
-
-    code.push(Instruction::Load(tmp));
-}
-
-fn compile_source(path: &Path) -> Vec<Instruction> {
-    let output_path = PathBuf::from("target").join("bootstrap_out.rxb");
-    run_bootstrap_compiler(path, &output_path);
-    read_instructions_from_file(output_path.to_str().unwrap()).unwrap_or_else(|e| exit_error(&e))
+    bytecode
 }
 
 fn exit_error(message: &str) -> ! {
