@@ -43,7 +43,7 @@ fn main() {
             }
 
             let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
-            let input = resolve_source_path(&args[1]);
+            let input = resolve_path(&args[1], "rx");
             let output = output_path(&input, args.get(2));
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
@@ -58,7 +58,7 @@ fn main() {
             }
 
             let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
-            let input = resolve_source_path(&args[1]);
+            let input = resolve_path(&args[1], "rx");
             let output = output_path(&input, args.get(2));
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file_module");
@@ -73,7 +73,7 @@ fn main() {
             }
 
             let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
-            let input = resolve_source_path(&args[1]);
+            let input = resolve_path(&args[1], "rx");
             let output = output_path(&input, args.get(2));
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
@@ -88,7 +88,7 @@ fn main() {
             }
 
             let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
-            let input = resolve_source_path(&args[1]);
+            let input = resolve_path(&args[1], "rx");
             let output = output_path(&input, args.get(2));
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file_module");
@@ -102,7 +102,10 @@ fn main() {
                 exit_error("Usage: reactive run <input.rxb>");
             }
 
-            let code = read_instructions_from_file(&args[1]).unwrap_or_else(|e| exit_error(&e));
+            let path = resolve_path(&args[1], "rxb");
+            let code = read_instructions_from_file(path.to_str().unwrap())
+                .unwrap_or_else(|e| exit_error(&e));
+
             VM::new(code).run();
         }
 
@@ -168,6 +171,14 @@ Shortcuts:
     );
     std::process::exit(0);
 }
+fn resolve_path(name: &str, default_ext: &str) -> PathBuf {
+    let path = PathBuf::from(name);
+    if path.extension().is_some() {
+        path
+    } else {
+        path.with_extension(default_ext)
+    }
+}
 
 fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     code.push(Instruction::Push(value.chars().count() as i32));
@@ -185,14 +196,6 @@ fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     }
 
     code.push(Instruction::Load(tmp));
-}
-
-fn resolve_source_path(name: &str) -> PathBuf {
-    let mut path = PathBuf::from(name);
-    if path.extension().is_none() {
-        path.set_extension("rx");
-    }
-    path
 }
 
 fn output_path(input: &Path, arg: Option<&String>) -> PathBuf {
