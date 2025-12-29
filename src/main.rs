@@ -10,6 +10,41 @@ fn main() {
     if args.is_empty() {
         print_help();
     }
+    // ------------------------------------------------------------
+    // Shortcuts:
+    //   reactive file.rx   -> compile + run
+    //   reactive file.rxb  -> run
+    // ------------------------------------------------------------
+    if args.len() == 1 {
+        let path = PathBuf::from(&args[0]);
+
+        match path.extension().and_then(|e| e.to_str()) {
+            Some("rx") => {
+                let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
+                let input = resolve_path(&args[0], "rx");
+                let output = output_path(&input, None);
+
+                run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+
+                let code = read_instructions_from_file(output.to_str().unwrap())
+                    .unwrap_or_else(|e| exit_error(&e));
+
+                VM::new(code).run();
+                return;
+            }
+
+            Some("rxb") => {
+                let path = resolve_path(&args[0], "rxb");
+                let code = read_instructions_from_file(path.to_str().unwrap())
+                    .unwrap_or_else(|e| exit_error(&e));
+
+                VM::new(code).run();
+                return;
+            }
+
+            _ => {}
+        }
+    }
 
     match args[0].as_str() {
         // ------------------------------------------------------------
