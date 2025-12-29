@@ -2,6 +2,7 @@
 
 This is a small self hosted expression-oriented language compiled to bytecode and executed on a stack-based virtual machine.
 The Rust compiler/VM live in `src/`, and a bootstrapped Reactive compiler lives in `project/bootstrap/`.
+We also have a simple vscode plugin that include syntax highlighing and formatting. This is found in the rx-vscode folder.
 
 ## Values and Types
 
