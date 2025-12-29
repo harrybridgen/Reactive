@@ -88,7 +88,7 @@ fn main() {
             let input = resolve_source_path(&args[1]);
             let output = output_path(&input, args.get(2));
 
-            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file_module");
         }
 
         // ------------------------------------------------------------
