@@ -51,12 +51,12 @@ Without needing to type `cargo run --`.
 
 ## VS Code Extension
 
-See `rx-vscode/README.md` for the extension docs and setup.
+See [rx-vscode/README.md](rx-vscode/README.md) for the extension docs and setup.
 
 ## Documentation
 
-- Language guide: `docs/language-guide.md`
-- Standard library: `docs/stdlib.md`
-- Examples: `docs/examples.md`
-- Grammar reference: `docs/grammar.md`
-- Implementation notes: `docs/implementation.md`
+- Language guide: [docs/language-guide.md](docs/language-guide.md)
+- Standard library: [docs/stdlib.md](docs/stdlib.md)
+- Examples: [docs/examples.md](docs/examples.md)
+- Grammar reference: [docs/grammar.md](docs/grammar.md)
+- Implementation notes: [docs/implementation.md](docs/implementation.md)
