@@ -1,17 +1,23 @@
 use std::env;
 use std::path::{Path, PathBuf};
 
-use reactive_language::bytecode::read_instructions_from_file;
-use reactive_language::grammar::Instruction;
-use reactive_language::vm::VM;
+use reactive::bytecode::read_instructions_from_file;
+use reactive::grammar::Instruction;
+use reactive::vm::VM;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
     if args.is_empty() {
-        exit_error("expected command");
+        print_help();
     }
 
     match args[0].as_str() {
+        // ------------------------------------------------------------
+        // Help command
+        // ------------------------------------------------------------
+        "help" | "--help" | "-h" => {
+            print_help();
+        }
         // ------------------------------------------------------------
         // Bootstrap experimental compiler using stable compiler
         // ------------------------------------------------------------
@@ -96,7 +102,7 @@ fn main() {
                     .unwrap_or_else(|e| exit_error(&e));
                 VM::new(code).run();
             } else {
-                exit_error("unknown command");
+                exit_error("unknown command (try 'reactive help')");
             }
         }
     }
@@ -128,6 +134,34 @@ fn run_compiler_vm_entry(compiler_path: &Path, input_path: &Path, output_path: &
 // ================================================================
 // Helpers
 // ================================================================
+fn print_help() -> ! {
+    println!(
+        "Reactive Language CLI
+
+Commands:
+  bootstrap
+      Build experimental compiler from stable compiler
+
+  compile <input.rx> [output.rxb]
+      Compile a program (requires main) using stable compiler
+
+  compile-experimental <input.rx> [output.rxb]
+      Compile a program using experimental compiler
+
+  compile-module <input.rx> [output.rxb]
+      Compile a module (no main required)
+
+  run <input.rxb>
+      Run bytecode
+
+Shortcuts:
+  reactive file.rx     Compile with stable compiler and run
+  reactive file.rxb    Run bytecode directly
+"
+    );
+    std::process::exit(0);
+}
+
 fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     code.push(Instruction::Push(value.chars().count() as i32));
     code.push(Instruction::ArrayNew);

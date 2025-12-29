@@ -3,5 +3,5 @@
 version = 4
 
 [[package]]
-name = "reactive_language"
+name = "reactive"
 version = "0.1.0"

@@ -1,4 +1,0 @@
-import std.maths;
-func main() {
-    println abs(-1);
-}
