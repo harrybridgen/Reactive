@@ -1,67 +1,11 @@
-import std.char;
-import std.maths;
+#
+=========================================
+String utilities
+=========================================
 
-struct Vec {
-    items;
-    len = 0;
-}
-
-func vec_new(cap) {
-    v := struct Vec;
-    v.items = [cap];
-    v.len = 0;
-    return v;
-}
-
-func vec_len(v) {
-    return v.len;
-}
-
-func vec_push(v, val) {
-    if v.len >= v.items {
-        newcap = v.items * 2 + 1;
-        newitems := [newcap];
-
-        i = 0;
-        di ::= i + 1;
-        loop {
-            if i >= v.len { break; }
-            newitems[i] = v.items[i];
-            i = di;
-        }
-
-        v.items = newitems;
-    }
-    v.items[v.len] = val;
-    v.len = v.len + 1;
-}
-
-func vec_last(v) {
-    if v.len == 0 {
-        error "vec_last on empty vec";
-    }
-    return v.items[v.len - 1];
-}
-
-func vec_pop(v) {
-    if v.len == 0 {
-        error "vec_pop on empty vec";
-    }
-    v.len = v.len - 1;
-    return v.items[v.len];
-}
-
-func vec_to_array(v) {
-    out := [v.len];
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= v.len { break; }
-        out[i] = v.items[i];
-        i = di;
-    }
-    return out;
-}
+Helpers for working with strings (arrays of chars).
+=========================================
+#
 
 func str_len(s) {
     return (int)s;

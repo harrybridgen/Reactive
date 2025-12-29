@@ -1,6 +1,6 @@
 import bootstrap.experimental.grammar;
-import bootstrap.experimental.util;
 import std.buf;
+import std.str;
 
 #
 -----------------------------------------

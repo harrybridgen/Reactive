@@ -1,5 +1,6 @@
 import bootstrap.experimental.grammar;
-import bootstrap.experimental.util;
+import std.vec;
+import std.str;
 
 struct Parser {
     tokens;

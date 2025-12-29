@@ -1,8 +1,9 @@
 import bootstrap.stable.grammar;
 import bootstrap.stable.serialize;
-import bootstrap.stable.util;
 import bootstrap.stable.tokenizer;
 import bootstrap.stable.parser;
+import std.vec;
+import std.str;
 import std.file;
 
 #
@@ -30,9 +31,10 @@ func label_fresh(lg, prefix) {
 func vec_contains_str(v, s) {
     i = 0;
     di ::= i + 1;
+    n := (int)v;
     loop {
-        if i >= v.len { break; }
-        if str_equals(v.items[i], s) {
+        if i >= n { break; }
+        if str_equals(v[i], s) {
             return 1;
         }
         i = di;
@@ -50,17 +52,18 @@ func vec_push_unique(v, s) {
 func vec_sort_strings(v) {
     i = 1;
     di ::= i + 1;
+    n := (int)v;
     loop {
-        if i >= v.len { break; }
-        key := v.items[i];
+        if i >= n { break; }
+        key := v[i];
         j = i - 1;
         loop {
             if j < 0 { break; }
-            if str_compare(v.items[j], key) <= 0 { break; }
-            v.items[j + 1] = v.items[j];
+            if str_compare(v[j], key) <= 0 { break; }
+            v[j + 1] = v[j];
             j = j - 1;
         }
-        v.items[j + 1] = key;
+        v[j + 1] = key;
         i = di;
     }
 }

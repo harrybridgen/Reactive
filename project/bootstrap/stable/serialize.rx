@@ -1,6 +1,6 @@
 import bootstrap.stable.grammar;
-import bootstrap.stable.util;
 import std.buf;
+import std.str;
 
 #
 -----------------------------------------

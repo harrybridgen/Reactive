@@ -106,7 +106,7 @@ func main(){
     framebuffer(screen, text);
     loop {
         render(screen);
-        delay(20000);
+        delay(50000);
 
         text.x = text.dx;
         text.y = text.dy;

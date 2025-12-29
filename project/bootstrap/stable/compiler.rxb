@@ -1034,921 +1034,36 @@ Return
 Return
 Import 3 "bootstrap" "stable" "serialize"
 Import 3 "bootstrap" "stable" "grammar"
-Import 3 "bootstrap" "stable" "util"
-Import 2 "std" "char"
-StoreFunction "is_digit" 1 "c" 13
-Load "c"
-Cast Int
-PushChar 48
-Cast Int
-GreaterEqual
-Load "c"
-Cast Int
-PushChar 57
-Cast Int
-LessEqual
-And
-Return
-Return
-StoreFunction "is_alpha" 1 "c" 31
-Load "c"
-Cast Int
-PushChar 97
-Cast Int
-GreaterEqual
-Load "c"
-Cast Int
-PushChar 122
-Cast Int
-LessEqual
-And
-Load "c"
-Cast Int
-PushChar 65
-Cast Int
-GreaterEqual
-Load "c"
-Cast Int
-PushChar 90
-Cast Int
-LessEqual
-And
-Or
-Load "c"
-Cast Int
-PushChar 95
-Cast Int
-Equal
-Or
-Return
-Return
-StoreFunction "is_alnum" 1 "c" 7
-Load "c"
-Call "is_alpha" 1
-Load "c"
-Call "is_digit" 1
-Or
-Return
-Return
-StoreFunction "is_space" 1 "c" 25
-Load "c"
-Cast Int
-PushChar 32
-Cast Int
-Equal
-Load "c"
-Cast Int
-PushChar 10
-Cast Int
-Equal
-Or
-Load "c"
-Cast Int
-PushChar 9
-Cast Int
-Equal
-Or
-Load "c"
-Cast Int
-PushChar 13
-Cast Int
-Equal
-Or
-Return
-Return
-StoreFunction "is_lower" 1 "c" 13
-Load "c"
-Cast Int
-PushChar 97
-Cast Int
-GreaterEqual
-Load "c"
-Cast Int
-PushChar 122
-Cast Int
-LessEqual
-And
-Return
-Return
-StoreFunction "is_upper" 1 "c" 13
-Load "c"
-Cast Int
-PushChar 65
-Cast Int
-GreaterEqual
-Load "c"
-Cast Int
-PushChar 90
-Cast Int
-LessEqual
-And
-Return
-Return
-StoreFunction "to_lower" 1 "c" 23
-Load "c"
-Call "is_upper" 1
-JumpIfZero "else_0"
-PushImmutableContext
-Load "c"
-Cast Int
-PushChar 97
-Cast Int
-PushChar 65
-Cast Int
-Sub
-Add
-Cast Char
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "c"
-Return
-Return
-StoreFunction "to_upper" 1 "c" 23
-Load "c"
-Call "is_lower" 1
-JumpIfZero "else_0"
-PushImmutableContext
-Load "c"
-Cast Int
-PushChar 97
-Cast Int
-PushChar 65
-Cast Int
-Sub
-Sub
-Cast Char
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "c"
-Return
-Return
-StoreFunction "digit_to_int" 1 "c" 149
-Load "c"
-Call "is_digit" 1
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Push 25
-ArrayNew
-Store "__strlit_2"
-Load "__strlit_2"
-Push 0
-ArrayLValue
-PushChar 100
-StoreThrough
-Load "__strlit_2"
-Push 1
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 2
-ArrayLValue
-PushChar 103
-StoreThrough
-Load "__strlit_2"
-Push 3
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 4
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 5
-ArrayLValue
-PushChar 95
-StoreThrough
-Load "__strlit_2"
-Push 6
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 7
-ArrayLValue
-PushChar 111
-StoreThrough
-Load "__strlit_2"
-Push 8
-ArrayLValue
-PushChar 95
-StoreThrough
-Load "__strlit_2"
-Push 9
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 10
-ArrayLValue
-PushChar 110
-StoreThrough
-Load "__strlit_2"
-Push 11
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 12
-ArrayLValue
-PushChar 58
-StoreThrough
-Load "__strlit_2"
-Push 13
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 14
-ArrayLValue
-PushChar 110
-StoreThrough
-Load "__strlit_2"
-Push 15
-ArrayLValue
-PushChar 111
-StoreThrough
-Load "__strlit_2"
-Push 16
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 17
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 18
-ArrayLValue
-PushChar 97
-StoreThrough
-Load "__strlit_2"
-Push 19
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 20
-ArrayLValue
-PushChar 100
-StoreThrough
-Load "__strlit_2"
-Push 21
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 22
-ArrayLValue
-PushChar 103
-StoreThrough
-Load "__strlit_2"
-Push 23
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 24
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Println
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "c"
-Cast Int
-PushChar 48
-Cast Int
-Sub
-Return
-Return
-StoreFunction "int_to_digit" 1 "n" 152
-Load "n"
-Push 0
-Less
-Load "n"
-Push 9
-Greater
-Or
-JumpIfZero "else_0"
-PushImmutableContext
-Push 25
-ArrayNew
-Store "__strlit_2"
-Load "__strlit_2"
-Push 0
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 1
-ArrayLValue
-PushChar 110
-StoreThrough
-Load "__strlit_2"
-Push 2
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 3
-ArrayLValue
-PushChar 95
-StoreThrough
-Load "__strlit_2"
-Push 4
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 5
-ArrayLValue
-PushChar 111
-StoreThrough
-Load "__strlit_2"
-Push 6
-ArrayLValue
-PushChar 95
-StoreThrough
-Load "__strlit_2"
-Push 7
-ArrayLValue
-PushChar 100
-StoreThrough
-Load "__strlit_2"
-Push 8
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 9
-ArrayLValue
-PushChar 103
-StoreThrough
-Load "__strlit_2"
-Push 10
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 11
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 12
-ArrayLValue
-PushChar 58
-StoreThrough
-Load "__strlit_2"
-Push 13
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 14
-ArrayLValue
-PushChar 110
-StoreThrough
-Load "__strlit_2"
-Push 15
-ArrayLValue
-PushChar 111
-StoreThrough
-Load "__strlit_2"
-Push 16
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Push 17
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 18
-ArrayLValue
-PushChar 97
-StoreThrough
-Load "__strlit_2"
-Push 19
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_2"
-Push 20
-ArrayLValue
-PushChar 100
-StoreThrough
-Load "__strlit_2"
-Push 21
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 22
-ArrayLValue
-PushChar 103
-StoreThrough
-Load "__strlit_2"
-Push 23
-ArrayLValue
-PushChar 105
-StoreThrough
-Load "__strlit_2"
-Push 24
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_2"
-Println
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "n"
-PushChar 48
-Cast Int
-Add
-Cast Char
-Return
-Return
-StoreFunction "char_to_int" 1 "c" 4
-Load "c"
-Cast Int
-Return
-Return
-StoreFunction "int_to_char" 1 "n" 4
-Load "n"
-Cast Char
-Return
-Return
-Import 2 "std" "maths"
-StoreFunction "abs" 1 "x" 18
-Load "x"
-Push 0
-Less
-JumpIfZero "else_0"
-PushImmutableContext
-Push 0
-Load "x"
-Sub
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "x"
-Return
-Return
-StoreFunction "clamp" 3 "x" "lo" "hi" 29
-Load "x"
-Load "lo"
-Less
-JumpIfZero "else_0"
-PushImmutableContext
-Load "lo"
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "x"
-Load "hi"
-Greater
-JumpIfZero "else_2"
-PushImmutableContext
-Load "hi"
-Return
-PopImmutableContext
-Jump "ifend_3"
-Label "else_2"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_3"
-Load "x"
-Return
-Return
-StoreFunction "square" 1 "x" 5
-Load "x"
-Load "x"
-Mul
-Return
-Return
-StoreFunction "cube" 1 "x" 7
-Load "x"
-Load "x"
-Mul
-Load "x"
-Mul
-Return
-Return
-StoreFunction "min" 2 "x" "y" 16
-Load "x"
-Load "y"
-Greater
-JumpIfZero "else_0"
-PushImmutableContext
-Load "y"
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "x"
-Return
-Return
-StoreFunction "max" 2 "x" "y" 16
-Load "x"
-Load "y"
-Greater
-JumpIfZero "else_0"
-PushImmutableContext
-Load "x"
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "y"
-Return
-Return
-StoreFunction "sign" 1 "x" 31
-Load "x"
-Push 0
-Greater
-JumpIfZero "else_0"
-PushImmutableContext
-Push 1
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "x"
-Push 0
-Less
-JumpIfZero "else_2"
-PushImmutableContext
-Push 0
-Push 1
-Sub
-Return
-PopImmutableContext
-Jump "ifend_3"
-Label "else_2"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_3"
-Push 0
-Return
-Return
-StoreFunction "iseven" 1 "x" 19
-Load "x"
-Call "abs" 1
-Push 2
-Modulo
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Push 1
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Push 0
-Return
-Return
-StoreFunction "isodd" 1 "x" 19
-Load "x"
-Call "abs" 1
-Push 2
-Modulo
-Push 0
-NotEqual
-JumpIfZero "else_0"
-PushImmutableContext
-Push 1
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Push 0
-Return
-Return
-StoreFunction "mod" 2 "a" "b" 24
-Load "b"
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Push 0
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "a"
-Call "abs" 1
-Store "a"
-Load "b"
-Call "abs" 1
-Store "b"
-Load "a"
-Load "b"
-Modulo
-Return
-Return
-StoreFunction "sqrt" 1 "x" 45
-Load "x"
-Push 0
-Less
-JumpIfZero "else_0"
-PushImmutableContext
-Push 0
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_2"
-ClearImmutableContext
-Load "i"
-Push 1
-Add
-Load "i"
-Push 1
-Add
-Mul
-Load "x"
-Greater
-JumpIfZero "else_4"
-PushImmutableContext
-Jump "loop_end_3"
-PopImmutableContext
-Jump "ifend_5"
-Label "else_4"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_5"
-Load "di"
-Store "i"
-Jump "loop_start_2"
-Label "loop_end_3"
-PopImmutableContext
-Load "i"
-Return
-Return
-StoreStruct "Vec" 2
-Field "items" None
-Field "len" Mutable 2
-Push 0
-Return
-StoreFunction "vec_new" 1 "cap" 14
-NewStruct "Vec"
-StoreImmutable "v"
-Load "v"
-FieldLValue "items"
+Import 2 "std" "buf"
+StoreFunction "buf_new" 1 "cap" 4
 Load "cap"
-ArrayNew
-StoreThrough
-Load "v"
-FieldLValue "len"
-Push 0
-StoreThrough
-Load "v"
+Call "internal_buf_new" 1
 Return
 Return
-StoreFunction "vec_len" 1 "v" 4
-Load "v"
-FieldGet "len"
+StoreFunction "buf_push_char" 2 "buf" "c" 5
+Load "buf"
+Load "c"
+Call "internal_buf_push_char" 2
 Return
 Return
-StoreFunction "vec_push" 2 "v" "val" 74
-Load "v"
-FieldGet "len"
-Load "v"
-FieldGet "items"
-GreaterEqual
-JumpIfZero "else_0"
-PushImmutableContext
-Load "v"
-FieldGet "items"
-Push 2
-Mul
-Push 1
-Add
-Store "newcap"
-Load "newcap"
-ArrayNew
-StoreImmutable "newitems"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_2"
-ClearImmutableContext
-Load "i"
-Load "v"
-FieldGet "len"
-GreaterEqual
-JumpIfZero "else_4"
-PushImmutableContext
-Jump "loop_end_3"
-PopImmutableContext
-Jump "ifend_5"
-Label "else_4"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_5"
-Load "newitems"
-Load "i"
-ArrayLValue
-Load "v"
-FieldGet "items"
-Load "i"
-ArrayGet
-StoreThrough
-Load "di"
-Store "i"
-Jump "loop_start_2"
-Label "loop_end_3"
-PopImmutableContext
-Load "v"
-FieldLValue "items"
-Load "newitems"
-StoreThrough
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "v"
-FieldLValue "items"
-Load "v"
-FieldGet "len"
-ArrayLValue
-Load "val"
-StoreThrough
-Load "v"
-FieldLValue "len"
-Load "v"
-FieldGet "len"
-Push 1
-Add
-StoreThrough
-Return
-StoreFunction "vec_last" 1 "v" 22
-Load "v"
-FieldGet "len"
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Error "vec_last on empty vec"
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "v"
-FieldGet "items"
-Load "v"
-FieldGet "len"
-Push 1
-Sub
-ArrayGet
+StoreFunction "buf_push_str" 2 "buf" "s" 5
+Load "buf"
+Load "s"
+Call "internal_buf_push_str" 2
 Return
 Return
-StoreFunction "vec_pop" 1 "v" 27
-Load "v"
-FieldGet "len"
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Error "vec_pop on empty vec"
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Load "v"
-FieldLValue "len"
-Load "v"
-FieldGet "len"
-Push 1
-Sub
-StoreThrough
-Load "v"
-FieldGet "items"
-Load "v"
-FieldGet "len"
-ArrayGet
+StoreFunction "buf_to_string" 1 "buf" 4
+Load "buf"
+Call "internal_buf_to_string" 1
 Return
 Return
-StoreFunction "vec_to_array" 1 "v" 39
-Load "v"
-FieldGet "len"
-ArrayNew
-StoreImmutable "out"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_0"
-ClearImmutableContext
-Load "i"
-Load "v"
-FieldGet "len"
-GreaterEqual
-JumpIfZero "else_2"
-PushImmutableContext
-Jump "loop_end_1"
-PopImmutableContext
-Jump "ifend_3"
-Label "else_2"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_3"
-Load "out"
-Load "i"
-ArrayLValue
-Load "v"
-FieldGet "items"
-Load "i"
-ArrayGet
-StoreThrough
-Load "di"
-Store "i"
-Jump "loop_start_0"
-Label "loop_end_1"
-PopImmutableContext
-Load "out"
+StoreFunction "buf_write_file" 2 "buf" "path" 5
+Load "buf"
+Load "path"
+Call "internal_buf_write_file" 2
 Return
 Return
+Import 2 "std" "str"
 StoreFunction "str_len" 1 "s" 4
 Load "s"
 Cast Int
@@ -2797,35 +1912,6 @@ PushChar 34
 Call "str_append_char" 2
 Store "out"
 Load "out"
-Return
-Return
-Import 2 "std" "buf"
-StoreFunction "buf_new" 1 "cap" 4
-Load "cap"
-Call "internal_buf_new" 1
-Return
-Return
-StoreFunction "buf_push_char" 2 "buf" "c" 5
-Load "buf"
-Load "c"
-Call "internal_buf_push_char" 2
-Return
-Return
-StoreFunction "buf_push_str" 2 "buf" "s" 5
-Load "buf"
-Load "s"
-Call "internal_buf_push_str" 2
-Return
-Return
-StoreFunction "buf_to_string" 1 "buf" 4
-Load "buf"
-Call "internal_buf_to_string" 1
-Return
-Return
-StoreFunction "buf_write_file" 2 "buf" "path" 5
-Load "buf"
-Load "path"
-Call "internal_buf_write_file" 2
 Return
 Return
 StoreStruct "TextBuf" 2
@@ -7501,12 +6587,480 @@ Load "expr"
 FieldGet "code"
 Call "append_instructions" 2
 Return
-Import 3 "bootstrap" "stable" "util"
 Import 3 "bootstrap" "stable" "tokenizer"
 Import 3 "bootstrap" "stable" "grammar"
-Import 3 "bootstrap" "stable" "util"
 Import 2 "std" "char"
+StoreFunction "is_digit" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 48
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 57
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "is_alpha" 1 "c" 31
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 122
+Cast Int
+LessEqual
+And
+Load "c"
+Cast Int
+PushChar 65
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 90
+Cast Int
+LessEqual
+And
+Or
+Load "c"
+Cast Int
+PushChar 95
+Cast Int
+Equal
+Or
+Return
+Return
+StoreFunction "is_alnum" 1 "c" 7
+Load "c"
+Call "is_alpha" 1
+Load "c"
+Call "is_digit" 1
+Or
+Return
+Return
+StoreFunction "is_space" 1 "c" 25
+Load "c"
+Cast Int
+PushChar 32
+Cast Int
+Equal
+Load "c"
+Cast Int
+PushChar 10
+Cast Int
+Equal
+Or
+Load "c"
+Cast Int
+PushChar 9
+Cast Int
+Equal
+Or
+Load "c"
+Cast Int
+PushChar 13
+Cast Int
+Equal
+Or
+Return
+Return
+StoreFunction "is_lower" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 122
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "is_upper" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 65
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 90
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "to_lower" 1 "c" 23
+Load "c"
+Call "is_upper" 1
+JumpIfZero "else_0"
+PushImmutableContext
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+PushChar 65
+Cast Int
+Sub
+Add
+Cast Char
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Return
+Return
+StoreFunction "to_upper" 1 "c" 23
+Load "c"
+Call "is_lower" 1
+JumpIfZero "else_0"
+PushImmutableContext
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+PushChar 65
+Cast Int
+Sub
+Sub
+Cast Char
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Return
+Return
+StoreFunction "digit_to_int" 1 "c" 149
+Load "c"
+Call "is_digit" 1
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 25
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 1
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 2
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 3
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 4
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 5
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 6
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 7
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 8
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 9
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 10
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 11
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 12
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 13
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 14
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 15
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 16
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 18
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_2"
+Push 19
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 20
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 21
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 22
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 23
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 24
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Println
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Cast Int
+PushChar 48
+Cast Int
+Sub
+Return
+Return
+StoreFunction "int_to_digit" 1 "n" 152
+Load "n"
+Push 0
+Less
+Load "n"
+Push 9
+Greater
+Or
+JumpIfZero "else_0"
+PushImmutableContext
+Push 25
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 1
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 2
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 3
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 4
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 5
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 6
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 7
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 8
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 9
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 10
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 11
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 12
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 13
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 14
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 15
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 16
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 18
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_2"
+Push 19
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 20
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 21
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 22
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 23
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 24
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Println
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "n"
+PushChar 48
+Cast Int
+Add
+Cast Char
+Return
+Return
+StoreFunction "char_to_int" 1 "c" 4
+Load "c"
+Cast Int
+Return
+Return
+StoreFunction "int_to_char" 1 "n" 4
+Load "n"
+Cast Char
+Return
+Return
 Import 2 "std" "buf"
+Import 2 "std" "str"
 StoreStruct "Lexer" 2
 Field "tokens" None
 Field "len" Mutable 2
@@ -9662,7 +9216,111 @@ Return
 Return
 Import 3 "bootstrap" "stable" "parser"
 Import 3 "bootstrap" "stable" "grammar"
-Import 3 "bootstrap" "stable" "util"
+Import 2 "std" "vec"
+StoreFunction "vec_new" 1 "cap" 4
+Load "cap"
+Call "internal_vec_new" 1
+Return
+Return
+StoreFunction "vec_len" 1 "v" 4
+Load "v"
+Cast Int
+Return
+Return
+StoreFunction "vec_push" 2 "v" "val" 5
+Load "v"
+Load "val"
+Call "internal_vec_push" 2
+Return
+Return
+StoreFunction "vec_pop" 1 "v" 4
+Load "v"
+Call "internal_vec_pop" 1
+Return
+Return
+StoreFunction "vec_last" 1 "v" 22
+Load "v"
+Cast Int
+StoreImmutable "n"
+Load "n"
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Error "vec_last on empty vec"
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "v"
+Load "n"
+Push 1
+Sub
+ArrayGet
+Return
+Return
+StoreFunction "vec_to_array" 1 "v" 39
+Load "v"
+Cast Int
+StoreImmutable "n"
+Load "n"
+ArrayNew
+StoreImmutable "out"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "n"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "out"
+Load "i"
+ArrayLValue
+Load "v"
+Load "i"
+ArrayGet
+StoreThrough
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "out"
+Return
+Return
+StoreFunction "vec_get" 2 "v" "i" 5
+Load "v"
+Load "i"
+ArrayGet
+Return
+Return
+StoreFunction "vec_set" 3 "v" "i" "val" 8
+Load "v"
+Load "i"
+ArrayLValue
+Load "val"
+StoreThrough
+Push 0
+Return
+Return
+Import 2 "std" "str"
 StoreStruct "Parser" 3
 Field "tokens" None
 Field "len" Mutable 2
@@ -11618,6 +11276,8 @@ Label "ifend_1"
 Load "cond"
 Return
 Return
+Import 2 "std" "vec"
+Import 2 "std" "str"
 Import 2 "std" "file"
 StoreFunction "file_read" 1 "path" 4
 Load "path"
@@ -11683,7 +11343,7 @@ StoreThrough
 Load "name"
 Return
 Return
-StoreFunction "vec_contains_str" 2 "v" "s" 43
+StoreFunction "vec_contains_str" 2 "v" "s" 44
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -11691,12 +11351,14 @@ Load "i"
 Push 1
 Add
 Return
+Load "v"
+Cast Int
+StoreImmutable "n"
 PushImmutableContext
 Label "loop_start_0"
 ClearImmutableContext
 Load "i"
-Load "v"
-FieldGet "len"
+Load "n"
 GreaterEqual
 JumpIfZero "else_2"
 PushImmutableContext
@@ -11708,7 +11370,6 @@ PushImmutableContext
 PopImmutableContext
 Label "ifend_3"
 Load "v"
-FieldGet "items"
 Load "i"
 ArrayGet
 Load "s"
@@ -11749,7 +11410,7 @@ Load "v"
 Load "s"
 Call "vec_push" 2
 Return
-StoreFunction "vec_sort_strings" 1 "v" 92
+StoreFunction "vec_sort_strings" 1 "v" 89
 Push 1
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -11757,12 +11418,14 @@ Load "i"
 Push 1
 Add
 Return
+Load "v"
+Cast Int
+StoreImmutable "n"
 PushImmutableContext
 Label "loop_start_0"
 ClearImmutableContext
 Load "i"
-Load "v"
-FieldGet "len"
+Load "n"
 GreaterEqual
 JumpIfZero "else_2"
 PushImmutableContext
@@ -11774,7 +11437,6 @@ PushImmutableContext
 PopImmutableContext
 Label "ifend_3"
 Load "v"
-FieldGet "items"
 Load "i"
 ArrayGet
 StoreImmutable "key"
@@ -11798,7 +11460,6 @@ PushImmutableContext
 PopImmutableContext
 Label "ifend_7"
 Load "v"
-FieldGet "items"
 Load "j"
 ArrayGet
 Load "key"
@@ -11815,13 +11476,11 @@ PushImmutableContext
 PopImmutableContext
 Label "ifend_9"
 Load "v"
-FieldLValue "items"
 Load "j"
 Push 1
 Add
 ArrayLValue
 Load "v"
-FieldGet "items"
 Load "j"
 ArrayGet
 StoreThrough
@@ -11833,7 +11492,6 @@ Jump "loop_start_4"
 Label "loop_end_5"
 PopImmutableContext
 Load "v"
-FieldLValue "items"
 Load "j"
 Push 1
 Add

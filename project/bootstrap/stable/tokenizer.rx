@@ -1,7 +1,7 @@
 import bootstrap.stable.grammar;
-import bootstrap.stable.util;
 import std.char;
 import std.buf;
+import std.str;
 
 struct Lexer {
     tokens;

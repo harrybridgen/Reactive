@@ -78,6 +78,53 @@ func vec_pop(v) {
 
 #
 -----------------------------------------
+vec_last
+-----------------------------------------
+Return the last element.
+
+Args:
+v : vec
+
+Returns:
+last element
+-----------------------------------------
+#
+func vec_last(v) {
+    n := (int)v;
+    if n == 0 {
+        error "vec_last on empty vec";
+    }
+    return v[n - 1];
+}
+
+#
+-----------------------------------------
+vec_to_array
+-----------------------------------------
+Copy a vec into a fixed array.
+
+Args:
+v : vec
+
+Returns:
+array copy
+-----------------------------------------
+#
+func vec_to_array(v) {
+    n := (int)v;
+    out := [n];
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= n { break; }
+        out[i] = v[i];
+        i = di;
+    }
+    return out;
+}
+
+#
+-----------------------------------------
 vec_get
 -----------------------------------------
 Retrieve an element from a vector.
