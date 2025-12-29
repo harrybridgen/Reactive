@@ -150,38 +150,5 @@ impl VM {
         if path.len() == 2 && path[0] == "std" && path[1] == "file" {
             self.install_native_fs();
         }
-        let file_path = format!("project/{}.rx", path.join("/"));
-
-        let source = std::fs::read_to_string(&file_path).unwrap_or_else(|_| {
-            self.runtime_error(&format!("could not import module `{}`", file_path))
-        });
-
-        let tokens = crate::tokenizer::tokenize(&source);
-        let ast = crate::parser::parse(tokens);
-
-        let mut code = Vec::new();
-        let mut lg = crate::compiler::LabelGenerator::new();
-        let mut break_stack = Vec::new();
-
-        let mut continue_stack = Vec::new();
-
-        crate::compiler::compile_module(
-            ast,
-            &mut code,
-            &mut lg,
-            &mut break_stack,
-            &mut continue_stack,
-        );
-
-        let saved_code = std::mem::replace(&mut self.code, code);
-        let saved_labels = std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
-        let saved_ptr = self.pointer;
-
-        self.pointer = 0;
-        self.run();
-
-        self.code = saved_code;
-        self.labels = saved_labels;
-        self.pointer = saved_ptr;
     }
 }

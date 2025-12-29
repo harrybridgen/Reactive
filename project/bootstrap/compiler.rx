@@ -59,6 +59,21 @@ func vec_sort_strings(v) {
     }
 }
 
+func join_segments(parts, sep) {
+    out := str_empty();
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= parts { break; }
+        if i > 0 {
+            out = str_append(out, sep);
+        }
+        out = str_append(out, parts[i]);
+        i = di;
+    }
+    return out;
+}
+
 func compile_source(src) {
     lex := tokenize(src);
     ast := parse(lex.tokens, lex.len);
@@ -67,8 +82,23 @@ func compile_source(src) {
     labels := new_labelgen();
     break_stack := vec_new(8);
     continue_stack := vec_new(8);
+    imports := vec_new(8);
     println "[Reactive] Compiler"
-    compile(ast, code, labels, break_stack, continue_stack);
+    compile(ast, code, labels, break_stack, continue_stack, imports);
+    return vec_to_array(code);
+}
+
+func compile_source_module(src) {
+    lex := tokenize(src);
+    ast := parse(lex.tokens, lex.len);
+
+    code := vec_new(64);
+    labels := new_labelgen();
+    break_stack := vec_new(8);
+    continue_stack := vec_new(8);
+    imports := vec_new(8);
+    println "[Reactive] Compiler (module)"
+    compile_module(ast, code, labels, break_stack, continue_stack, imports);
     return vec_to_array(code);
 }
 
@@ -81,23 +111,32 @@ func compile_file(input_path, output_path) {
     file_write(output_path, text);
 }
 
-func compile_module(ast, code, labels, break_stack, continue_stack) {
+func compile_file_module(input_path, output_path) {
+    src := file_read(input_path);
+    code := compile_source_module(src);
+    println "[Reactive] Serialize";
+    text := serialize_instructions(code);
+    println "[Reactive] Write file";
+    file_write(output_path, text);
+}
+
+func compile_module(ast, code, labels, break_stack, continue_stack, imports) {
     if ast.kind == AST_Program {
         items := ast.list;
         i = 0;
         di ::= i + 1;
         loop {
             if i >= items { break; }
-            compile(items[i], code, labels, break_stack, continue_stack);
+            compile(items[i], code, labels, break_stack, continue_stack, imports);
             i = di;
         }
     }
     else {
-        compile(ast, code, labels, break_stack, continue_stack);
+        compile(ast, code, labels, break_stack, continue_stack, imports);
     }
 }
 
-func compile(ast, code, labels, break_stack, continue_stack) {
+func compile(ast, code, labels, break_stack, continue_stack, imports) {
     if ast.kind == AST_Number {
         value := ast.a;
         inst := instr1(INSTR_Push, value);
@@ -123,7 +162,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
     if ast.kind == AST_ArrayNew {
         size := ast.a;
-        compile(size, code, labels, break_stack, continue_stack);
+        compile(size, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_ArrayNew);
         vec_push(code, inst);
         return;
@@ -131,15 +170,15 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_Index {
         base := ast.a;
         index := ast.b;
-        compile(base, code, labels, break_stack, continue_stack);
-        compile(index, code, labels, break_stack, continue_stack);
+        compile(base, code, labels, break_stack, continue_stack, imports);
+        compile(index, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_ArrayGet);
         vec_push(code, inst);
         return;
     }
     if ast.kind == AST_FieldAccess {
         base := ast.a;
-        compile(base, code, labels, break_stack, continue_stack);
+        compile(base, code, labels, break_stack, continue_stack, imports);
         name := ast.name;
         inst := instr1(INSTR_FieldGet, name);
         vec_push(code, inst);
@@ -148,8 +187,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_Operation {
         left := ast.a;
         right := ast.b;
-        compile(left, code, labels, break_stack, continue_stack);
-        compile(right, code, labels, break_stack, continue_stack);
+        compile(left, code, labels, break_stack, continue_stack, imports);
+        compile(right, code, labels, break_stack, continue_stack, imports);
         emit_operator(ast.op, code);
         return;
     }
@@ -157,20 +196,20 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         cond := ast.a;
         then_expr := ast.b;
         else_expr := ast.c;
-        compile(cond, code, labels, break_stack, continue_stack);
+        compile(cond, code, labels, break_stack, continue_stack, imports);
 
         else_lbl := label_fresh(labels, "ternary_else");
         end_lbl := label_fresh(labels, "ternary_end");
 
         inst := instr1(INSTR_JumpIfZero, else_lbl);
         vec_push(code, inst);
-        compile(then_expr, code, labels, break_stack, continue_stack);
+        compile(then_expr, code, labels, break_stack, continue_stack, imports);
         inst = instr1(INSTR_Jump, end_lbl);
         vec_push(code, inst);
 
         inst = instr1(INSTR_Label, else_lbl);
         vec_push(code, inst);
-        compile(else_expr, code, labels, break_stack, continue_stack);
+        compile(else_expr, code, labels, break_stack, continue_stack, imports);
 
         inst = instr1(INSTR_Label, end_lbl);
         vec_push(code, inst);
@@ -182,7 +221,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         di ::= i + 1;
         loop {
             if i >= args { break; }
-            compile(args[i], code, labels, break_stack, continue_stack);
+            compile(args[i], code, labels, break_stack, continue_stack, imports);
             i = di;
         }
         inst := instr2(INSTR_Call, ast.name, (int)args);
@@ -192,7 +231,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
     if ast.kind == AST_Assign {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         name := ast.name;
         inst := instr1(INSTR_Store, name);
         vec_push(code, inst);
@@ -200,7 +239,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     }
     if ast.kind == AST_ImmutableAssign {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         name := ast.name;
         inst := instr1(INSTR_StoreImmutable, name);
         vec_push(code, inst);
@@ -208,7 +247,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     }
     if ast.kind == AST_ReactiveAssign {
         value := ast.a;
-        reactive := compile_reactive_expr(value);
+        reactive := compile_reactive_expr(value, imports);
         name := ast.name;
         inst := instr2(INSTR_StoreReactive, name, reactive);
         vec_push(code, inst);
@@ -217,8 +256,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_AssignTarget {
         target := ast.a;
         value := ast.b;
-        compile_lvalue(target, code, labels, break_stack, continue_stack);
-        compile(value, code, labels, break_stack, continue_stack);
+        compile_lvalue(target, code, labels, break_stack, continue_stack, imports);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_StoreThrough);
         vec_push(code, inst);
         return;
@@ -226,8 +265,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_ReactiveAssignTarget {
         target := ast.a;
         value := ast.b;
-        compile_lvalue(target, code, labels, break_stack, continue_stack);
-        reactive := compile_reactive_expr(value);
+        compile_lvalue(target, code, labels, break_stack, continue_stack, imports);
+        reactive := compile_reactive_expr(value, imports);
         inst := instr1(INSTR_StoreThroughReactive, reactive);
         vec_push(code, inst);
         return;
@@ -235,8 +274,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_ImmutableAssignTarget {
         target := ast.a;
         value := ast.b;
-        compile_lvalue(target, code, labels, break_stack, continue_stack);
-        compile(value, code, labels, break_stack, continue_stack);
+        compile_lvalue(target, code, labels, break_stack, continue_stack, imports);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_StoreThroughImmutable);
         vec_push(code, inst);
         return;
@@ -245,8 +284,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         if ast.flag == FIELD_ASSIGN_Normal {
             base := ast.a;
             value := ast.b;
-            compile(base, code, labels, break_stack, continue_stack);
-            compile(value, code, labels, break_stack, continue_stack);
+            compile(base, code, labels, break_stack, continue_stack, imports);
+            compile(value, code, labels, break_stack, continue_stack, imports);
             name := ast.name;
             inst := instr1(INSTR_FieldSet, name);
             vec_push(code, inst);
@@ -255,8 +294,8 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         if ast.flag == FIELD_ASSIGN_Reactive {
             base := ast.a;
             value := ast.b;
-            compile(base, code, labels, break_stack, continue_stack);
-            reactive := compile_reactive_expr(value);
+            compile(base, code, labels, break_stack, continue_stack, imports);
+            reactive := compile_reactive_expr(value, imports);
             name := ast.name;
             inst := instr2(INSTR_FieldSetReactive, name, reactive);
             vec_push(code, inst);
@@ -269,7 +308,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         cond := ast.a;
         then_block := ast.b;
         else_block := ast.c;
-        compile(cond, code, labels, break_stack, continue_stack);
+        compile(cond, code, labels, break_stack, continue_stack, imports);
 
         else_lbl := label_fresh(labels, "else");
         end_lbl := label_fresh(labels, "ifend");
@@ -279,7 +318,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
         inst = instr0(INSTR_PushImmutableContext);
         vec_push(code, inst);
-        compile_block(then_block, code, labels, break_stack, continue_stack);
+        compile_block(then_block, code, labels, break_stack, continue_stack, imports);
         inst = instr0(INSTR_PopImmutableContext);
         vec_push(code, inst);
 
@@ -290,7 +329,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
         inst = instr0(INSTR_PushImmutableContext);
         vec_push(code, inst);
-        compile_block(else_block, code, labels, break_stack, continue_stack);
+        compile_block(else_block, code, labels, break_stack, continue_stack, imports);
         inst = instr0(INSTR_PopImmutableContext);
         vec_push(code, inst);
 
@@ -313,7 +352,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
         inst = instr0(INSTR_ClearImmutableContext);
         vec_push(code, inst);
 
-        compile_block(ast.list, code, labels, break_stack, continue_stack);
+        compile_block(ast.list, code, labels, break_stack, continue_stack, imports);
 
         inst = instr1(INSTR_Jump, start);
         vec_push(code, inst);
@@ -342,7 +381,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_Return {
         if ast.flag == 1 {
             value := ast.a;
-            compile(value, code, labels, break_stack, continue_stack);
+            compile(value, code, labels, break_stack, continue_stack, imports);
         }
         else {
             inst := instr1(INSTR_Push, 0);
@@ -354,14 +393,14 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     }
 
     if ast.kind == AST_FuncDef {
-        func_code := compile_function_body(ast.body);
+        func_code := compile_function_body(ast.body, imports);
         inst := instr3(INSTR_StoreFunction, ast.name, ast.params, func_code);
         vec_push(code, inst);
         return;
     }
 
     if ast.kind == AST_StructDef {
-        fields := compile_struct_fields(ast.list);
+        fields := compile_struct_fields(ast.list, imports);
         inst := instr2(INSTR_StoreStruct, ast.name, fields);
         vec_push(code, inst);
         return;
@@ -374,8 +413,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     }
 
     if ast.kind == AST_Import {
-        inst := instr1(INSTR_Import, ast.list);
-        vec_push(code, inst);
+        compile_import(ast.list, code, labels, break_stack, continue_stack, imports);
         return;
     }
 
@@ -393,7 +431,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
                     has_main = 1;
                 }
             }
-            compile(item, code, labels, break_stack, continue_stack);
+            compile(item, code, labels, break_stack, continue_stack, imports);
             i = di;
         }
 
@@ -410,21 +448,21 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
     if ast.kind == AST_Print {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_Print);
         vec_push(code, inst);
         return;
     }
     if ast.kind == AST_Println {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_Println);
         vec_push(code, inst);
         return;
     }
     if ast.kind == AST_Assert {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_Assert);
         vec_push(code, inst);
         return;
@@ -438,7 +476,7 @@ func compile(ast, code, labels, break_stack, continue_stack) {
 
     if ast.kind == AST_Cast {
         value := ast.a;
-        compile(value, code, labels, break_stack, continue_stack);
+        compile(value, code, labels, break_stack, continue_stack, imports);
         flag := ast.flag;
         inst := instr1(INSTR_Cast, flag);
         vec_push(code, inst);
@@ -448,29 +486,29 @@ func compile(ast, code, labels, break_stack, continue_stack) {
     error "compiler: unknown AST node";
 }
 
-func compile_block(block, code, labels, break_stack, continue_stack) {
+func compile_block(block, code, labels, break_stack, continue_stack, imports) {
     i = 0;
     di ::= i + 1;
     loop {
         if i >= block { break; }
-        compile(block[i], code, labels, break_stack, continue_stack);
+        compile(block[i], code, labels, break_stack, continue_stack, imports);
         i = di;
     }
 }
 
-func compile_function_body(body) {
+func compile_function_body(body, imports) {
     code := vec_new(16);
     labels := new_labelgen();
     break_stack := vec_new(4);
     continue_stack := vec_new(4);
 
-    compile_block(body, code, labels, break_stack, continue_stack);
+    compile_block(body, code, labels, break_stack, continue_stack, imports);
     inst := instr0(INSTR_Return);
     vec_push(code, inst);
     return vec_to_array(code);
 }
 
-func compile_struct_fields(fields) {
+func compile_struct_fields(fields, imports) {
     out := vec_new(8);
     i = 0;
     di ::= i + 1;
@@ -482,17 +520,17 @@ func compile_struct_fields(fields) {
             vec_push(out, init);
         }
         else if f.kind == FIELD_INIT_Mutable {
-            code := compile_expr_to_code(f.value);
+            code := compile_expr_to_code(f.value, imports);
             init := field_init(f.name, FIELD_INIT_Mutable, code);
             vec_push(out, init);
         }
         else if f.kind == FIELD_INIT_Immutable {
-            code := compile_expr_to_code(f.value);
+            code := compile_expr_to_code(f.value, imports);
             init := field_init(f.name, FIELD_INIT_Immutable, code);
             vec_push(out, init);
         }
         else if f.kind == FIELD_INIT_Reactive {
-            reactive := compile_reactive_expr(f.value);
+            reactive := compile_reactive_expr(f.value, imports);
             init := field_init(f.name, FIELD_INIT_Reactive, reactive);
             vec_push(out, init);
         }
@@ -504,23 +542,23 @@ func compile_struct_fields(fields) {
     return vec_to_array(out);
 }
 
-func compile_expr_to_code(ast) {
+func compile_expr_to_code(ast, imports) {
     code := vec_new(8);
     labels := new_labelgen();
     break_stack := vec_new(4);
     continue_stack := vec_new(4);
 
-    compile(ast, code, labels, break_stack, continue_stack);
+    compile(ast, code, labels, break_stack, continue_stack, imports);
     inst := instr0(INSTR_Return);
     vec_push(code, inst);
     return vec_to_array(code);
 }
 
-func compile_reactive_expr(ast) {
+func compile_reactive_expr(ast, imports) {
     names := vec_new(8);
     collect_free_vars(ast, names);
     vec_sort_strings(names);
-    code := compile_expr_to_code(ast);
+    code := compile_expr_to_code(ast, imports);
     return reactive_expr(vec_to_array(names), code);
 }
 
@@ -614,7 +652,7 @@ func collect_free_vars(ast, out) {
     }
 }
 
-func compile_lvalue(ast, code, labels, break_stack, continue_stack) {
+func compile_lvalue(ast, code, labels, break_stack, continue_stack, imports) {
     if ast.kind == AST_Var {
         name := ast.name;
         inst := instr1(INSTR_Load, name);
@@ -624,21 +662,42 @@ func compile_lvalue(ast, code, labels, break_stack, continue_stack) {
     if ast.kind == AST_Index {
         base := ast.a;
         index := ast.b;
-        compile_lvalue(base, code, labels, break_stack, continue_stack);
-        compile(index, code, labels, break_stack, continue_stack);
+        compile_lvalue(base, code, labels, break_stack, continue_stack, imports);
+        compile(index, code, labels, break_stack, continue_stack, imports);
         inst := instr0(INSTR_ArrayLValue);
         vec_push(code, inst);
         return;
     }
     if ast.kind == AST_FieldAccess {
         base := ast.a;
-        compile_lvalue(base, code, labels, break_stack, continue_stack);
+        compile_lvalue(base, code, labels, break_stack, continue_stack, imports);
         name := ast.name;
         inst := instr1(INSTR_FieldLValue, name);
         vec_push(code, inst);
         return;
     }
     error "compiler: invalid assignment target";
+}
+
+func compile_import(path, code, labels, break_stack, continue_stack, imports) {
+    inst := instr1(INSTR_Import, path);
+    vec_push(code, inst);
+
+    module_name := join_segments(path, ".");
+    if vec_contains_str(imports, module_name) {
+        return;
+    }
+    vec_push(imports, module_name);
+
+    rel_path := join_segments(path, "/");
+    file_path := str_append("project/", rel_path);
+    file_path = str_append(file_path, ".rx");
+
+    source := file_read(file_path);
+    lex := tokenize(source);
+    ast := parse(lex.tokens, lex.len);
+
+    compile_module(ast, code, labels, break_stack, continue_stack, imports);
 }
 
 func emit_operator(op, code) {

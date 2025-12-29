@@ -3,12 +3,29 @@ use crate::grammar::{
     StructFieldInit,
 };
 use std::collections::HashSet;
+use std::path::PathBuf;
+
+use crate::parser::parse;
+use crate::tokenizer::tokenize;
+
+pub struct CompileContext {
+    imported_modules: HashSet<String>,
+}
+
+impl CompileContext {
+    pub fn new() -> Self {
+        Self {
+            imported_modules: HashSet::new(),
+        }
+    }
+}
 pub fn compile(
     ast: AST,
     code: &mut Vec<Instruction>,
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
     continue_stack: &mut Vec<String>,
+    ctx: &mut CompileContext,
 ) {
     match ast {
         // ---------- literals ----------
@@ -20,24 +37,24 @@ pub fn compile(
 
         // ---------- expressions ----------
         AST::ArrayNew(size) => {
-            compile(*size, code, labels, break_stack, continue_stack);
+            compile(*size, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::ArrayNew);
         }
 
         AST::Index(base, index) => {
-            compile(*base, code, labels, break_stack, continue_stack);
-            compile(*index, code, labels, break_stack, continue_stack);
+            compile(*base, code, labels, break_stack, continue_stack, ctx);
+            compile(*index, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::ArrayGet);
         }
 
         AST::FieldAccess(base, field) => {
-            compile(*base, code, labels, break_stack, continue_stack);
+            compile(*base, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::FieldGet(field));
         }
 
         AST::Operation(l, op, r) => {
-            compile(*l, code, labels, break_stack, continue_stack);
-            compile(*r, code, labels, break_stack, continue_stack);
+            compile(*l, code, labels, break_stack, continue_stack, ctx);
+            compile(*r, code, labels, break_stack, continue_stack, ctx);
             emit_operator(op, code);
         }
 
@@ -46,17 +63,17 @@ pub fn compile(
             then_expr,
             else_expr,
         } => {
-            compile(*cond, code, labels, break_stack, continue_stack);
+            compile(*cond, code, labels, break_stack, continue_stack, ctx);
 
             let else_lbl = labels.fresh("ternary_else");
             let end_lbl = labels.fresh("ternary_end");
 
             code.push(Instruction::JumpIfZero(else_lbl.clone()));
-            compile(*then_expr, code, labels, break_stack, continue_stack);
+            compile(*then_expr, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Jump(end_lbl.clone()));
 
             code.push(Instruction::Label(else_lbl));
-            compile(*else_expr, code, labels, break_stack, continue_stack);
+            compile(*else_expr, code, labels, break_stack, continue_stack, ctx);
 
             code.push(Instruction::Label(end_lbl));
         }
@@ -64,36 +81,36 @@ pub fn compile(
         AST::Call { name, args } => {
             let argc = args.len();
             for a in args {
-                compile(a, code, labels, break_stack, continue_stack);
+                compile(a, code, labels, break_stack, continue_stack, ctx);
             }
             code.push(Instruction::Call(name, argc));
         }
 
         // ---------- assignments ----------
         AST::Assign(name, expr) => {
-            compile(*expr, code, labels, break_stack, continue_stack);
+            compile(*expr, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Store(name));
         }
 
         AST::ImmutableAssign(name, expr) => {
-            compile(*expr, code, labels, break_stack, continue_stack);
+            compile(*expr, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::StoreImmutable(name));
         }
 
         AST::ReactiveAssign(name, expr) => {
-            let reactive = compile_reactive_expr(*expr);
+            let reactive = compile_reactive_expr(*expr, ctx);
             code.push(Instruction::StoreReactive(name, reactive));
         }
 
         AST::AssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack, continue_stack);
-            compile(*value, code, labels, break_stack, continue_stack);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack, ctx);
+            compile(*value, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::StoreThrough);
         }
 
         AST::ReactiveAssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack, continue_stack);
-            let reactive = compile_reactive_expr(*value);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack, ctx);
+            let reactive = compile_reactive_expr(*value, ctx);
             code.push(Instruction::StoreThroughReactive(reactive));
         }
 
@@ -104,13 +121,13 @@ pub fn compile(
             kind,
         } => match kind {
             FieldAssignKind::Normal => {
-                compile(*base, code, labels, break_stack, continue_stack);
-                compile(*value, code, labels, break_stack, continue_stack);
+                compile(*base, code, labels, break_stack, continue_stack, ctx);
+                compile(*value, code, labels, break_stack, continue_stack, ctx);
                 code.push(Instruction::FieldSet(field));
             }
             FieldAssignKind::Reactive => {
-                compile(*base, code, labels, break_stack, continue_stack);
-                let reactive = compile_reactive_expr(*value);
+                compile(*base, code, labels, break_stack, continue_stack, ctx);
+                let reactive = compile_reactive_expr(*value, ctx);
                 code.push(Instruction::FieldSetReactive(field, reactive));
             }
             FieldAssignKind::Immutable => {
@@ -120,7 +137,7 @@ pub fn compile(
 
         // ---------- control ----------
         AST::IfElse(cond, then_block, else_block) => {
-            compile(*cond, code, labels, break_stack, continue_stack);
+            compile(*cond, code, labels, break_stack, continue_stack, ctx);
 
             let else_lbl = labels.fresh("else");
             let end_lbl = labels.fresh("ifend");
@@ -130,7 +147,7 @@ pub fn compile(
             // THEN block scope
             code.push(Instruction::PushImmutableContext);
             for s in then_block {
-                compile(s, code, labels, break_stack, continue_stack);
+                compile(s, code, labels, break_stack, continue_stack, ctx);
             }
             code.push(Instruction::PopImmutableContext);
 
@@ -141,7 +158,7 @@ pub fn compile(
             // ELSE block scope
             code.push(Instruction::PushImmutableContext);
             for s in else_block {
-                compile(s, code, labels, break_stack, continue_stack);
+                compile(s, code, labels, break_stack, continue_stack, ctx);
             }
             code.push(Instruction::PopImmutableContext);
 
@@ -159,7 +176,7 @@ pub fn compile(
             code.push(Instruction::ClearImmutableContext);
 
             for s in body {
-                compile(s, code, labels, break_stack, continue_stack);
+                compile(s, code, labels, break_stack, continue_stack, ctx);
             }
 
             code.push(Instruction::Jump(start));
@@ -188,7 +205,7 @@ pub fn compile(
 
         AST::Return(expr) => {
             if let Some(e) = expr {
-                compile(*e, code, labels, break_stack, continue_stack);
+                compile(*e, code, labels, break_stack, continue_stack, ctx);
             } else {
                 code.push(Instruction::Push(0));
             }
@@ -197,12 +214,12 @@ pub fn compile(
 
         // ---------- definitions ----------
         AST::FuncDef { name, params, body } => {
-            let func_code = compile_function_body(body);
+            let func_code = compile_function_body(body, ctx);
             code.push(Instruction::StoreFunction(name, params, func_code));
         }
 
         AST::StructDef { name, fields } => {
-            let compiled_fields = compile_struct_fields(fields);
+            let compiled_fields = compile_struct_fields(fields, ctx);
             code.push(Instruction::StoreStruct(name, compiled_fields));
         }
 
@@ -211,7 +228,7 @@ pub fn compile(
         }
 
         AST::Import(path) => {
-            code.push(Instruction::Import(path));
+            compile_import(path, code, labels, break_stack, continue_stack, ctx);
         }
 
         AST::Program(stmts) => {
@@ -223,7 +240,7 @@ pub fn compile(
                         has_main = true;
                     }
                 }
-                compile(s, code, labels, break_stack, continue_stack);
+                compile(s, code, labels, break_stack, continue_stack, ctx);
             }
 
             if !has_main {
@@ -235,17 +252,17 @@ pub fn compile(
         }
 
         AST::Print(e) => {
-            compile(*e, code, labels, break_stack, continue_stack);
+            compile(*e, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Print);
         }
 
         AST::Println(e) => {
-            compile(*e, code, labels, break_stack, continue_stack);
+            compile(*e, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Println);
         }
 
         AST::Assert(expr) => {
-            compile(*expr, code, labels, break_stack, continue_stack);
+            compile(*expr, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Assert);
         }
 
@@ -254,18 +271,18 @@ pub fn compile(
         }
 
         AST::ImmutableAssignTarget(target, value) => {
-            compile_lvalue(*target, code, labels, break_stack, continue_stack);
-            compile(*value, code, labels, break_stack, continue_stack);
+            compile_lvalue(*target, code, labels, break_stack, continue_stack, ctx);
+            compile(*value, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::StoreThroughImmutable);
         }
         AST::Cast { target, expr } => {
-            compile(*expr, code, labels, break_stack, continue_stack);
+            compile(*expr, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::Cast(target));
         }
     }
 }
 
-fn compile_function_body(body: Vec<AST>) -> Vec<Instruction> {
+fn compile_function_body(body: Vec<AST>, ctx: &mut CompileContext) -> Vec<Instruction> {
     let mut code = Vec::new();
     let mut labels = LabelGenerator::new();
     let mut break_stack = Vec::new();
@@ -278,6 +295,7 @@ fn compile_function_body(body: Vec<AST>) -> Vec<Instruction> {
             &mut labels,
             &mut break_stack,
             &mut continue_stack,
+            ctx,
         );
     }
 
@@ -287,19 +305,22 @@ fn compile_function_body(body: Vec<AST>) -> Vec<Instruction> {
 
 fn compile_struct_fields(
     fields: Vec<(String, Option<StructFieldInit>)>,
+    ctx: &mut CompileContext,
 ) -> Vec<(String, Option<CompiledStructFieldInit>)> {
     fields
         .into_iter()
         .map(|(name, init)| {
             let compiled_init = match init {
                 Some(StructFieldInit::Mutable(ast)) => {
-                    Some(CompiledStructFieldInit::Mutable(compile_expr_to_code(ast)))
+                    Some(CompiledStructFieldInit::Mutable(compile_expr_to_code(
+                        ast, ctx,
+                    )))
                 }
                 Some(StructFieldInit::Immutable(ast)) => Some(CompiledStructFieldInit::Immutable(
-                    compile_expr_to_code(ast),
+                    compile_expr_to_code(ast, ctx),
                 )),
                 Some(StructFieldInit::Reactive(ast)) => Some(CompiledStructFieldInit::Reactive(
-                    compile_reactive_expr(ast),
+                    compile_reactive_expr(ast, ctx),
                 )),
                 None => None,
             };
@@ -308,7 +329,7 @@ fn compile_struct_fields(
         .collect()
 }
 
-fn compile_expr_to_code(ast: AST) -> Vec<Instruction> {
+fn compile_expr_to_code(ast: AST, ctx: &mut CompileContext) -> Vec<Instruction> {
     let mut code = Vec::new();
     let mut labels = LabelGenerator::new();
     let mut break_stack = Vec::new();
@@ -320,18 +341,19 @@ fn compile_expr_to_code(ast: AST) -> Vec<Instruction> {
         &mut labels,
         &mut break_stack,
         &mut continue_stack,
+        ctx,
     );
     code.push(Instruction::Return);
     code
 }
-fn compile_reactive_expr(ast: AST) -> ReactiveExpr {
+fn compile_reactive_expr(ast: AST, ctx: &mut CompileContext) -> ReactiveExpr {
     let mut names = HashSet::new();
     collect_free_vars(&ast, &mut names);
 
     let mut captures: Vec<String> = names.into_iter().collect();
     captures.sort();
 
-    let code = compile_expr_to_code(ast);
+    let code = compile_expr_to_code(ast, ctx);
 
     ReactiveExpr { code, captures }
 }
@@ -407,14 +429,15 @@ pub fn compile_module(
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
     continue_stack: &mut Vec<String>,
+    ctx: &mut CompileContext,
 ) {
     match ast {
         AST::Program(stmts) => {
             for s in stmts {
-                compile(s, code, labels, break_stack, continue_stack);
+                compile(s, code, labels, break_stack, continue_stack, ctx);
             }
         }
-        other => compile(other, code, labels, break_stack, continue_stack),
+        other => compile(other, code, labels, break_stack, continue_stack, ctx),
     }
 }
 fn compile_lvalue(
@@ -423,6 +446,7 @@ fn compile_lvalue(
     labels: &mut LabelGenerator,
     break_stack: &mut Vec<String>,
     continue_stack: &mut Vec<String>,
+    ctx: &mut CompileContext,
 ) {
     match ast {
         AST::Var(name) => {
@@ -430,17 +454,40 @@ fn compile_lvalue(
         }
 
         AST::Index(base, index) => {
-            compile_lvalue(*base, code, labels, break_stack, continue_stack);
-            compile(*index, code, labels, break_stack, continue_stack);
+            compile_lvalue(*base, code, labels, break_stack, continue_stack, ctx);
+            compile(*index, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::ArrayLValue);
         }
 
         AST::FieldAccess(base, field) => {
-            compile_lvalue(*base, code, labels, break_stack, continue_stack);
+            compile_lvalue(*base, code, labels, break_stack, continue_stack, ctx);
             code.push(Instruction::FieldLValue(field));
         }
 
         other => panic!("invalid assignment target: {:?}", other),
+    }
+}
+
+fn compile_import(
+    path: Vec<String>,
+    code: &mut Vec<Instruction>,
+    labels: &mut LabelGenerator,
+    break_stack: &mut Vec<String>,
+    continue_stack: &mut Vec<String>,
+    ctx: &mut CompileContext,
+) {
+    let module_name = path.join(".");
+    code.push(Instruction::Import(path.clone()));
+
+    if ctx.imported_modules.insert(module_name) {
+        let mut file_path = PathBuf::from("project").join(path.join("/"));
+        file_path.set_extension("rx");
+        let source = std::fs::read_to_string(&file_path).unwrap_or_else(|e| {
+            panic!("failed to read module `{}`: {}", file_path.display(), e)
+        });
+        let tokens = tokenize(&source);
+        let ast = parse(tokens);
+        compile_module(ast, code, labels, break_stack, continue_stack, ctx);
     }
 }
 
