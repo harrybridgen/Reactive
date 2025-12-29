@@ -1,0 +1,200 @@
+# ------------------------------------------------ #
+# Reactive Pong (two AI paddles)                   #
+# ------------------------------------------------ #
+
+struct Screen {
+    width;
+    height;
+    buf;
+}
+
+struct Ball {
+    x;
+    y;
+    vx;
+    vy;
+
+    dx ::= x + vx;
+    dy ::= y + vy;
+}
+
+struct Paddle {
+    x;
+    y;
+    height;
+}
+
+func new_screen(width, height) {
+    screen := struct Screen;
+    screen.width := width;
+    screen.height := height;
+    screen.buf := [screen.height];
+
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+        screen.buf[y] = [screen.width];
+        y = dy;
+    }
+
+    return screen;
+}
+
+func new_ball(x, y, vx, vy) {
+    ball := struct Ball;
+    ball.x = x;
+    ball.y = y;
+    ball.vx = vx;
+    ball.vy = vy;
+    return ball;
+}
+
+func new_paddle(x, y, height) {
+    paddle := struct Paddle;
+    paddle.x = x;
+    paddle.y = y;
+    paddle.height := height;
+    return paddle;
+}
+
+func framebuffer(screen, ball, left, right) {
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+
+        x = 0;
+        dx ::= x + 1;
+
+        loop {
+            if x >= screen.width { break; }
+
+            yy := y;
+            xx := x;
+
+            screen.buf[yy][xx] ::=
+            (xx == ball.x && yy == ball.y) ? 'o'
+            : (xx == left.x && yy >= left.y && yy < (left.y + left.height)) ? '|'
+            : (xx == right.x && yy >= right.y && yy < (right.y + right.height)) ? '|'
+            : (' ');
+
+            x = dx;
+        }
+
+        y = dy;
+    }
+}
+
+func render(screen) {
+    print "\033[H";
+
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+        println screen.buf[y];
+        y = dy;
+    }
+}
+
+func delay(n) {
+    d = 0;
+    dd ::= d + 1;
+
+    loop {
+        if d >= n { break; }
+        d = dd;
+    }
+}
+
+func main() {
+    print "\033[2J";
+    screen_width := 60;
+    screen_height := 20;
+
+    screen := new_screen(screen_width, screen_height);
+
+    center_x = screen_width/2 + 1;
+    center_y = screen_height/2;
+
+    ball := new_ball(center_x, center_y, 2, 1);
+
+    left := new_paddle(2, 7, 5);
+    right := new_paddle(screen.width - 3, 7, 4);
+
+    framebuffer(screen, ball, left, right);
+
+    left_bias = 1;
+    right_bias = 1;
+    right_bias_tick = 1;
+
+    loop {
+        render(screen);
+        delay(20000);
+
+        right_bias_tick = right_bias_tick + 1;
+        if right_bias_tick >= 6 {
+            right_bias_tick = 0;
+            right_bias = -right_bias;
+        }
+
+        left_target = ball.y + left_bias;
+        if left_target > (left.y + 2) { left.y = left.y + 1; }
+        if left_target < (left.y + 2) { left.y = left.y - 1; }
+        if left.y < 0 { left.y = 0; }
+        if left.y > (screen.height - left.height) {
+            left.y = screen.height - left.height;
+        }
+        left_bias = -left_bias;
+
+        right_center = right.y + (right.height/2);
+        if ball.x > center_x {
+            right_target = ball.y + right_bias;
+            if right_target > right_center { right.y = right.y + 1; }
+            if right_target < right_center { right.y = right.y - 1; }
+            right_center = right.y + (right.height/2);
+            if right_target > right_center { right.y = right.y + 1; }
+            if right_target < right_center { right.y = right.y - 1; }
+        }
+        if right.y < 0 { right.y = 0; }
+        if right.y > (screen.height - right.height) {
+            right.y = screen.height - right.height;
+        }
+
+        ball.x = ball.dx;
+        ball.y = ball.dy;
+
+        if ball.y < 0 {
+            ball.y = -ball.y;
+            ball.vy = -ball.vy;
+        }
+
+        if ball.y > (screen.height - 1) {
+            ball.y = (screen.height - 1) - (ball.y - (screen.height - 1));
+            ball.vy = -ball.vy;
+        }
+
+        if ball.vx < 0 &&
+        ball.x <= (left.x + 1) &&
+        ball.y >= left.y &&
+        ball.y < (left.y + left.height) {
+            ball.x = left.x + 1;
+            ball.vx = -ball.vx;
+        }
+
+        if ball.vx > 0 &&
+        ball.x >= (right.x - 1) &&
+        ball.y >= right.y &&
+        ball.y < (right.y + right.height) {
+            ball.x = right.x - 1;
+            ball.vx = -ball.vx;
+        }
+
+        if ball.x < 0 { break; }
+        if ball.x >= screen.width { break; }
+    }
+}

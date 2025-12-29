@@ -78,7 +78,6 @@ func framebuffer(screen, text) {
     }
 }
 func render(screen) {
-    print "\033[2J";
     print "\033[H";
 
     y = 0;
@@ -100,13 +99,14 @@ func delay(n) {
     }
 }
 func main(){
+    print "\033[2J";
     text := new_text("HELLO REACTIVE");
-    screen := new_screen(50,8);
+    screen := new_screen(67,13);
 
     framebuffer(screen, text);
     loop {
         render(screen);
-        delay(50000);
+        delay(60000);
 
         text.x = text.dx;
         text.y = text.dy;

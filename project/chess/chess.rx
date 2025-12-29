@@ -36,7 +36,7 @@ func new_board(pawn) {
             yy := y;
             xx := x;
             board.cells[yy][xx] ::=
-            (xx == pawn.x && yy == pawn.y) ? 'P' : '.';
+            (xx == pawn.x && yy == pawn.y) ? '♙' : '·';
             x = dx;
         }
         y = dy;
@@ -46,16 +46,26 @@ func new_board(pawn) {
 }
 
 func render(board) {
-    print "\033[2J";
     print "\033[H";
-    println " abcdefgh";
+    print " ";
+    println "   a  b  c  d  e  f  g  h";
     y = 0;
     dy ::= y + 1;
     loop {
         if y >= board.size { break; }
+        print " ";
         print (board.size - y);
         print " ";
-        println board.cells[y];
+        x = 0;
+        dx ::= x + 1;
+        loop {
+            if x >= board.size { break; }
+            print " ";
+            print board.cells[y][x];
+            print " ";
+            x = dx;
+        }
+        println "";
         y = dy;
     }
 }
@@ -70,6 +80,7 @@ func delay(n) {
 }
 
 func main() {
+    print "\033[2J";
     pawn := struct Pawn;
     board := new_board(pawn);
 
