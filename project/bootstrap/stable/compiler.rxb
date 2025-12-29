@@ -2801,6 +2801,35 @@ Import 3 "bootstrap" "stable" "tokenizer"
 Import 3 "bootstrap" "stable" "grammar"
 Import 3 "bootstrap" "stable" "util"
 Import 2 "std" "char"
+Import 2 "std" "buf"
+StoreFunction "buf_new" 1 "cap" 4
+Load "cap"
+Call "internal_buf_new" 1
+Return
+Return
+StoreFunction "buf_push_char" 2 "buf" "c" 5
+Load "buf"
+Load "c"
+Call "internal_buf_push_char" 2
+Return
+Return
+StoreFunction "buf_push_str" 2 "buf" "s" 5
+Load "buf"
+Load "s"
+Call "internal_buf_push_str" 2
+Return
+Return
+StoreFunction "buf_to_string" 1 "buf" 4
+Load "buf"
+Call "internal_buf_to_string" 1
+Return
+Return
+StoreFunction "buf_write_file" 2 "buf" "path" 5
+Load "buf"
+Load "path"
+Call "internal_buf_write_file" 2
+Return
+Return
 StoreStruct "Lexer" 2
 Field "tokens" None
 Field "len" Mutable 2
@@ -3804,11 +3833,12 @@ StoreThrough
 Load "res"
 Return
 Return
-StoreFunction "read_ident" 2 "src" "start" 61
+StoreFunction "read_ident" 2 "src" "start" 62
 NewStruct "ReadResult"
 StoreImmutable "res"
-Call "str_empty" 0
-StoreImmutable "name"
+Push 8
+Call "buf_new" 1
+StoreImmutable "buf"
 Load "start"
 Store "i"
 PushImmutableContext
@@ -3843,10 +3873,9 @@ Label "else_4"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_5"
-Load "name"
+Load "buf"
 Load "c"
-Call "str_append_char" 2
-Store "name"
+Call "buf_push_char" 2
 Load "i"
 Push 1
 Add
@@ -3856,7 +3885,8 @@ Label "loop_end_1"
 PopImmutableContext
 Load "res"
 FieldLValue "value"
-Load "name"
+Load "buf"
+Call "buf_to_string" 1
 Call "ident_token" 1
 StoreThrough
 Load "res"
@@ -4435,8 +4465,9 @@ Return
 StoreFunction "read_string" 2 "src" "start" 88
 NewStruct "ReadResult"
 StoreImmutable "res"
-Call "str_empty" 0
-StoreImmutable "out"
+Push 16
+Call "buf_new" 1
+StoreImmutable "buf"
 Load "start"
 Store "i"
 PushImmutableContext
@@ -4485,11 +4516,10 @@ Push 1
 Add
 Call "read_escape" 2
 StoreImmutable "esc"
-Load "out"
+Load "buf"
 Load "esc"
 FieldGet "value"
-Call "str_append_char" 2
-Store "out"
+Call "buf_push_char" 2
 Load "esc"
 FieldGet "index"
 Store "i"
@@ -4497,10 +4527,9 @@ PopImmutableContext
 Jump "ifend_7"
 Label "else_6"
 PushImmutableContext
-Load "out"
+Load "buf"
 Load "c"
-Call "str_append_char" 2
-Store "out"
+Call "buf_push_char" 2
 Load "i"
 Push 1
 Add
@@ -4512,7 +4541,8 @@ Label "loop_end_1"
 PopImmutableContext
 Load "res"
 FieldLValue "value"
-Load "out"
+Load "buf"
+Call "buf_to_string" 1
 StoreThrough
 Load "res"
 FieldLValue "index"
@@ -6934,34 +6964,6 @@ Call "internal_file_remove" 1
 Return
 Return
 Import 2 "std" "buf"
-StoreFunction "buf_new" 1 "cap" 4
-Load "cap"
-Call "internal_buf_new" 1
-Return
-Return
-StoreFunction "buf_push_char" 2 "buf" "c" 5
-Load "buf"
-Load "c"
-Call "internal_buf_push_char" 2
-Return
-Return
-StoreFunction "buf_push_str" 2 "buf" "s" 5
-Load "buf"
-Load "s"
-Call "internal_buf_push_str" 2
-Return
-Return
-StoreFunction "buf_to_string" 1 "buf" 4
-Load "buf"
-Call "internal_buf_to_string" 1
-Return
-Return
-StoreFunction "buf_write_file" 2 "buf" "path" 5
-Load "buf"
-Load "path"
-Call "internal_buf_write_file" 2
-Return
-Return
 StoreStruct "LabelGen" 1
 Field "counter" Mutable 2
 Push 0

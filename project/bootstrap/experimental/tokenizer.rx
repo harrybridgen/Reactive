@@ -1,6 +1,7 @@
 import bootstrap.experimental.grammar;
 import bootstrap.experimental.util;
 import std.char;
+import std.buf;
 
 struct Lexer {
     tokens;
@@ -185,18 +186,18 @@ func read_number(src, start) {
 
 func read_ident(src, start) {
     res := struct ReadResult;
-    name := str_empty();
+    buf := buf_new(8);
 
     i = start;
     loop {
         if i >= src { break; }
         c := src[i];
         if !is_alnum(c) { break; }
-        name = str_append_char(name, c);
+        buf_push_char(buf, c);
         i = i + 1;
     }
 
-    res.value = ident_token(name);
+    res.value = ident_token(buf_to_string(buf));
     res.index = i;
     return res;
 }
@@ -220,7 +221,7 @@ func ident_token(name) {
 
 func read_string(src, start) {
     res := struct ReadResult;
-    out := str_empty();
+    buf := buf_new(16);
 
     i = start;
     loop {
@@ -234,16 +235,16 @@ func read_string(src, start) {
         }
         if c == '\\' {
             esc := read_escape(src, i + 1);
-            out = str_append_char(out, esc.value);
+            buf_push_char(buf, esc.value);
             i = esc.index;
         }
         else {
-            out = str_append_char(out, c);
+            buf_push_char(buf, c);
             i = i + 1;
         }
     }
 
-    res.value = out;
+    res.value = buf_to_string(buf);
     res.index = i;
     return res;
 }
