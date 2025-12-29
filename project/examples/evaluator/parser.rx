@@ -1,4 +1,4 @@
-import eval.grammar;
+import examples.evaluator.grammar;
 
 struct Parser {
     tokens;

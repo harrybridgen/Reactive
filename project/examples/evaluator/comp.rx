@@ -1,5 +1,5 @@
-import eval.tokenizer;
-import eval.parser;
+import examples.evaluator.tokenizer;
+import examples.evaluator.parser;
 
 
 
