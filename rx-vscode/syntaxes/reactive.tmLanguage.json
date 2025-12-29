@@ -18,15 +18,22 @@
     { "include": "#mutableIdentifiers" }
   ],
   "repository": {
-    "comments": {
-      "patterns": [
-        {
-          "name": "comment.block.reactive",
-          "begin": "#",
-          "end": "#"
-        }
-      ]
-    },
+  "comments": {
+    "patterns": [
+      {
+        "name": "comment.block.reactive",
+        "begin": "#",
+        "beginCaptures": {
+          "0": { "name": "punctuation.definition.comment.reactive" }
+        },
+        "end": "#",
+        "endCaptures": {
+          "0": { "name": "punctuation.definition.comment.reactive" }
+        },
+        "patterns": []
+      }
+    ]
+  },
 
     "keywords": {
       "patterns": [
