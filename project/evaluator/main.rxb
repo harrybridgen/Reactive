@@ -1,0 +1,1597 @@
+RXB1
+Import 2 "evaluator" "tokenizer"
+Import 2 "evaluator" "tokens"
+Push 1
+StoreImmutable "TK_Number"
+Push 2
+StoreImmutable "TK_Add"
+Push 3
+StoreImmutable "TK_Sub"
+Push 4
+StoreImmutable "TK_Mul"
+Push 5
+StoreImmutable "TK_Div"
+Push 6
+StoreImmutable "TK_LParen"
+Push 7
+StoreImmutable "TK_RParen"
+StoreStruct "Token" 2
+Field "kind" Mutable 2
+Push 0
+Return
+Field "ival" Mutable 2
+Push 0
+Return
+StoreFunction "tokenOper" 2 "kind" "r" 21
+NewStruct "Token"
+StoreImmutable "t"
+Load "t"
+FieldLValue "kind"
+Load "kind"
+StoreThrough
+Load "r"
+FieldLValue "tokens"
+Load "r"
+FieldGet "len"
+ArrayLValue
+Load "t"
+StoreThrough
+Load "r"
+FieldLValue "len"
+Load "r"
+FieldGet "len"
+Push 1
+Add
+StoreThrough
+Return
+StoreFunction "tokenNum" 3 "kind" "r" "val" 25
+NewStruct "Token"
+StoreImmutable "t"
+Load "t"
+FieldLValue "kind"
+Load "kind"
+StoreThrough
+Load "t"
+FieldLValue "ival"
+Load "val"
+StoreThrough
+Load "r"
+FieldLValue "tokens"
+Load "r"
+FieldGet "len"
+ArrayLValue
+Load "t"
+StoreThrough
+Load "r"
+FieldLValue "len"
+Load "r"
+FieldGet "len"
+Push 1
+Add
+StoreThrough
+Return
+Import 2 "std" "char"
+StoreFunction "is_digit" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 48
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 57
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "is_alpha" 1 "c" 31
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 122
+Cast Int
+LessEqual
+And
+Load "c"
+Cast Int
+PushChar 65
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 90
+Cast Int
+LessEqual
+And
+Or
+Load "c"
+Cast Int
+PushChar 95
+Cast Int
+Equal
+Or
+Return
+Return
+StoreFunction "is_alnum" 1 "c" 7
+Load "c"
+Call "is_alpha" 1
+Load "c"
+Call "is_digit" 1
+Or
+Return
+Return
+StoreFunction "is_space" 1 "c" 25
+Load "c"
+Cast Int
+PushChar 32
+Cast Int
+Equal
+Load "c"
+Cast Int
+PushChar 10
+Cast Int
+Equal
+Or
+Load "c"
+Cast Int
+PushChar 9
+Cast Int
+Equal
+Or
+Load "c"
+Cast Int
+PushChar 13
+Cast Int
+Equal
+Or
+Return
+Return
+StoreFunction "is_lower" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 122
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "is_upper" 1 "c" 13
+Load "c"
+Cast Int
+PushChar 65
+Cast Int
+GreaterEqual
+Load "c"
+Cast Int
+PushChar 90
+Cast Int
+LessEqual
+And
+Return
+Return
+StoreFunction "to_lower" 1 "c" 23
+Load "c"
+Call "is_upper" 1
+JumpIfZero "else_0"
+PushImmutableContext
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+PushChar 65
+Cast Int
+Sub
+Add
+Cast Char
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Return
+Return
+StoreFunction "to_upper" 1 "c" 23
+Load "c"
+Call "is_lower" 1
+JumpIfZero "else_0"
+PushImmutableContext
+Load "c"
+Cast Int
+PushChar 97
+Cast Int
+PushChar 65
+Cast Int
+Sub
+Sub
+Cast Char
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Return
+Return
+StoreFunction "digit_to_int" 1 "c" 149
+Load "c"
+Call "is_digit" 1
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 25
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 1
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 2
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 3
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 4
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 5
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 6
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 7
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 8
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 9
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 10
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 11
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 12
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 13
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 14
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 15
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 16
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 18
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_2"
+Push 19
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 20
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 21
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 22
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 23
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 24
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Println
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "c"
+Cast Int
+PushChar 48
+Cast Int
+Sub
+Return
+Return
+StoreFunction "int_to_digit" 1 "n" 152
+Load "n"
+Push 0
+Less
+Load "n"
+Push 9
+Greater
+Or
+JumpIfZero "else_0"
+PushImmutableContext
+Push 25
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 1
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 2
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 3
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 4
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 5
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 6
+ArrayLValue
+PushChar 95
+StoreThrough
+Load "__strlit_2"
+Push 7
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 8
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 9
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 10
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 11
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 12
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 13
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 14
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_2"
+Push 15
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 16
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 18
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_2"
+Push 19
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 20
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_2"
+Push 21
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 22
+ArrayLValue
+PushChar 103
+StoreThrough
+Load "__strlit_2"
+Push 23
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_2"
+Push 24
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Println
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "n"
+PushChar 48
+Cast Int
+Add
+Cast Char
+Return
+Return
+StoreFunction "char_to_int" 1 "c" 4
+Load "c"
+Cast Int
+Return
+Return
+StoreFunction "int_to_char" 1 "n" 4
+Load "n"
+Cast Char
+Return
+Return
+StoreStruct "Lexer" 2
+Field "tokens" None
+Field "len" Mutable 2
+Push 0
+Return
+StoreFunction "tokenize" 1 "src" 217
+NewStruct "Lexer"
+StoreImmutable "r"
+Load "r"
+FieldLValue "tokens"
+Load "src"
+Cast Int
+ArrayNew
+StoreThroughImmutable
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "src"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "src"
+Load "i"
+ArrayGet
+StoreImmutable "c"
+Load "c"
+PushChar 32
+Equal
+Load "c"
+PushChar 9
+Equal
+Or
+Load "c"
+PushChar 10
+Equal
+Or
+JumpIfZero "else_4"
+PushImmutableContext
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+Load "c"
+PushChar 43
+Equal
+JumpIfZero "else_6"
+PushImmutableContext
+Load "TK_Add"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_7"
+Label "else_6"
+PushImmutableContext
+Load "c"
+PushChar 45
+Equal
+JumpIfZero "else_8"
+PushImmutableContext
+Load "TK_Sub"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_9"
+Label "else_8"
+PushImmutableContext
+Load "c"
+PushChar 42
+Equal
+JumpIfZero "else_10"
+PushImmutableContext
+Load "TK_Mul"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_11"
+Label "else_10"
+PushImmutableContext
+Load "c"
+PushChar 47
+Equal
+JumpIfZero "else_12"
+PushImmutableContext
+Load "TK_Div"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_13"
+Label "else_12"
+PushImmutableContext
+Load "c"
+PushChar 40
+Equal
+JumpIfZero "else_14"
+PushImmutableContext
+Load "TK_LParen"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_15"
+Label "else_14"
+PushImmutableContext
+Load "c"
+PushChar 41
+Equal
+JumpIfZero "else_16"
+PushImmutableContext
+Load "TK_RParen"
+Load "r"
+Call "tokenOper" 2
+Load "di"
+Store "i"
+PopImmutableContext
+Jump "ifend_17"
+Label "else_16"
+PushImmutableContext
+Load "c"
+Call "is_digit" 1
+JumpIfZero "else_18"
+PushImmutableContext
+Load "c"
+Call "digit_to_int" 1
+Store "val"
+Load "di"
+Store "i"
+PushImmutableContext
+Label "loop_start_20"
+ClearImmutableContext
+Load "i"
+Load "src"
+GreaterEqual
+JumpIfZero "else_22"
+PushImmutableContext
+Jump "loop_end_21"
+PopImmutableContext
+Jump "ifend_23"
+Label "else_22"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_23"
+Load "src"
+Load "i"
+ArrayGet
+Call "is_digit" 1
+Push 0
+Equal
+JumpIfZero "else_24"
+PushImmutableContext
+Jump "loop_end_21"
+PopImmutableContext
+Jump "ifend_25"
+Label "else_24"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_25"
+Load "val"
+Push 10
+Mul
+Load "src"
+Load "i"
+ArrayGet
+Call "digit_to_int" 1
+Add
+Store "val"
+Load "di"
+Store "i"
+Jump "loop_start_20"
+Label "loop_end_21"
+PopImmutableContext
+Load "TK_Number"
+Load "r"
+Load "val"
+Call "tokenNum" 3
+PopImmutableContext
+Jump "ifend_19"
+Label "else_18"
+PushImmutableContext
+Error "lexer: unknown character"
+PopImmutableContext
+Label "ifend_19"
+PopImmutableContext
+Label "ifend_17"
+PopImmutableContext
+Label "ifend_15"
+PopImmutableContext
+Label "ifend_13"
+PopImmutableContext
+Label "ifend_11"
+PopImmutableContext
+Label "ifend_9"
+PopImmutableContext
+Label "ifend_7"
+PopImmutableContext
+Label "ifend_5"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "r"
+Return
+Return
+StoreFunction "print_token" 1 "t" 263
+Load "t"
+FieldGet "kind"
+Load "TK_Number"
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Load "t"
+FieldGet "ival"
+Println
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_Add"
+Equal
+JumpIfZero "else_2"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_4"
+Load "__strlit_4"
+Push 0
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_4"
+Println
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_Sub"
+Equal
+JumpIfZero "else_5"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_7"
+Load "__strlit_7"
+Push 0
+ArrayLValue
+PushChar 45
+StoreThrough
+Load "__strlit_7"
+Println
+PopImmutableContext
+Jump "ifend_6"
+Label "else_5"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_Mul"
+Equal
+JumpIfZero "else_8"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_10"
+Load "__strlit_10"
+Push 0
+ArrayLValue
+PushChar 42
+StoreThrough
+Load "__strlit_10"
+Println
+PopImmutableContext
+Jump "ifend_9"
+Label "else_8"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_Div"
+Equal
+JumpIfZero "else_11"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_13"
+Load "__strlit_13"
+Push 0
+ArrayLValue
+PushChar 47
+StoreThrough
+Load "__strlit_13"
+Println
+PopImmutableContext
+Jump "ifend_12"
+Label "else_11"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_LParen"
+Equal
+JumpIfZero "else_14"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_16"
+Load "__strlit_16"
+Push 0
+ArrayLValue
+PushChar 40
+StoreThrough
+Load "__strlit_16"
+Println
+PopImmutableContext
+Jump "ifend_15"
+Label "else_14"
+PushImmutableContext
+Load "t"
+FieldGet "kind"
+Load "TK_RParen"
+Equal
+JumpIfZero "else_17"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_19"
+Load "__strlit_19"
+Push 0
+ArrayLValue
+PushChar 41
+StoreThrough
+Load "__strlit_19"
+Println
+PopImmutableContext
+Jump "ifend_18"
+Label "else_17"
+PushImmutableContext
+Push 22
+ArrayNew
+Store "__strlit_20"
+Load "__strlit_20"
+Push 0
+ArrayLValue
+PushChar 67
+StoreThrough
+Load "__strlit_20"
+Push 1
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_20"
+Push 2
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_20"
+Push 3
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_20"
+Push 4
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_20"
+Push 5
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_20"
+Push 6
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_20"
+Push 7
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_20"
+Push 8
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_20"
+Push 9
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_20"
+Push 10
+ArrayLValue
+PushChar 112
+StoreThrough
+Load "__strlit_20"
+Push 11
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_20"
+Push 12
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_20"
+Push 13
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_20"
+Push 14
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_20"
+Push 15
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_20"
+Push 16
+ArrayLValue
+PushChar 115
+StoreThrough
+Load "__strlit_20"
+Push 17
+ArrayLValue
+PushChar 121
+StoreThrough
+Load "__strlit_20"
+Push 18
+ArrayLValue
+PushChar 109
+StoreThrough
+Load "__strlit_20"
+Push 19
+ArrayLValue
+PushChar 98
+StoreThrough
+Load "__strlit_20"
+Push 20
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_20"
+Push 21
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_20"
+Println
+PopImmutableContext
+Label "ifend_18"
+PopImmutableContext
+Label "ifend_15"
+PopImmutableContext
+Label "ifend_12"
+PopImmutableContext
+Label "ifend_9"
+PopImmutableContext
+Label "ifend_6"
+PopImmutableContext
+Label "ifend_3"
+PopImmutableContext
+Label "ifend_1"
+Return
+Import 2 "evaluator" "parser"
+Import 2 "evaluator" "AST"
+Push 1
+StoreImmutable "AST_Number"
+Push 2
+StoreImmutable "AST_Add"
+Push 3
+StoreImmutable "AST_Sub"
+Push 4
+StoreImmutable "AST_Mul"
+Push 5
+StoreImmutable "AST_Div"
+Push 6
+StoreImmutable "AST_LParen"
+Push 7
+StoreImmutable "AST_RParen"
+StoreStruct "AST" 5
+Field "kind" None
+Field "left" None
+Field "right" None
+Field "literal" Mutable 2
+Push 0
+Return
+Field "value" Reactive 9 "AST_Add" "AST_Div" "AST_Mul" "AST_Number" "AST_Sub" "kind" "left" "literal" "right" 58
+Load "kind"
+Load "AST_Number"
+Equal
+JumpIfZero "ternary_else_0"
+Load "literal"
+Jump "ternary_end_1"
+Label "ternary_else_0"
+Load "kind"
+Load "AST_Add"
+Equal
+JumpIfZero "ternary_else_2"
+Load "left"
+FieldGet "value"
+Load "right"
+FieldGet "value"
+Add
+Jump "ternary_end_3"
+Label "ternary_else_2"
+Load "kind"
+Load "AST_Sub"
+Equal
+JumpIfZero "ternary_else_4"
+Load "left"
+FieldGet "value"
+Load "right"
+FieldGet "value"
+Sub
+Jump "ternary_end_5"
+Label "ternary_else_4"
+Load "kind"
+Load "AST_Mul"
+Equal
+JumpIfZero "ternary_else_6"
+Load "left"
+FieldGet "value"
+Load "right"
+FieldGet "value"
+Mul
+Jump "ternary_end_7"
+Label "ternary_else_6"
+Load "kind"
+Load "AST_Div"
+Equal
+JumpIfZero "ternary_else_8"
+Load "left"
+FieldGet "value"
+Load "right"
+FieldGet "value"
+Div
+Jump "ternary_end_9"
+Label "ternary_else_8"
+Push 0
+Label "ternary_end_9"
+Label "ternary_end_7"
+Label "ternary_end_5"
+Label "ternary_end_3"
+Label "ternary_end_1"
+Return
+StoreFunction "nodeOper" 3 "kind" "left" "right" 17
+NewStruct "AST"
+StoreImmutable "n"
+Load "n"
+FieldLValue "kind"
+Load "kind"
+StoreThrough
+Load "n"
+FieldLValue "left"
+Load "left"
+StoreThrough
+Load "n"
+FieldLValue "right"
+Load "right"
+StoreThrough
+Load "n"
+Return
+Return
+StoreFunction "nodeNum" 1 "val" 13
+NewStruct "AST"
+StoreImmutable "n"
+Load "n"
+FieldLValue "kind"
+Load "AST_Number"
+StoreThrough
+Load "n"
+FieldLValue "literal"
+Load "val"
+StoreThrough
+Load "n"
+Return
+Return
+Import 2 "evaluator" "tokens"
+StoreStruct "Parser" 3
+Field "tokens" None
+Field "len" Mutable 2
+Push 0
+Return
+Field "pos" Mutable 2
+Push 0
+Return
+StoreFunction "new_parser" 2 "tokens" "len" 17
+NewStruct "Parser"
+StoreImmutable "p"
+Load "p"
+FieldLValue "tokens"
+Load "tokens"
+StoreThroughImmutable
+Load "p"
+FieldLValue "len"
+Load "len"
+StoreThrough
+Load "p"
+FieldLValue "pos"
+Push 0
+StoreThrough
+Load "p"
+Return
+Return
+StoreFunction "peek" 1 "p" 23
+Load "p"
+FieldGet "pos"
+Load "p"
+FieldGet "len"
+GreaterEqual
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "p"
+FieldGet "tokens"
+Load "p"
+FieldGet "pos"
+ArrayGet
+FieldGet "kind"
+Return
+Return
+StoreFunction "advance" 1 "p" 8
+Load "p"
+FieldLValue "pos"
+Load "p"
+FieldGet "pos"
+Push 1
+Add
+StoreThrough
+Return
+StoreFunction "parse_number" 1 "p" 15
+Load "p"
+FieldGet "tokens"
+Load "p"
+FieldGet "pos"
+ArrayGet
+StoreImmutable "t"
+Load "p"
+Call "advance" 1
+Load "t"
+FieldGet "ival"
+Call "nodeNum" 1
+StoreImmutable "n"
+Load "n"
+Return
+Return
+StoreFunction "parse_primary" 1 "p" 51
+Load "p"
+Call "peek" 1
+Load "TK_Number"
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Load "p"
+Call "parse_number" 1
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+Load "p"
+Call "peek" 1
+Load "TK_LParen"
+Equal
+JumpIfZero "else_2"
+PushImmutableContext
+Load "p"
+Call "advance" 1
+Load "p"
+Call "parse_expr" 1
+StoreImmutable "expr"
+Load "p"
+Call "peek" 1
+Load "TK_RParen"
+NotEqual
+JumpIfZero "else_4"
+PushImmutableContext
+Error "parser: expected ')'"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_5"
+Load "p"
+Call "advance" 1
+Load "expr"
+Return
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+Error "parser: expected primary expression"
+PopImmutableContext
+Label "ifend_3"
+PopImmutableContext
+Label "ifend_1"
+Return
+StoreFunction "parse_mul" 1 "p" 57
+Load "p"
+Call "parse_primary" 1
+StoreImmutable "expr"
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "p"
+Call "peek" 1
+Load "TK_Mul"
+Equal
+JumpIfZero "else_2"
+PushImmutableContext
+Load "p"
+Call "advance" 1
+Load "p"
+Call "parse_primary" 1
+StoreImmutable "rhs"
+Load "AST_Mul"
+Load "expr"
+Load "rhs"
+Call "nodeOper" 3
+Store "expr"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+Load "p"
+Call "peek" 1
+Load "TK_Div"
+Equal
+JumpIfZero "else_4"
+PushImmutableContext
+Load "p"
+Call "advance" 1
+Load "p"
+Call "parse_primary" 1
+StoreImmutable "rhs"
+Load "AST_Div"
+Load "expr"
+Load "rhs"
+Call "nodeOper" 3
+Store "expr"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Label "ifend_5"
+PopImmutableContext
+Label "ifend_3"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "expr"
+Return
+Return
+StoreFunction "parse_expr" 1 "p" 57
+Load "p"
+Call "parse_mul" 1
+StoreImmutable "expr"
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "p"
+Call "peek" 1
+Load "TK_Add"
+Equal
+JumpIfZero "else_2"
+PushImmutableContext
+Load "p"
+Call "advance" 1
+Load "p"
+Call "parse_mul" 1
+StoreImmutable "rhs"
+Load "AST_Add"
+Load "expr"
+Load "rhs"
+Call "nodeOper" 3
+Store "expr"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+Load "p"
+Call "peek" 1
+Load "TK_Sub"
+Equal
+JumpIfZero "else_4"
+PushImmutableContext
+Load "p"
+Call "advance" 1
+Load "p"
+Call "parse_mul" 1
+StoreImmutable "rhs"
+Load "AST_Sub"
+Load "expr"
+Load "rhs"
+Call "nodeOper" 3
+Store "expr"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Label "ifend_5"
+PopImmutableContext
+Label "ifend_3"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "expr"
+Return
+Return
+StoreFunction "parse" 2 "tokens" "len" 24
+Load "tokens"
+Load "len"
+Call "new_parser" 2
+StoreImmutable "p"
+Load "p"
+Call "parse_expr" 1
+StoreImmutable "ast"
+Load "p"
+FieldGet "pos"
+Load "p"
+FieldGet "len"
+NotEqual
+JumpIfZero "else_0"
+PushImmutableContext
+Error "parser: unexpected trailing tokens"
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "ast"
+Return
+Return
+StoreFunction "main" 0 178
+Push 32
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 49
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 2
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_0"
+Push 3
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 4
+ArrayLValue
+PushChar 51
+StoreThrough
+Load "__strlit_0"
+Push 5
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 6
+ArrayLValue
+PushChar 52
+StoreThrough
+Load "__strlit_0"
+Push 7
+ArrayLValue
+PushChar 42
+StoreThrough
+Load "__strlit_0"
+Push 8
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_0"
+Push 9
+ArrayLValue
+PushChar 45
+StoreThrough
+Load "__strlit_0"
+Push 10
+ArrayLValue
+PushChar 40
+StoreThrough
+Load "__strlit_0"
+Push 11
+ArrayLValue
+PushChar 54
+StoreThrough
+Load "__strlit_0"
+Push 12
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 13
+ArrayLValue
+PushChar 55
+StoreThrough
+Load "__strlit_0"
+Push 14
+ArrayLValue
+PushChar 42
+StoreThrough
+Load "__strlit_0"
+Push 15
+ArrayLValue
+PushChar 56
+StoreThrough
+Load "__strlit_0"
+Push 16
+ArrayLValue
+PushChar 45
+StoreThrough
+Load "__strlit_0"
+Push 17
+ArrayLValue
+PushChar 57
+StoreThrough
+Load "__strlit_0"
+Push 18
+ArrayLValue
+PushChar 41
+StoreThrough
+Load "__strlit_0"
+Push 19
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 20
+ArrayLValue
+PushChar 49
+StoreThrough
+Load "__strlit_0"
+Push 21
+ArrayLValue
+PushChar 48
+StoreThrough
+Load "__strlit_0"
+Push 22
+ArrayLValue
+PushChar 42
+StoreThrough
+Load "__strlit_0"
+Push 23
+ArrayLValue
+PushChar 40
+StoreThrough
+Load "__strlit_0"
+Push 24
+ArrayLValue
+PushChar 49
+StoreThrough
+Load "__strlit_0"
+Push 25
+ArrayLValue
+PushChar 49
+StoreThrough
+Load "__strlit_0"
+Push 26
+ArrayLValue
+PushChar 45
+StoreThrough
+Load "__strlit_0"
+Push 27
+ArrayLValue
+PushChar 51
+StoreThrough
+Load "__strlit_0"
+Push 28
+ArrayLValue
+PushChar 41
+StoreThrough
+Load "__strlit_0"
+Push 29
+ArrayLValue
+PushChar 43
+StoreThrough
+Load "__strlit_0"
+Push 30
+ArrayLValue
+PushChar 49
+StoreThrough
+Load "__strlit_0"
+Push 31
+ArrayLValue
+PushChar 52
+StoreThrough
+Load "__strlit_0"
+StoreImmutable "src"
+Load "src"
+Call "tokenize" 1
+StoreImmutable "lexer"
+Load "lexer"
+FieldGet "tokens"
+Load "lexer"
+FieldGet "len"
+Call "parse" 2
+StoreImmutable "ast"
+Load "ast"
+FieldGet "value"
+Println
+Return
+Call "main" 0
+Return

@@ -1,32 +1,3 @@
-TK_Number := 1;
-TK_Add    := 2;
-TK_Sub    := 3;
-TK_Mul    := 4;
-TK_Div    := 5;
-
-TK_LParen := 6;
-TK_RParen := 7;
-
-struct Token {
-    kind = 0;
-    ival = 0;
-}
-func tokenOper(kind, r){
-    t := struct Token;
-    t.kind = kind;
-
-    r.tokens[r.len] = t;
-    r.len = r.len + 1;
-}
-func tokenNum(kind, r, val){
-    t := struct Token;
-    t.kind = kind;
-    t.ival = val;
-
-    r.tokens[r.len] = t;
-    r.len = r.len + 1;
-}
-
 AST_Number := 1;
 AST_Add := 2;
 AST_Sub := 3;
@@ -62,5 +33,3 @@ func nodeNum(val) {
     n.literal = val;
     return n;
 }
-
-
