@@ -1,14 +1,14 @@
-import compiler.grammar;
+import examples.evaluator.grammar;
 import std.char;
 
-MAX_TOKENS := 64;
-
 struct Lexer {
-    tokens := [MAX_TOKENS]
+    tokens;
     len = 0;
 }
+
 func tokenize(src) {
     r := struct Lexer;
+    r.tokens := [(int) src];
 
     i = 0;
     di ::= i + 1;
@@ -18,21 +18,8 @@ func tokenize(src) {
 
         c := src[i];
 
-        if is_space(c) {
+        if c == ' ' || c == '\t' || c == '\n' {
             i = di;
-        }
-        else if is_digit(c) {
-            val = digit_to_int(c);
-            i = di;
-
-            loop {
-                if i >= src { break; }
-                if !is_digit(src[i]) { break; }
-                val = val * 10 + digit_to_int(src[i]);
-                i = di;
-            }
-
-            tokenNum(TK_Number, r, val);
         }
 
         else if c == '+' {
@@ -59,15 +46,26 @@ func tokenize(src) {
             tokenOper(TK_RParen, r);
             i = di;
         }
+
+        else if is_digit(c) {
+            val = digit_to_int(c);
+            i = di;
+
+            loop {
+                if i >= src { break; }
+                if !is_digit(src[i]) { break; }
+                val = val * 10 + digit_to_int(src[i]);
+                i = di;
+            }
+            tokenNum(TK_Number, r, val);
+        }
         else {
-            println "error: unknown character";
-            break;
+            error "lexer: unknown character";
         }
     }
 
     return r;
 }
-
 
 func print_token(t) {
     if t.kind == TK_Number {

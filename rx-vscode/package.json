@@ -10,11 +10,11 @@
     "Programming Languages"
   ],
 
-  "main": "./out/extension.js",
-  "activationEvents": [
-    "onLanguage:reactive"
-  ],
+    "main": "./out/extension.js",
 
+  "activationEvents": [
+    "onLanguage:rx"
+  ],
   "contributes": {
     "languages": [
       {

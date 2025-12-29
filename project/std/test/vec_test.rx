@@ -1,0 +1,21 @@
+import std.vec;
+
+func main() {
+    v := vec_new(2);
+
+    vec_push(v, 10);
+    vec_push(v, 20);
+
+    assert (int)v == 2;
+    assert v[0] == 10;
+    assert v[1] == 20;
+
+    v[1] ::= v[0] + 5;
+    assert v[1] == 15;
+
+    x := vec_pop(v);
+    assert x == 15;
+    assert (int)v == 1;
+
+    println "ok";
+}

@@ -1,0 +1,171 @@
+#
+=========================================
+Reactive Linked List
+=========================================
+
+Singly linked list implementation using
+heap-allocated nodes.
+
+This structure demonstrates reference
+chaining, aliasing, and safe mutation
+under the reactive execution model.
+
+Characteristics:
+- Singly linked
+- Heap-allocated nodes
+- Deterministic behavior
+- Safe for reactive (::=) expressions
+
+Stored values may be any type.
+
+Import with:
+import std.linkedlist;
+
+=========================================
+#
+
+#
+-----------------------------------------
+Node
+-----------------------------------------
+A single linked list node.
+
+Fields:
+value : stored value
+next  : next node or 0
+-----------------------------------------
+#
+struct Node {
+    value;
+    next;
+}
+
+#
+-----------------------------------------
+LinkedList
+-----------------------------------------
+Linked list container.
+
+Fields:
+head : first node or 0
+size : number of elements
+
+Reactive fields:
+empty ::= size == 0
+-----------------------------------------
+#
+struct LinkedList {
+    head;
+    size = 0;
+
+    empty ::= size == 0;
+}
+
+#
+-----------------------------------------
+list
+-----------------------------------------
+Create an empty linked list.
+
+Returns:
+new LinkedList
+-----------------------------------------
+#
+func list() {
+    l := struct LinkedList;
+    l.head = 0;
+    l.size = 0;
+    return l;
+}
+
+#
+-----------------------------------------
+push_front
+-----------------------------------------
+Insert a value at the front of the list.
+
+Args:
+l     : LinkedList
+value : value to insert
+
+Returns:
+l (updated in place)
+-----------------------------------------
+#
+func push_front(l, value) {
+    n := struct Node;
+    n.value = value;
+    n.next = l.head;
+
+    l.head = n;
+    l.size = l.size + 1;
+
+    return l;
+}
+
+#
+-----------------------------------------
+peek_front
+-----------------------------------------
+Read the front value without removing it.
+
+Args:
+l : LinkedList
+
+Returns:
+front value
+0 if list is empty
+-----------------------------------------
+#
+func peek_front(l) {
+    if l.size == 0 {
+        return 0;
+    }
+    return l.head.value;
+}
+
+#
+-----------------------------------------
+pop_front
+-----------------------------------------
+Remove and return the front element.
+
+Args:
+l : LinkedList
+
+Returns:
+removed value
+0 if list is empty
+-----------------------------------------
+#
+func pop_front(l) {
+    if l.size == 0 {
+        return 0;
+    }
+
+    v := l.head.value;
+    l.head = l.head.next;
+    l.size = l.size - 1;
+
+    return v;
+}
+
+
+#
+-----------------------------------------
+clear
+-----------------------------------------
+Remove all elements from the list.
+
+Args:
+l : LinkedList
+
+Returns:
+l (cleared)
+-----------------------------------------
+#
+func clear(l) {
+    l.head = 0;
+    l.size = 0;
+    return l;
+}

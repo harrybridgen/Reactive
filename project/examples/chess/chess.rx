@@ -1,0 +1,82 @@
+# ------------------------------------------------ #
+# Reactive Chess (single pawn demo)                #
+# ------------------------------------------------ #
+
+struct Pawn {
+    x = 4;
+    y = 6;
+}
+
+struct Board {
+    size;
+    cells;
+}
+
+func new_board(pawn) {
+    board := struct Board;
+    board.size := 8;
+    board.cells := [board.size];
+
+    y = 0;
+    dy ::= y + 1;
+    loop {
+        if y >= board.size { break; }
+        board.cells[y] = [board.size];
+        y = dy;
+    }
+
+    y = 0;
+    dy ::= y + 1;
+    loop {
+        if y >= board.size { break; }
+        x = 0;
+        dx ::= x + 1;
+        loop {
+            if x >= board.size { break; }
+            yy := y;
+            xx := x;
+            board.cells[yy][xx] ::=
+            (xx == pawn.x && yy == pawn.y) ? 'P' : '.';
+            x = dx;
+        }
+        y = dy;
+    }
+
+    return board;
+}
+
+func render(board) {
+    print "\033[2J";
+    print "\033[H";
+    println " abcdefgh";
+    y = 0;
+    dy ::= y + 1;
+    loop {
+        if y >= board.size { break; }
+        print (board.size - y);
+        print " ";
+        println board.cells[y];
+        y = dy;
+    }
+}
+
+func delay(n) {
+    d = 0;
+    dd ::= d + 1;
+    loop {
+        if d >= n { break; }
+        d = dd;
+    }
+}
+
+func main() {
+    pawn := struct Pawn;
+    board := new_board(pawn);
+
+    loop {
+        render(board);
+        if pawn.y == 0 { break; }
+        delay(100000);
+        pawn.y = pawn.y - 1;
+    }
+}

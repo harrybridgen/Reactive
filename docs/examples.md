@@ -1,11 +1,89 @@
-# ------------------------------------------------ #
-# Bouncing String via Reactive Framebuffer         #
-# ------------------------------------------------ #
+# Examples
+
+## Reactive Variables
+
+```lua
+func main(){
+    x = 1;
+    y ::= x + 1;
+
+    println y;   # 2 #
+    x = 10;
+    println y;   # 11 #
+}
+```
+
+## Struct with Reactive Fields
+
+```lua
+struct Counter {
+    x = 0;
+    step := 1;
+    next ::= x + step;
+}
+
+func main(){
+    c = struct Counter;
+    println c.next; # 1 #
+    c.x = 10;
+    println c.next; # 11 #
+}
+```
+
+## Factorial via Dependency Graph
+
+```lua
+func main(){
+    fact = [6];
+
+    fact[0] ::= 1;
+    fact[1] ::= 1;
+
+    x = 1;
+    dx ::= x + 1;
+
+    loop {
+        if x >= fact - 1 {
+            break;
+        }
+
+        i := x;
+        fact[i + 1] ::= fact[i] * (i + 1);
+        x = dx;
+    }
+
+    println fact[5];  # 120 #
+}
+```
+
+## Arrays and Lazy Elements
+
+```lua
+func main(){
+    arr = [5];
+    x = 2;
+
+    arr[0] ::= x * 10;
+    println arr[0];  # 20 #
+
+    x = 7;
+    println arr[0];  # 70 #
+}
+```
+
+## Bouncing String via Reactive Framebuffer
+
+```lua
+struct Screen {
+    width;
+    height;
+    buf;
+}
 
 struct Text {
     str;
     len;
-    
+
     x = 0;
     y = 0;
     vx = 1;
@@ -15,20 +93,14 @@ struct Text {
     dy ::= y + vy;
 }
 
-func new_text(str){
+func make_text(str){
     text := struct Text;
-    text.str = str;
+    text.str := str;
     text.len ::= text.str;
     return text;
 }
 
-struct Screen {
-    width;
-    height;
-    buf;
-}
-
-func new_screen(width, height) {
+func make_screen(width, height) {
     screen := struct Screen;
     screen.width := width;
     screen.height := height;
@@ -39,16 +111,13 @@ func new_screen(width, height) {
 
     loop {
         if y >= screen.height { break; }
-        
         screen.buf[y] = [screen.width];
-
         y = dy;
     }
     return screen;
 }
 
 func framebuffer(screen, text) {
-    
     y = 0;
     dy ::= y + 1;
 
@@ -77,6 +146,7 @@ func framebuffer(screen, text) {
         y = dy;
     }
 }
+
 func render(screen) {
     print "\033[2J";
     print "\033[H";
@@ -84,12 +154,13 @@ func render(screen) {
     y = 0;
     dy ::= y + 1;
 
-    loop { 
+    loop {
         if y >= screen.height { break; }
         println screen.buf[y];
         y = dy;
     }
 }
+
 func delay(n) {
     d = 0;
     dd ::= d + 1;
@@ -99,11 +170,13 @@ func delay(n) {
         d = dd;
     }
 }
+
 func main(){
-    text := new_text("HELLO REACTIVE");
-    screen := new_screen(50,8);
+    text := make_text("HELLO REACTIVE");
+    screen := make_screen(31,5);
 
     framebuffer(screen, text);
+
     loop {
         render(screen);
         delay(20000);
@@ -114,25 +187,22 @@ func main(){
         if text.x < 0 {
             text.x = -text.x;
             text.vx = -text.vx;
-            text.str = "HELLO REACTIVE"
         }
 
         if (text.x + text.len) > screen.width {
             text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
             text.vx = -text.vx;
-            text.str = "REACTIVE HELLO"
         }
 
         if text.y < 0 {
             text.y = -text.y;
             text.vy = -text.vy;
-            text.str = "HELLO REACTIVE"
         }
 
         if text.y > (screen.height - 1) {
             text.y = (screen.height - 1) - (text.y - (screen.height - 1));
             text.vy = -text.vy;
-            text.str = "REACTIVE HELLO"
         }
     }
 }
+```

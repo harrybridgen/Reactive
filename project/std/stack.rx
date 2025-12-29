@@ -1,63 +1,63 @@
 #
- ========================================= 
-        Reactive Stack        
- ========================================= 
+=========================================
+Reactive Stack
+=========================================
 
- Fixed-capacity LIFO stack implementation  
- with reactive-derived properties.         
-                                           
- Characteristics:                          
- - Uses an array-backed storage            
- - Fixed capacity (no resizing)            
- - LIFO (last-in, first-out)               
- - Safe for reactive (::=) expressions     
-                                           
- Stored values are integers.               
- Indices and counters are integers.   
+Fixed-capacity LIFO stack implementation
+with reactive-derived properties.
 
- Import with:                              
-    import std.stack;    
+Characteristics:
+- Uses an array-backed storage
+- Fixed capacity (no resizing)
+- LIFO (last-in, first-out)
+- Safe for reactive (::=) expressions
 
- ========================================= 
+Stored values are integers.
+Indices and counters are integers.
+
+Import with:
+import std.stack;
+
+=========================================
 #
 
 #
- ----------------------------------------- 
- Stack structure                           
- ----------------------------------------- 
- Fields:                                   
-   data : backing array                    
-   cap  : maximum capacity                 
-   top  : index of next free slot          
-                                           
- Reactive fields:                          
-   size  ::= top                           
-   empty ::= top == 0                      
- ----------------------------------------- 
+-----------------------------------------
+Stack structure
+-----------------------------------------
+Fields:
+data : backing array
+cap  : maximum capacity
+top  : index of next free slot
+
+Reactive fields:
+size  ::= top
+empty ::= top == 0
+-----------------------------------------
 #
 struct Stack {
     data;
     cap = 0;
-    top = 0;          
+    top = 0;
 
     size ::= top;
     empty ::= top == 0;
 }
 
 #
- ----------------------------------------- 
- stack                                    
- -----------------------------------------
- Create a new empty stack with a fixed     
- capacity.                                 
-                                           
- Args:                                     
-   capacity : maximum number of elements   
-                                           
- Returns:                                  
-   initialized Stack instance              
- ----------------------------------------- 
- #
+-----------------------------------------
+stack
+-----------------------------------------
+Create a new empty stack with a fixed
+capacity.
+
+Args:
+capacity : maximum number of elements
+
+Returns:
+initialized Stack instance
+-----------------------------------------
+#
 func stack(capacity) {
     s := struct Stack;
     s.data = [capacity];
@@ -67,26 +67,26 @@ func stack(capacity) {
 }
 
 #
- ----------------------------------------- 
- push                                      
- ----------------------------------------- 
- Push a value onto the top of the stack.   
-                                           
- If the stack is full, the operation       
- fails and no state is modified.           
-                                           
- Args:                                     
-   s     : Stack                           
-   value : integer to push                 
-                                           
- Returns:                                  
-   value if successful                     
-   0 if the stack is full                  
- ----------------------------------------- 
+-----------------------------------------
+push
+-----------------------------------------
+Push a value onto the top of the stack.
+
+If the stack is full, the operation
+fails and no state is modified.
+
+Args:
+s     : Stack
+value : integer to push
+
+Returns:
+value if successful
+0 if the stack is full
+-----------------------------------------
 #
 func push(s, value) {
     if s.top >= s.cap {
-        return 0;   
+        return 0;
     }
 
     s.data[s.top] = value;
@@ -95,26 +95,26 @@ func push(s, value) {
 }
 
 #
- ----------------------------------------- 
- pop                                       
- ----------------------------------------- 
- Remove and return the top element of the  
- stack.                                    
-                                           
- If the stack is empty, the operation      
- fails and no state is modified.           
-                                           
- Args:                                     
-   s : Stack                               
-                                           
- Returns:                                  
-   popped value                            
-   0 if the stack is empty                 
- ----------------------------------------- 
+-----------------------------------------
+pop
+-----------------------------------------
+Remove and return the top element of the
+stack.
+
+If the stack is empty, the operation
+fails and no state is modified.
+
+Args:
+s : Stack
+
+Returns:
+popped value
+0 if the stack is empty
+-----------------------------------------
 #
 func pop(s) {
     if s.top == 0 {
-        return 0;  
+        return 0;
     }
 
     s.top = s.top - 1;
@@ -122,19 +122,19 @@ func pop(s) {
 }
 
 #
- ----------------------------------------- 
- top                                       
- ----------------------------------------- 
- Read the top element without removing it 
- from the stack.                           
-                                           
- Args:                                     
-   s : Stack                               
-                                           
- Returns:                                  
-   top value                               
-   0 if the stack is empty                 
- ----------------------------------------- 
+-----------------------------------------
+top
+-----------------------------------------
+Read the top element without removing it
+from the stack.
+
+Args:
+s : Stack
+
+Returns:
+top value
+0 if the stack is empty
+-----------------------------------------
 #
 func top(s) {
     if s.top == 0 {

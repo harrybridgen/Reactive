@@ -1,0 +1,512 @@
+import bootstrap.experimental.grammar;
+import std.vec;
+import std.str;
+
+struct Parser {
+    tokens;
+    len = 0;
+    pos = 0;
+}
+
+func new_parser(tokens, len) {
+    p := struct Parser;
+    p.tokens = tokens;
+    p.len = len;
+    p.pos = 0;
+    return p;
+}
+
+func peek(p) {
+    if p.pos >= p.len { return 0; }
+    return p.tokens[p.pos].kind;
+}
+
+func peek_n(p, n) {
+    if p.pos + n >= p.len { return 0; }
+    return p.tokens[p.pos + n].kind;
+}
+
+func next_token(p) {
+    if p.pos >= p.len {
+        error "parser: unexpected end of tokens";
+    }
+    t := p.tokens[p.pos];
+    p.pos = p.pos + 1;
+    return t;
+}
+
+func expect(p, kind) {
+    t := next_token(p);
+    if t.kind != kind {
+        error "parser: unexpected token";
+    }
+}
+
+func expect_ident(p) {
+    t := next_token(p);
+    if t.kind != TK_Ident {
+        error "parser: expected identifier";
+    }
+    return t.sval;
+}
+
+func parse(tokens, len) {
+    println "[Reactive] Parser";
+    p := new_parser(tokens, len);
+    ast := parse_program(p);
+    if p.pos != p.len {
+        error "parser did not consume all tokens";
+    }
+    return ast;
+}
+
+func parse_program(p) {
+    items := vec_new(8);
+    loop {
+        if peek(p) == 0 { break; }
+        toplevel := parse_toplevel(p);
+        vec_push(items, toplevel);
+        if peek(p) == TK_Semicolon {
+            next_token(p);
+        }
+    }
+    list := vec_to_array(items);
+    return ast_program(list);
+}
+
+func parse_toplevel(p) {
+    if peek(p) == TK_Import {
+        return parse_import(p);
+    }
+    if peek(p) == TK_Func {
+        return parse_func_def(p);
+    }
+    if peek(p) == TK_Struct && peek_n(p, 2) == TK_LBrace {
+        return parse_struct_def(p);
+    }
+    if peek(p) == TK_Ident && peek_n(p, 1) == TK_ImmutableAssign {
+        name := expect_ident(p);
+        expect(p, TK_ImmutableAssign);
+        rhs := parse_ternary(p);
+        return ast_immutable_assign(name, rhs);
+    }
+    error "parser: invalid top-level item";
+}
+
+func parse_statement(p) {
+    if peek(p) == TK_Import {
+        return parse_import(p);
+    }
+    if peek(p) == TK_Func {
+        return parse_func_def(p);
+    }
+    if peek(p) == TK_Struct && peek_n(p, 2) == TK_LBrace {
+        return parse_struct_def(p);
+    }
+    if peek(p) == TK_Return {
+        return parse_return(p);
+    }
+    if peek(p) == TK_Break {
+        next_token(p);
+        return ast_break();
+    }
+    if peek(p) == TK_Continue {
+        next_token(p);
+        return ast_continue();
+    }
+    if peek(p) == TK_If {
+        return parse_if(p);
+    }
+    if peek(p) == TK_Print {
+        next_token(p);
+        expr := parse_ternary(p);
+        return ast_print(expr);
+    }
+    if peek(p) == TK_Println {
+        next_token(p);
+        expr := parse_ternary(p);
+        return ast_println(expr);
+    }
+    if peek(p) == TK_Assert {
+        next_token(p);
+        expr := parse_ternary(p);
+        return ast_assert(expr);
+    }
+    if peek(p) == TK_Error {
+        next_token(p);
+        t := next_token(p);
+        if t.kind != TK_String {
+            error "error expects a string literal";
+        }
+        return ast_error(t.sval);
+    }
+    if peek(p) == TK_Loop {
+        next_token(p);
+        body := parse_block(p);
+        return ast_loop(body);
+    }
+    if peek(p) == TK_Ident &&
+    (peek_n(p, 1) == TK_Assign ||
+    peek_n(p, 1) == TK_ReactiveAssign ||
+    peek_n(p, 1) == TK_ImmutableAssign) {
+        name := expect_ident(p);
+        op := next_token(p).kind;
+        rhs := parse_ternary(p);
+        if op == TK_Assign { return ast_assign(name, rhs); }
+        if op == TK_ReactiveAssign { return ast_reactive_assign(name, rhs); }
+        return ast_immutable_assign(name, rhs);
+    }
+
+    lhs := parse_ternary(p);
+    if peek(p) == TK_Assign {
+        next_token(p);
+        rhs := parse_ternary(p);
+        return ast_assign_target(lhs, rhs);
+    }
+    if peek(p) == TK_ReactiveAssign {
+        next_token(p);
+        rhs := parse_ternary(p);
+        return ast_reactive_assign_target(lhs, rhs);
+    }
+    if peek(p) == TK_ImmutableAssign {
+        next_token(p);
+        rhs := parse_ternary(p);
+        return ast_immutable_assign_target(lhs, rhs);
+    }
+    return lhs;
+}
+
+func parse_import(p) {
+    next_token(p);
+    segments := vec_new(4);
+    seg := expect_ident(p);
+    vec_push(segments, seg);
+    loop {
+        if peek(p) != TK_Dot { break; }
+        next_token(p);
+        seg = expect_ident(p);
+        vec_push(segments, seg);
+    }
+    list := vec_to_array(segments);
+    return ast_import(list);
+}
+
+func parse_block(p) {
+    expect(p, TK_LBrace);
+    stmts := vec_new(8);
+    loop {
+        if peek(p) == TK_RBrace { break; }
+        stmt := parse_statement(p);
+        vec_push(stmts, stmt);
+        if peek(p) == TK_Semicolon {
+            next_token(p);
+        }
+    }
+    expect(p, TK_RBrace);
+    return vec_to_array(stmts);
+}
+
+func parse_if(p) {
+    next_token(p);
+    cond := parse_ternary(p);
+    then_block := parse_block(p);
+    else_block := [0];
+
+    if peek(p) == TK_Else {
+        next_token(p);
+        if peek(p) == TK_If {
+            nested := vec_new(1);
+            nested_if := parse_if(p);
+            vec_push(nested, nested_if);
+            else_block = vec_to_array(nested);
+        }
+        else {
+            else_block = parse_block(p);
+        }
+    }
+
+    return ast_if_else(cond, then_block, else_block);
+}
+
+func parse_func_def(p) {
+    next_token(p);
+    name := expect_ident(p);
+    expect(p, TK_LParen);
+
+    params := vec_new(4);
+    if peek(p) != TK_RParen {
+        loop {
+            param := expect_ident(p);
+            vec_push(params, param);
+            if peek(p) == TK_Comma {
+                next_token(p);
+            }
+            else {
+                break;
+            }
+        }
+    }
+    expect(p, TK_RParen);
+    body := parse_block(p);
+    list := vec_to_array(params);
+    return ast_func_def(name, list, body);
+}
+
+func parse_struct_def(p) {
+    next_token(p);
+    name := expect_ident(p);
+    expect(p, TK_LBrace);
+
+    fields := vec_new(8);
+    loop {
+        if peek(p) == TK_RBrace { break; }
+        fname := expect_ident(p);
+        init_kind = FIELD_INIT_None;
+        init_val = 0;
+
+        if peek(p) == TK_Assign {
+            next_token(p);
+            init_kind = FIELD_INIT_Mutable;
+            init_val = parse_ternary(p);
+        }
+        else if peek(p) == TK_ImmutableAssign {
+            next_token(p);
+            init_kind = FIELD_INIT_Immutable;
+            init_val = parse_ternary(p);
+        }
+        else if peek(p) == TK_ReactiveAssign {
+            next_token(p);
+            init_kind = FIELD_INIT_Reactive;
+            init_val = parse_ternary(p);
+        }
+
+        field := field_init(fname, init_kind, init_val);
+        vec_push(fields, field);
+
+        if peek(p) == TK_Semicolon {
+            next_token(p);
+        }
+    }
+
+    expect(p, TK_RBrace);
+    list := vec_to_array(fields);
+    return ast_struct_def(name, list);
+}
+
+func parse_return(p) {
+    next_token(p);
+    if peek(p) == TK_Semicolon || peek(p) == TK_RBrace || peek(p) == 0 {
+        return ast_return(0, 0);
+    }
+    expr := parse_ternary(p);
+    return ast_return(expr, 1);
+}
+
+func parse_factor(p) {
+    t := next_token(p);
+
+    if t.kind == TK_Ident {
+        name := t.sval;
+        if peek(p) == TK_LParen {
+            next_token(p);
+            args := vec_new(4);
+            if peek(p) != TK_RParen {
+                loop {
+                    arg := parse_ternary(p);
+                    vec_push(args, arg);
+                    if peek(p) == TK_Comma {
+                        next_token(p);
+                    }
+                    else {
+                        break;
+                    }
+                }
+            }
+            expect(p, TK_RParen);
+            list := vec_to_array(args);
+            return ast_call(name, list);
+        }
+        return ast_var(name);
+    }
+
+    if t.kind == TK_Number {
+        return ast_number(t.ival);
+    }
+    if t.kind == TK_Char {
+        return ast_char(t.cval);
+    }
+    if t.kind == TK_String {
+        return ast_string(t.sval);
+    }
+
+    if t.kind == TK_LParen {
+        expr := parse_ternary(p);
+        expect(p, TK_RParen);
+        return expr;
+    }
+
+    if t.kind == TK_LSquare {
+        size := parse_ternary(p);
+        expect(p, TK_RSquare);
+        return ast_array_new(size);
+    }
+
+    if t.kind == TK_Struct {
+        name := expect_ident(p);
+        return ast_struct_new(name);
+    }
+
+    error "parser: invalid factor";
+}
+
+func parse_postfix(p) {
+    expr := parse_factor(p);
+    loop {
+        if peek(p) == TK_LSquare {
+            next_token(p);
+            idx := parse_ternary(p);
+            expect(p, TK_RSquare);
+            expr = ast_index(expr, idx);
+        }
+        else if peek(p) == TK_Dot {
+            next_token(p);
+            field := expect_ident(p);
+            expr = ast_field_access(expr, field);
+        }
+        else {
+            break;
+        }
+    }
+    return expr;
+}
+
+func parse_unary(p) {
+    if peek(p) == TK_LParen {
+        if peek_n(p, 1) == TK_Ident && peek_n(p, 2) == TK_RParen {
+            name := p.tokens[p.pos + 1].sval;
+            if str_equals(name, "int") {
+                p.pos = p.pos + 3;
+                expr := parse_unary(p);
+                return ast_cast(CAST_Int, expr);
+            }
+            if str_equals(name, "char") {
+                p.pos = p.pos + 3;
+                expr := parse_unary(p);
+                return ast_cast(CAST_Char, expr);
+            }
+        }
+    }
+
+    if peek(p) == TK_Sub {
+        next_token(p);
+        left := ast_number(0);
+        right := parse_unary(p);
+        return ast_operation(left, OP_Sub, right);
+    }
+    if peek(p) == TK_Not {
+        next_token(p);
+        left := parse_unary(p);
+        right := ast_number(0);
+        return ast_operation(left, OP_Equal, right);
+    }
+
+    return parse_postfix(p);
+}
+
+func parse_mul(p) {
+    expr := parse_unary(p);
+    loop {
+        if peek(p) == TK_Mul {
+            next_token(p);
+            right := parse_unary(p);
+            expr = ast_operation(expr, OP_Mul, right);
+        }
+        else if peek(p) == TK_Div {
+            next_token(p);
+            right := parse_unary(p);
+            expr = ast_operation(expr, OP_Div, right);
+        }
+        else if peek(p) == TK_Modulo {
+            next_token(p);
+            right := parse_unary(p);
+            expr = ast_operation(expr, OP_Mod, right);
+        }
+        else {
+            break;
+        }
+    }
+    return expr;
+}
+
+func parse_add(p) {
+    expr := parse_mul(p);
+    loop {
+        if peek(p) == TK_Add {
+            next_token(p);
+            right := parse_mul(p);
+            expr = ast_operation(expr, OP_Add, right);
+        }
+        else if peek(p) == TK_Sub {
+            next_token(p);
+            right := parse_mul(p);
+            expr = ast_operation(expr, OP_Sub, right);
+        }
+        else {
+            break;
+        }
+    }
+    return expr;
+}
+
+func parse_cmp(p) {
+    expr := parse_add(p);
+    loop {
+        op = 0;
+        if peek(p) == TK_Greater { op = OP_Greater; }
+        else if peek(p) == TK_Less { op = OP_Less; }
+        else if peek(p) == TK_Equal { op = OP_Equal; }
+        else if peek(p) == TK_GreaterEqual { op = OP_GreaterEqual; }
+        else if peek(p) == TK_LessEqual { op = OP_LessEqual; }
+        else if peek(p) == TK_NotEqual { op = OP_NotEqual; }
+        else { break; }
+
+        next_token(p);
+        right := parse_add(p);
+        expr = ast_operation(expr, op, right);
+    }
+    return expr;
+}
+
+func parse_and(p) {
+    expr := parse_cmp(p);
+    loop {
+        if peek(p) != TK_And { break; }
+        next_token(p);
+        right := parse_cmp(p);
+        expr = ast_operation(expr, OP_And, right);
+    }
+    return expr;
+}
+
+func parse_or(p) {
+    expr := parse_and(p);
+    loop {
+        if peek(p) != TK_Or { break; }
+        next_token(p);
+        right := parse_and(p);
+        expr = ast_operation(expr, OP_Or, right);
+    }
+    return expr;
+}
+
+func parse_ternary(p) {
+    cond := parse_or(p);
+    if peek(p) == TK_Question {
+        next_token(p);
+        then_expr := parse_ternary(p);
+        expect(p, TK_Colon);
+        else_expr := parse_ternary(p);
+        return ast_ternary(cond, then_expr, else_expr);
+    }
+    return cond;
+}

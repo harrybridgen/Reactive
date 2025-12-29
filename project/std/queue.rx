@@ -1,43 +1,43 @@
 #
- ========================================= 
-        Reactive Queue        
- ========================================= 
+=========================================
+Reactive Queue
+=========================================
 
- Fixed-capacity FIFO queue implementation  
- with reactive-derived properties.         
-                                           
- Characteristics:                          
- - Uses a circular buffer                  
- - Fixed capacity (no resizing)            
- - FIFO (first-in, first-out)              
- - Safe for reactive (::=) expressions     
-                                           
- Stored values are integers.               
- Indices and counters are integers.    
+Fixed-capacity FIFO queue implementation
+with reactive-derived properties.
 
- Import with:                              
-    import std.queue;    
+Characteristics:
+- Uses a circular buffer
+- Fixed capacity (no resizing)
+- FIFO (first-in, first-out)
+- Safe for reactive (::=) expressions
 
- ========================================= 
+Stored values are integers.
+Indices and counters are integers.
+
+Import with:
+import std.queue;
+
+=========================================
 #
 
 #
- ----------------------------------------- 
- Queue structure                           
- ----------------------------------------- 
- Fields:                                   
-   data  : backing array                   
-   cap   : maximum capacity                
-                                           
-   head  : index of next element to read   
-   tail  : index of next element to write  
-   count : number of stored elements       
-                                           
- Reactive fields:                          
-   size  ::= count                         
-   empty ::= count == 0                    
-   full  ::= count == cap                  
- ----------------------------------------- 
+-----------------------------------------
+Queue structure
+-----------------------------------------
+Fields:
+data  : backing array
+cap   : maximum capacity
+
+head  : index of next element to read
+tail  : index of next element to write
+count : number of stored elements
+
+Reactive fields:
+size  ::= count
+empty ::= count == 0
+full  ::= count == cap
+-----------------------------------------
 #
 struct Queue {
     data;
@@ -53,18 +53,18 @@ struct Queue {
 }
 
 #
- ----------------------------------------- 
- queue                                    
- ----------------------------------------- 
- Create a new empty queue with a fixed     
- capacity.                                 
-                                           
- Args:                                     
-   capacity : maximum number of elements   
-                                           
- Returns:                                  
-   initialized Queue instance              
- ----------------------------------------- 
+-----------------------------------------
+queue
+-----------------------------------------
+Create a new empty queue with a fixed
+capacity.
+
+Args:
+capacity : maximum number of elements
+
+Returns:
+initialized Queue instance
+-----------------------------------------
 #
 func queue(capacity) {
     q := struct Queue;
@@ -79,22 +79,22 @@ func queue(capacity) {
 }
 
 #
- ----------------------------------------- 
- enqueue                                   
- ----------------------------------------- 
- Add a value to the back of the queue.     
-                                           
- If the queue is full, the operation       
- fails and no state is modified.           
-                                           
- Args:                                     
-   q     : Queue                           
-   value : integer to enqueue              
-                                           
- Returns:                                  
-   value if successful                     
-   0 if the queue is full                  
- ----------------------------------------- 
+-----------------------------------------
+enqueue
+-----------------------------------------
+Add a value to the back of the queue.
+
+If the queue is full, the operation
+fails and no state is modified.
+
+Args:
+q     : Queue
+value : integer to enqueue
+
+Returns:
+value if successful
+0 if the queue is full
+-----------------------------------------
 #
 func enqueue(q, value) {
     if q.count >= q.cap {
@@ -109,26 +109,26 @@ func enqueue(q, value) {
 }
 
 #
- ----------------------------------------- 
- dequeue                                   
- ----------------------------------------- 
- Remove and return the front element of    
- the queue.                                
-                                           
- If the queue is empty, the operation      
- fails and no state is modified.           
-                                           
- Args:                                     
-   q : Queue                               
-                                           
- Returns:                                  
-   dequeued value                          
-   0 if the queue is empty                 
- ----------------------------------------- 
+-----------------------------------------
+dequeue
+-----------------------------------------
+Remove and return the front element of
+the queue.
+
+If the queue is empty, the operation
+fails and no state is modified.
+
+Args:
+q : Queue
+
+Returns:
+dequeued value
+0 if the queue is empty
+-----------------------------------------
 #
 func dequeue(q) {
     if q.count == 0 {
-        return 0; 
+        return 0;
     }
 
     v := q.data[q.head];
@@ -139,19 +139,19 @@ func dequeue(q) {
 }
 
 #
- ----------------------------------------- 
- peek                                      
- ----------------------------------------- 
- Read the front element without removing   
- it from the queue.                        
-                                           
- Args:                                     
-   q : Queue                               
-                                           
- Returns:                                  
-   front value                             
-   0 if the queue is empty                 
- ----------------------------------------- 
+-----------------------------------------
+peek
+-----------------------------------------
+Read the front element without removing
+it from the queue.
+
+Args:
+q : Queue
+
+Returns:
+front value
+0 if the queue is empty
+-----------------------------------------
 #
 func peek(q) {
     if q.count == 0 {

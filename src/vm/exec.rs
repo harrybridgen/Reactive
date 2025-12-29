@@ -1,5 +1,5 @@
 use super::VM;
-use crate::grammar::{AST, CastType, Instruction, Type};
+use crate::grammar::{CastType, Instruction, ReactiveExpr, Type};
 
 impl VM {
     pub fn run(&mut self) {
@@ -10,17 +10,16 @@ impl VM {
                 Instruction::Push(n) => self.stack.push(Type::Integer(n)),
                 Instruction::PushChar(c) => self.stack.push(Type::Char(c)),
                 Instruction::Load(name) => {
-                    let v = self
-                        .lookup_var(&name)
-                        .cloned()
-                        .unwrap_or_else(|| panic!("undefined variable: {name}"));
+                    let v = self.lookup_var(&name).cloned().unwrap_or_else(|| {
+                        self.runtime_error(&format!("undefined variable: {name}"))
+                    });
 
                     let value = self.force(v);
                     self.stack.push(value);
                 }
                 Instruction::Store(name) => self.exec_store(name),
                 Instruction::StoreImmutable(name) => self.exec_store_immutable(name),
-                Instruction::StoreReactive(name, ast) => self.exec_store_reactive(name, ast),
+                Instruction::StoreReactive(name, expr) => self.exec_store_reactive(name, expr),
                 Instruction::Add => self.exec_add(),
                 Instruction::Sub => self.exec_sub(),
                 Instruction::Mul => self.exec_mul(),
@@ -42,64 +41,71 @@ impl VM {
                     let v = self.pop();
                     self.print_value(v, true);
                 }
+                Instruction::Assert => {
+                    let v = self.pop_int();
+                    if v == 0 {
+                        self.runtime_error("assertion failed");
+                    }
+                }
+                Instruction::Error(message) => {
+                    self.runtime_error(&message);
+                }
                 Instruction::ArrayNew => self.exec_array_new(),
                 Instruction::ArrayGet => self.exec_array_get(),
                 Instruction::StoreIndex(name) => self.exec_store_index(name),
-                Instruction::StoreIndexReactive(name, ast) => {
-                    self.exec_store_index_reactive(name, ast)
+                Instruction::StoreIndexReactive(name, expr) => {
+                    self.exec_store_index_reactive(name, expr)
                 }
                 Instruction::StoreFunction(name, params, body) => {
                     self.global_env
-                        .insert(name, Type::Function { params, body });
+                        .insert(name, Type::Function { params, code: body });
                 }
                 Instruction::Call(name, argc) => self.exec_call(name, argc),
                 Instruction::StoreStruct(name, fields) => {
                     self.struct_defs.insert(name, fields);
                 }
                 Instruction::NewStruct(name) => {
-                    let def = self
-                        .struct_defs
-                        .get(&name)
-                        .cloned()
-                        .unwrap_or_else(|| panic!("unknown struct type `{name}`"));
+                    let def = self.struct_defs.get(&name).cloned().unwrap_or_else(|| {
+                        self.runtime_error(&format!("unknown struct type `{name}`"))
+                    });
                     let inst = self.instantiate_struct(def);
                     self.stack.push(inst);
                 }
                 Instruction::FieldGet(field) => self.exec_field_get(field),
                 Instruction::FieldSet(field) => self.exec_field_set(field),
-                Instruction::FieldSetReactive(field, ast) => {
-                    self.exec_field_set_reactive(field, ast)
+                Instruction::FieldSetReactive(field, expr) => {
+                    self.exec_field_set_reactive(field, expr)
                 }
                 Instruction::PushImmutableContext => {
                     self.immutable_stack.push(std::collections::HashMap::new());
                 }
                 Instruction::PopImmutableContext => {
                     if self.immutable_stack.len() <= 1 {
-                        panic!("internal error: cannot pop root immutable context");
+                        self.runtime_error("internal error: cannot pop root immutable context");
                     }
                     self.immutable_stack.pop();
                 }
                 Instruction::ClearImmutableContext => {
-                    self.immutable_stack
-                        .last_mut()
-                        .expect("internal error: no immutable scope")
-                        .clear();
+                    if let Some(scope) = self.immutable_stack.last_mut() {
+                        scope.clear();
+                    } else {
+                        self.runtime_error("internal error: no immutable scope");
+                    }
                 }
                 Instruction::Label(_) => {}
                 Instruction::Jump(label) => {
                     self.pointer = *self
                         .labels
                         .get(&label)
-                        .unwrap_or_else(|| panic!("unknown label `{label}`"));
+                        .unwrap_or_else(|| self.runtime_error(&format!("unknown label `{label}`")));
                     continue;
                 }
                 Instruction::JumpIfZero(label) => {
                     let n = self.pop_int();
                     if n == 0 {
-                        self.pointer = *self
-                            .labels
-                            .get(&label)
-                            .unwrap_or_else(|| panic!("unknown label `{label}`"));
+                        self.pointer = *self.labels.get(&label).unwrap_or_else(|| {
+                            self.runtime_error(&format!("unknown label `{label}`"))
+                        });
                         continue;
                     }
                 }
@@ -107,7 +113,7 @@ impl VM {
                 Instruction::ArrayLValue => self.exec_array_lvalue(),
                 Instruction::FieldLValue(field) => self.exec_field_lvalue(field),
                 Instruction::StoreThrough => self.exec_store_through(),
-                Instruction::StoreThroughReactive(ast) => self.exec_store_through_reactive(ast),
+                Instruction::StoreThroughReactive(expr) => self.exec_store_through_reactive(expr),
                 Instruction::StoreThroughImmutable => self.store_through_immutable(),
                 Instruction::Import(path) => {
                     let module_name = path.join(".");
@@ -126,7 +132,7 @@ impl VM {
                         CastType::Char => {
                             let n = self.as_int(v);
                             if n < 0 || n > 0x10FFFF {
-                                panic!("invalid char code {}", n);
+                                self.runtime_error(&format!("invalid char code {}", n));
                             }
                             self.stack.push(Type::Char(n as u32));
                         }
@@ -156,28 +162,27 @@ impl VM {
 
     fn exec_store_immutable(&mut self, name: String) {
         let v = self.pop();
-        let scope = self
-            .immutable_stack
-            .last_mut()
-            .expect("internal error: no immutable scope");
+        let scope = match self.immutable_stack.last_mut() {
+            Some(scope) => scope,
+            None => self.runtime_error("internal error: no immutable scope"),
+        };
         if scope.contains_key(&name) {
-            panic!("cannot reassign immutable variable `{name}`");
+            self.runtime_error(&format!("cannot reassign immutable variable `{name}`"));
         }
         scope.insert(name, v);
     }
 
-    fn exec_store_reactive(&mut self, name: String, ast: Box<AST>) {
+    fn exec_store_reactive(&mut self, name: String, expr: ReactiveExpr) {
         self.ensure_mutable_binding(&name);
-        let frozen = self.freeze_ast(ast);
-        let captured = self.capture_immutables_for_ast(&frozen);
+        let captured = self.capture_immutables(&expr.captures);
+        let value = Type::LazyValue(expr, captured);
 
         match &mut self.local_env {
             Some(env) => {
-                env.insert(name, Type::LazyValue(frozen, captured));
+                env.insert(name, value);
             }
             None => {
-                self.global_env
-                    .insert(name, Type::LazyValue(frozen, captured));
+                self.global_env.insert(name, value);
             }
         }
     }
@@ -211,6 +216,9 @@ impl VM {
 
     fn exec_div(&mut self) {
         let a = self.pop_int();
+        if a == 0 {
+            self.runtime_error("division by zero");
+        }
         let b = self.pop_int();
         self.stack.push(Type::Integer(b / a));
     }

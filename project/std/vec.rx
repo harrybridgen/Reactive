@@ -1,0 +1,162 @@
+#
+=========================================
+Growable vector (native)
+=========================================
+
+Wrapper for VM-backed resizable vectors.
+=========================================
+#
+
+#
+-----------------------------------------
+vec_new
+-----------------------------------------
+Create a new vector with initial capacity.
+
+Args:
+cap : int
+
+Returns:
+vec handle
+-----------------------------------------
+#
+func vec_new(cap) {
+    return internal_vec_new(cap);
+}
+
+#
+-----------------------------------------
+vec_len
+-----------------------------------------
+Return the current length of a vector.
+
+Args:
+v : vec
+
+Returns:
+number of elements
+-----------------------------------------
+#
+func vec_len(v) {
+    return (int)v;
+}
+
+#
+-----------------------------------------
+vec_push
+-----------------------------------------
+Append a value to the vector.
+
+Args:
+v : vec
+val : value
+
+Returns:
+vec handle
+-----------------------------------------
+#
+func vec_push(v, val) {
+    return internal_vec_push(v, val);
+}
+
+#
+-----------------------------------------
+vec_pop
+-----------------------------------------
+Remove and return the last element.
+
+Args:
+v : vec
+
+Returns:
+last element
+-----------------------------------------
+#
+func vec_pop(v) {
+    return internal_vec_pop(v);
+}
+
+#
+-----------------------------------------
+vec_last
+-----------------------------------------
+Return the last element.
+
+Args:
+v : vec
+
+Returns:
+last element
+-----------------------------------------
+#
+func vec_last(v) {
+    n := (int)v;
+    if n == 0 {
+        error "vec_last on empty vec";
+    }
+    return v[n - 1];
+}
+
+#
+-----------------------------------------
+vec_to_array
+-----------------------------------------
+Copy a vec into a fixed array.
+
+Args:
+v : vec
+
+Returns:
+array copy
+-----------------------------------------
+#
+func vec_to_array(v) {
+    n := (int)v;
+    out := [n];
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= n { break; }
+        out[i] = v[i];
+        i = di;
+    }
+    return out;
+}
+
+#
+-----------------------------------------
+vec_get
+-----------------------------------------
+Retrieve an element from a vector.
+
+Args:
+v : vec
+i : index
+
+Returns:
+value at index i
+-----------------------------------------
+#
+func vec_get(v, i) {
+    return v[i];
+}
+
+#
+-----------------------------------------
+vec_set
+-----------------------------------------
+Assign a value to a vector element.
+
+Args:
+v : vec
+i : index
+val : value
+
+Returns:
+0
+-----------------------------------------
+#
+func vec_set(v, i, val) {
+    v[i] = val;
+    return 0;
+}

@@ -1,49 +1,49 @@
- #
- ========================================= 
-        Reactive Hash Map (Integer)        
- ========================================= 
-                                           
- This module provides a simple integer     
- hash map implementation suitable for      
- reactive and non-reactive programs.       
-                                           
- The map uses open addressing with         
- linear probing and fixed capacity.        
-                                           
- All operations are:                       
- - integer-only                            
- - deterministic                           
- - safe for reactive expressions (::=)     
-                                           
- Keys and values are 32-bit signed ints.   
-                                           
- Import with:                              
-     import std.hashmap;                   
-                                           
- ========================================= 
+#
+=========================================
+Reactive Hash Map (Integer)
+=========================================
+
+This module provides a simple integer
+hash map implementation suitable for
+reactive and non-reactive programs.
+
+The map uses open addressing with
+linear probing and fixed capacity.
+
+All operations are:
+- integer-only
+- deterministic
+- safe for reactive expressions (::=)
+
+Keys and values are 32-bit signed ints.
+
+Import with:
+import std.hashmap;
+
+=========================================
 #
 
 
 import std.maths;
 
 #
- ----------------------------------------- 
- HashMap                                   
- ----------------------------------------- 
- A fixed-capacity integer hash map.        
-                                           
- Fields:                                   
-   cap    : capacity of the table          
-   size   : number of stored entries       
-   keys   : array of keys                  
-   values : array of values                
-   used   : occupancy flags (0 or 1)       
-                                           
- Notes:                                    
- - capacity never grows                    
- - collisions resolved via linear probing  
- - removal leaves tombstones               
- ----------------------------------------- 
+-----------------------------------------
+HashMap
+-----------------------------------------
+A fixed-capacity integer hash map.
+
+Fields:
+cap    : capacity of the table
+size   : number of stored entries
+keys   : array of keys
+values : array of values
+used   : occupancy flags (0 or 1)
+
+Notes:
+- capacity never grows
+- collisions resolved via linear probing
+- removal leaves tombstones
+-----------------------------------------
 #
 struct HashMap {
     cap = 0;
@@ -54,20 +54,20 @@ struct HashMap {
 }
 
 #
- ----------------------------------------- 
- hashmap                                   
- ----------------------------------------- 
- Create a new empty hash map with the      
- given capacity.                           
-                                           
- All slots are initially unused.           
-                                           
- Args:                                     
-   capacity : number of buckets            
-                                           
- Returns:                                  
-   new HashMap instance                    
- ----------------------------------------- 
+-----------------------------------------
+hashmap
+-----------------------------------------
+Create a new empty hash map with the
+given capacity.
+
+All slots are initially unused.
+
+Args:
+capacity : number of buckets
+
+Returns:
+new HashMap instance
+-----------------------------------------
 #
 func hashmap(capacity) {
     m := struct HashMap;
@@ -83,20 +83,20 @@ func hashmap(capacity) {
 }
 
 #
- ----------------------------------------- 
- hash                                      
- ----------------------------------------- 
- Compute the hash index for a key.         
-                                           
- This function is pure and deterministic.  
-                                           
- Args:                                     
-   key : integer key                       
-   cap : table capacity                    
-                                           
- Returns:                                  
-   index in range [0, cap)                 
- -----------------------------------------
+-----------------------------------------
+hash
+-----------------------------------------
+Compute the hash index for a key.
+
+This function is pure and deterministic.
+
+Args:
+key : integer key
+cap : table capacity
+
+Returns:
+index in range [0, cap)
+-----------------------------------------
 #
 func hash(key, cap) {
     h = (key * 5761) % cap;
@@ -107,25 +107,25 @@ func hash(key, cap) {
 }
 
 #
- ----------------------------------------- 
- put                                       
- ----------------------------------------- 
- Insert or update a key-value pair.        
-                                           
- If the key already exists, its value is   
- updated. Otherwise, a new entry is added. 
-                                           
- Uses linear probing to resolve collisions 
-                                           
- Args:                                     
-   m     : HashMap                         
-   key   : integer key                     
-   value : integer value                   
-                                           
- Returns:                                  
-   1 on success                            
-   0 if the table is full                  
- ----------------------------------------- 
+-----------------------------------------
+put
+-----------------------------------------
+Insert or update a key-value pair.
+
+If the key already exists, its value is
+updated. Otherwise, a new entry is added.
+
+Uses linear probing to resolve collisions
+
+Args:
+m     : HashMap
+key   : integer key
+value : integer value
+
+Returns:
+1 on success
+0 if the table is full
+-----------------------------------------
 #
 func put(m, key, value) {
     i = hash(key, m.cap);
@@ -154,21 +154,21 @@ func put(m, key, value) {
 }
 
 #
- ----------------------------------------- 
- get                                       
- ----------------------------------------- 
- Retrieve the value associated with a key. 
-                                           
- Uses linear probing to search.            
-                                           
- Args:                                     
-   m   : HashMap                           
-   key : integer key                       
-                                           
- Returns:                                  
-   value if found                          
-   0 if key is not present                 
- ----------------------------------------- 
+-----------------------------------------
+get
+-----------------------------------------
+Retrieve the value associated with a key.
+
+Uses linear probing to search.
+
+Args:
+m   : HashMap
+key : integer key
+
+Returns:
+value if found
+0 if key is not present
+-----------------------------------------
 #
 func get(m, key) {
     i = hash(key, m.cap);
@@ -192,19 +192,19 @@ func get(m, key) {
 }
 
 #
- ----------------------------------------- 
- has                                       
- ----------------------------------------- 
- Check whether a key exists in the map.    
-                                           
- Args:                                     
-   m   : HashMap                           
-   key : integer key                       
-                                           
- Returns:                                  
-   1 if key exists                         
-   0 otherwise                             
- ----------------------------------------- 
+-----------------------------------------
+has
+-----------------------------------------
+Check whether a key exists in the map.
+
+Args:
+m   : HashMap
+key : integer key
+
+Returns:
+1 if key exists
+0 otherwise
+-----------------------------------------
 #
 func has(m, key) {
     i = hash(key, m.cap);
@@ -228,22 +228,22 @@ func has(m, key) {
 }
 
 #
- ----------------------------------------- 
- remove                                    
- ----------------------------------------- 
- Remove a key from the map if present.     
-                                           
- Marks the slot as unused and decrements   
- the size counter.                         
-                                           
- Args:                                     
-   m   : HashMap                           
-   key : integer key                       
-                                           
- Returns:                                  
-   1 if removed                            
-   0 if key was not found                  
- ----------------------------------------- 
+-----------------------------------------
+remove
+-----------------------------------------
+Remove a key from the map if present.
+
+Marks the slot as unused and decrements
+the size counter.
+
+Args:
+m   : HashMap
+key : integer key
+
+Returns:
+1 if removed
+0 if key was not found
+-----------------------------------------
 #
 func remove(m, key) {
     i = hash(key, m.cap);
@@ -288,3 +288,4 @@ func remove(m, key) {
         }
     }
 }
+

@@ -1,5 +1,8 @@
 use super::VM;
-use crate::grammar::{Instruction, Type};
+use crate::{
+    grammar::{Instruction, Type},
+    vm::CallFrame,
+};
 use std::collections::HashMap;
 
 impl VM {
@@ -10,18 +13,19 @@ impl VM {
         let args = self.pop_args(argc);
 
         let f = self.global_env.get(&name).cloned().unwrap_or_else(|| {
-            panic!(
+            self.runtime_error(&format!(
                 "call error: `{}` is not defined (attempted to call with {} argument(s))",
                 name, argc
-            )
+            ))
         });
 
         let ret = match f {
-            Type::Function { .. } => self.call_function(f, args),
-            other => panic!(
+            Type::Function { .. } => self.call_function(name, f, args),
+            Type::NativeFunction(native_name) => self.call_native(native_name, args),
+            other => self.runtime_error(&format!(
                 "call error: `{}` is not a function (found {:?})",
                 name, other
-            ),
+            )),
         };
 
         self.stack.push(ret);
@@ -30,94 +34,127 @@ impl VM {
     // =========================================================
     // Function execution
     // =========================================================
-    pub(crate) fn call_function(&mut self, f: Type, args: Vec<Type>) -> Type {
+    pub(crate) fn call_function(&mut self, name: String, f: Type, args: Vec<Type>) -> Type {
         match f {
-            Type::Function { params, body } => {
-                // Save VM state
-                let saved_local = self.local_env.take();
-                let saved_immutables = self.immutable_stack.clone();
+            Type::Function { params, code } => {
+                // Build immutable stack: global + params
+                let global_immutables = self.immutable_stack[0].clone();
+                let mut imm_stack = vec![global_immutables, HashMap::new()];
 
-                // Start function with:
-                // - existing immutable stack (global immutables preserved)
-                // - plus a fresh param frame
-                self.immutable_stack.push(HashMap::new());
-                self.local_env = Some(HashMap::new());
-
-                // Bind parameters as immutables
                 {
-                    let scope = self.immutable_stack.last_mut().unwrap();
+                    let scope = imm_stack.last_mut().unwrap();
                     for (p, v) in params.into_iter().zip(args) {
                         scope.insert(p, v);
                     }
                 }
 
-                // Compile function body
-                let mut code = Vec::new();
-                let mut lg = crate::compiler::LabelGenerator::new();
-                let mut break_stack = Vec::new();
+                let local_env = Some(HashMap::new());
 
-                for stmt in body {
-                    crate::compiler::compile(stmt, &mut code, &mut lg, &mut break_stack);
-                }
-                code.push(Instruction::Return);
+                let labels = Self::build_labels(&code);
 
-                // Swap execution context
-                let saved_code = std::mem::replace(&mut self.code, code);
-                let saved_labels =
-                    std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
-                let saved_ptr = self.pointer;
-                let saved_stack_len = self.stack.len();
+                // Push call frame
+                self.push_frame(name, code, labels, local_env, imm_stack);
 
-                self.pointer = 0;
+                // Execute
                 self.run();
 
-                // Retrieve return value
-                let ret = if self.stack.len() > saved_stack_len {
-                    self.pop()
-                } else {
-                    Type::Integer(0)
-                };
-
-                // Restore VM state
-                self.code = saved_code;
-                self.labels = saved_labels;
-                self.pointer = saved_ptr;
-                self.immutable_stack = saved_immutables;
-                self.local_env = saved_local;
-
-                ret
+                // Pop frame and return value
+                self.pop_frame()
             }
-            _ => panic!("attempted to call non-function"),
+            _ => self.runtime_error("attempted to call non-function"),
         }
+    }
+
+    fn call_native(&mut self, name: String, args: Vec<Type>) -> Type {
+        let f = self
+            .native_functions
+            .get(&name)
+            .copied()
+            .unwrap_or_else(|| {
+                self.runtime_error(&format!(
+                    "call error: native function `{}` is not registered",
+                    name
+                ))
+            });
+
+        self.push_native_frame(name);
+        let result = f(self, args);
+        if self.call_stack.pop().is_none() {
+            self.runtime_error("call stack underflow after native call");
+        }
+        result
+    }
+
+    fn push_frame(
+        &mut self,
+        function_name: String,
+        code: Vec<Instruction>,
+        labels: HashMap<String, usize>,
+        local_env: Option<HashMap<String, Type>>,
+        immutable_stack: Vec<HashMap<String, Type>>,
+    ) {
+        let frame = CallFrame {
+            code: std::mem::replace(&mut self.code, code),
+            labels: std::mem::replace(&mut self.labels, labels),
+            pointer: self.pointer,
+
+            local_env: std::mem::replace(&mut self.local_env, local_env),
+            immutable_stack: std::mem::replace(&mut self.immutable_stack, immutable_stack),
+
+            stack_base: self.stack.len(),
+            function_name,
+        };
+
+        self.pointer = 0;
+        self.call_stack.push(frame);
+    }
+
+    fn push_native_frame(&mut self, function_name: String) {
+        let frame = CallFrame {
+            code: Vec::new(),
+            labels: HashMap::new(),
+            pointer: 0,
+            local_env: None,
+            immutable_stack: Vec::new(),
+            stack_base: self.stack.len(),
+            function_name,
+        };
+        self.call_stack.push(frame);
+    }
+
+    fn pop_frame(&mut self) -> Type {
+        let frame = match self.call_stack.pop() {
+            Some(frame) => frame,
+            None => self.runtime_error("call stack underflow"),
+        };
+
+        let ret = if self.stack.len() > frame.stack_base {
+            self.stack.pop().unwrap()
+        } else {
+            Type::Integer(0)
+        };
+
+        self.code = frame.code;
+        self.labels = frame.labels;
+        self.pointer = frame.pointer;
+        self.local_env = frame.local_env;
+        self.immutable_stack = frame.immutable_stack;
+
+        ret
     }
 
     // =========================================================
     // Module imports
     // =========================================================
     pub(crate) fn import_module(&mut self, path: Vec<String>) {
-        let file_path = format!("project/{}.rx", path.join("/"));
-
-        let source = std::fs::read_to_string(&file_path)
-            .unwrap_or_else(|_| panic!("could not import module `{}`", file_path));
-
-        let tokens = crate::tokenizer::tokenize(&source);
-        let ast = crate::parser::parse(tokens);
-
-        let mut code = Vec::new();
-        let mut lg = crate::compiler::LabelGenerator::new();
-        let mut break_stack = Vec::new();
-
-        crate::compiler::compile_module(ast, &mut code, &mut lg, &mut break_stack);
-
-        let saved_code = std::mem::replace(&mut self.code, code);
-        let saved_labels = std::mem::replace(&mut self.labels, Self::build_labels(&self.code));
-        let saved_ptr = self.pointer;
-
-        self.pointer = 0;
-        self.run();
-
-        self.code = saved_code;
-        self.labels = saved_labels;
-        self.pointer = saved_ptr;
+        if path.len() == 2 && path[0] == "std" && path[1] == "file" {
+            self.install_native_fs();
+        }
+        if path.len() == 2 && path[0] == "std" && path[1] == "buf" {
+            self.install_native_buf();
+        }
+        if path.len() == 2 && path[0] == "std" && path[1] == "vec" {
+            self.install_native_vec();
+        }
     }
 }

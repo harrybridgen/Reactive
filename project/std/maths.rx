@@ -1,38 +1,38 @@
 #
- ========================================= 
-        Reactive Mathematics   
- ========================================= 
-                                           
- This module provides basic integer math   
- utilities for use in both eager and       
- reactive (::=) contexts.                  
-                                           
- All functions are:                        
- - pure                                    
- - deterministic                           
- - side-effect free                        
- - safe for reactive expressions (::=)     
-                                           
- Values are 32-bit signed integers.        
-                                           
- Import with:                              
-    import std.maths;                     
-                                           
- ========================================= 
+=========================================
+Reactive Mathematics
+=========================================
+
+This module provides basic integer math
+utilities for use in both eager and
+reactive (::=) contexts.
+
+All functions are:
+- pure
+- deterministic
+- side-effect free
+- safe for reactive expressions (::=)
+
+Values are 32-bit signed integers.
+
+Import with:
+import std.maths;
+
+=========================================
 #
 
 #
- ----------------------------------------- 
- abs                                       
- ----------------------------------------- 
- Compute the absolute value of an integer. 
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   |x|                                     
- ----------------------------------------- 
+-----------------------------------------
+abs
+-----------------------------------------
+Compute the absolute value of an integer.
+
+Args:
+x : integer
+
+Returns:
+|x|
+-----------------------------------------
 #
 func abs(x) {
     if x < 0 {
@@ -42,22 +42,22 @@ func abs(x) {
 }
 
 #
- ----------------------------------------- 
- clamp                                    
- ----------------------------------------- 
- Clamp a value into the inclusive range    
- [lo, hi].                                 
-                                           
- Args:                                     
-   x  : value to clamp                     
-   lo : lower bound                        
-   hi : upper bound                        
-                                           
- Returns:                                  
-   lo if x < lo                            
-   hi if x > hi                            
-   x otherwise                             
- ----------------------------------------- 
+-----------------------------------------
+clamp
+-----------------------------------------
+Clamp a value into the inclusive range
+[lo, hi].
+
+Args:
+x  : value to clamp
+lo : lower bound
+hi : upper bound
+
+Returns:
+lo if x < lo
+hi if x > hi
+x otherwise
+-----------------------------------------
 #
 func clamp(x, lo, hi) {
     if x < lo {
@@ -70,51 +70,51 @@ func clamp(x, lo, hi) {
 }
 
 #
- ----------------------------------------- 
- square                                   
- ----------------------------------------- 
- Square a number.                          
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   x * x                                   
- ----------------------------------------- 
+-----------------------------------------
+square
+-----------------------------------------
+Square a number.
+
+Args:
+x : integer
+
+Returns:
+x * x
+-----------------------------------------
 #
 func square(x) {
     return x * x;
 }
 
 #
- ----------------------------------------- 
- cube                                     
- ----------------------------------------- 
- Cube a number.                            
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   x * x * x                               
- ----------------------------------------- 
+-----------------------------------------
+cube
+-----------------------------------------
+Cube a number.
+
+Args:
+x : integer
+
+Returns:
+x * x * x
+-----------------------------------------
 #
 func cube(x) {
     return x * x * x;
 }
 
 #
- ----------------------------------------- 
- min                                      
- ----------------------------------------- 
- Compute the minimum of two values.        
-                                           
- Args:                                     
-   x, y : integers                         
-                                           
- Returns:                                  
-   the smaller of x and y                  
- ----------------------------------------- 
+-----------------------------------------
+min
+-----------------------------------------
+Compute the minimum of two values.
+
+Args:
+x, y : integers
+
+Returns:
+the smaller of x and y
+-----------------------------------------
 #
 func min(x, y) {
     if x > y {
@@ -124,17 +124,17 @@ func min(x, y) {
 }
 
 #
- ----------------------------------------- 
- max                                      
- ----------------------------------------- 
- Compute the maximum of two values.        
-                                           
- Args:                                     
-   x, y : integers                         
-                                           
- Returns:                                  
-   the larger of x and y                   
- ----------------------------------------- 
+-----------------------------------------
+max
+-----------------------------------------
+Compute the maximum of two values.
+
+Args:
+x, y : integers
+
+Returns:
+the larger of x and y
+-----------------------------------------
 #
 func max(x, y) {
     if x > y {
@@ -144,19 +144,19 @@ func max(x, y) {
 }
 
 #
- ----------------------------------------- 
- sign                                     
- ----------------------------------------- 
- Determine the sign of a number.           
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   1  if x > 0                             
-   0  if x == 0                            
-  -1  if x < 0                             
- ----------------------------------------- 
+-----------------------------------------
+sign
+-----------------------------------------
+Determine the sign of a number.
+
+Args:
+x : integer
+
+Returns:
+1  if x > 0
+0  if x == 0
+-1  if x < 0
+-----------------------------------------
 #
 func sign(x) {
     if x > 0 { return 1; }
@@ -165,18 +165,18 @@ func sign(x) {
 }
 
 #
- ----------------------------------------- 
- iseven                                   
- ----------------------------------------- 
- Test whether a number is even.            
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   1 if x is even                          
-   0 if x is odd                           
- ----------------------------------------- 
+-----------------------------------------
+iseven
+-----------------------------------------
+Test whether a number is even.
+
+Args:
+x : integer
+
+Returns:
+1 if x is even
+0 if x is odd
+-----------------------------------------
 #
 func iseven(x) {
     if abs(x) % 2 == 0 {
@@ -186,18 +186,18 @@ func iseven(x) {
 }
 
 #
- ----------------------------------------- 
- isodd                                    
- ----------------------------------------- 
- Test whether a number is odd.             
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   1 if x is odd                           
-   0 if x is even                          
- ----------------------------------------- 
+-----------------------------------------
+isodd
+-----------------------------------------
+Test whether a number is odd.
+
+Args:
+x : integer
+
+Returns:
+1 if x is odd
+0 if x is even
+-----------------------------------------
 #
 func isodd(x){
     if abs(x) % 2 != 0 {
@@ -207,21 +207,21 @@ func isodd(x){
 }
 
 #
- ----------------------------------------- 
- mod                                      
- ----------------------------------------- 
- Compute a safe, positive modulo.          
-                                           
- The result is always non-negative.        
- Division by zero returns 0.               
-                                           
- Args:                                     
-   a : dividend                            
-   b : divisor                             
-                                           
- Returns:                                  
-   a mod b (>= 0)                          
- ----------------------------------------- 
+-----------------------------------------
+mod
+-----------------------------------------
+Compute a safe, positive modulo.
+
+The result is always non-negative.
+Division by zero returns 0.
+
+Args:
+a : dividend
+b : divisor
+
+Returns:
+a mod b (>= 0)
+-----------------------------------------
 #
 func mod(a, b){
     if b == 0 { return 0; }
@@ -231,21 +231,21 @@ func mod(a, b){
 }
 
 #
- ----------------------------------------- 
- sqrt                                     
- ----------------------------------------- 
- Compute the integer square root (floor).  
-                                           
- Uses iterative incrementation and is      
- safe for reactive use.                    
-                                           
- Args:                                     
-   x : integer                             
-                                           
- Returns:                                  
-   floor(sqrt(x))                          
-   0 if x < 0                              
- ----------------------------------------- 
+-----------------------------------------
+sqrt
+-----------------------------------------
+Compute the integer square root (floor).
+
+Uses iterative incrementation and is
+safe for reactive use.
+
+Args:
+x : integer
+
+Returns:
+floor(sqrt(x))
+0 if x < 0
+-----------------------------------------
 #
 func sqrt(x) {
     if x < 0 {

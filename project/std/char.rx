@@ -1,32 +1,173 @@
+#
+=========================================
+Reactive Char Library
+=========================================
+
+This module provides basic character
+classification and conversion utilities.
+
+All functions operate on single character
+values and use integer comparisons.
+
+These helpers are safe to use in both
+reactive (::=) and non-reactive contexts.
+
+Characters are treated as Unicode scalar
+values but classification is ASCII-based.
+
+=========================================
+#
+
+#
+-----------------------------------------
+is_digit
+-----------------------------------------
+Check whether a character is a decimal
+digit ('0' through '9').
+
+Args:
+c : character to test
+
+Returns:
+1 if c is a digit
+0 otherwise
+-----------------------------------------
+#
 func is_digit(c) {
     return (int)c >= (int)'0' && (int)c <= (int)'9';
 }
 
+#
+-----------------------------------------
+is_alpha
+-----------------------------------------
+Check whether a character is an alphabetic
+character or underscore.
+
+Alphabetic characters include:
+- lowercase letters ('a'–'z')
+- uppercase letters ('A'–'Z')
+- underscore ('_')
+
+Args:
+c : character to test
+
+Returns:
+1 if c is alphabetic or underscore
+0 otherwise
+-----------------------------------------
+#
 func is_alpha(c) {
     return ((int)c >= (int)'a' && (int)c <= (int)'z') ||
-           ((int)c >= (int)'A' && (int)c <= (int)'Z') ||
-           (int)c == (int)'_';
+    ((int)c >= (int)'A' && (int)c <= (int)'Z') ||
+    (int)c == (int)'_';
 }
 
+#
+-----------------------------------------
+is_alnum
+-----------------------------------------
+Check whether a character is alphanumeric.
+
+A character is considered alphanumeric
+if it is either:
+- a digit
+- an alphabetic character
+
+Args:
+c : character to test
+
+Returns:
+1 if c is alphanumeric
+0 otherwise
+-----------------------------------------
+#
 func is_alnum(c) {
     return is_alpha(c) || is_digit(c);
 }
 
+#
+-----------------------------------------
+is_space
+-----------------------------------------
+Check whether a character is whitespace.
+
+Recognized whitespace characters:
+- space (' ')
+- newline ('\n')
+- tab ('\t')
+- carriage return ('\r')
+
+Args:
+c : character to test
+
+Returns:
+1 if c is whitespace
+0 otherwise
+-----------------------------------------
+#
 func is_space(c) {
     return (int)c == (int)' '  ||
-           (int)c == (int)'\n' ||
-           (int)c == (int)'\t' ||
-           (int)c == (int)'\r';
+    (int)c == (int)'\n' ||
+    (int)c == (int)'\t' ||
+    (int)c == (int)'\r';
 }
 
+#
+-----------------------------------------
+is_lower
+-----------------------------------------
+Check whether a character is a lowercase
+ASCII letter ('a' through 'z').
+
+Args:
+c : character to test
+
+Returns:
+1 if c is lowercase
+0 otherwise
+-----------------------------------------
+#
 func is_lower(c) {
     return (int)c >= (int)'a' && (int)c <= (int)'z';
 }
 
+#
+-----------------------------------------
+is_upper
+-----------------------------------------
+Check whether a character is an uppercase
+ASCII letter ('A' through 'Z').
+
+Args:
+c : character to test
+
+Returns:
+1 if c is uppercase
+0 otherwise
+-----------------------------------------
+#
 func is_upper(c) {
     return (int)c >= (int)'A' && (int)c <= (int)'Z';
 }
 
+#
+-----------------------------------------
+to_lower
+-----------------------------------------
+Convert an uppercase ASCII letter to its
+lowercase equivalent.
+
+If the character is not uppercase, it is
+returned unchanged.
+
+Args:
+c : character to convert
+
+Returns:
+lowercase character or original value
+-----------------------------------------
+#
 func to_lower(c) {
     if is_upper(c) {
         return (char)((int)c + ((int)'a' - (int)'A'));
@@ -34,6 +175,23 @@ func to_lower(c) {
     return c;
 }
 
+#
+-----------------------------------------
+to_upper
+-----------------------------------------
+Convert a lowercase ASCII letter to its
+uppercase equivalent.
+
+If the character is not lowercase, it is
+returned unchanged.
+
+Args:
+c : character to convert
+
+Returns:
+uppercase character or original value
+-----------------------------------------
+#
 func to_upper(c) {
     if is_lower(c) {
         return (char)((int)c - ((int)'a' - (int)'A'));
@@ -41,6 +199,23 @@ func to_upper(c) {
     return c;
 }
 
+#
+-----------------------------------------
+digit_to_int
+-----------------------------------------
+Convert a digit character to its integer
+value.
+
+If the character is not a digit, an error
+message is printed.
+
+Args:
+c : digit character ('0'–'9')
+
+Returns:
+integer value in range [0, 9]
+-----------------------------------------
+#
 func digit_to_int(c) {
     if !is_digit(c) {
         println "digit_to_int: not a digit";
@@ -48,6 +223,71 @@ func digit_to_int(c) {
     return (int)c - (int)'0';
 }
 
+#
+-----------------------------------------
+int_to_digit
+-----------------------------------------
+Convert an integer digit to its character
+representation.
+
+Valid input range is [0, 9].
+
+If the value is outside this range, an
+error message is printed.
+
+Args:
+n : integer digit value
+
+Returns:
+character representing the digit
+-----------------------------------------
+#
+func int_to_digit(n) {
+    if n < 0 || n > 9 {
+        println "int_to_digit: not a digit";
+    }
+    return (char)(n + (int)'0');
+}
+
+#
+-----------------------------------------
+char_to_int
+-----------------------------------------
+Convert a character to its integer code.
+
+This returns the integer representation
+of the character without validation.
+
+The value corresponds to the character’s
+Unicode scalar value.
+
+Args:
+c : character to convert
+
+Returns:
+integer code of the character
+-----------------------------------------
+#
+func char_to_int(c) {
+    return (int)c;
+}
+
+#
+-----------------------------------------
+int_to_char
+-----------------------------------------
+Convert an integer to a character.
+
+No validation is performed. The integer
+is interpreted as a character code.
+
+Args:
+n : integer character code
+
+Returns:
+character corresponding to n
+-----------------------------------------
+#
 func int_to_char(n) {
     return (char)n;
 }

@@ -1,13 +1,25 @@
 pub mod call;
-pub mod debug;
 pub mod env;
 pub mod exec;
+pub mod native;
 pub mod reactive;
 pub mod runtime;
 
-use crate::grammar::{Instruction, StructFieldInit, StructInstance, Type};
+use crate::grammar::{CompiledStructFieldInit, Instruction, StructInstance, Type};
 use std::collections::{HashMap, HashSet};
 
+type NativeFunction = fn(&mut VM, Vec<Type>) -> Type;
+struct CallFrame {
+    code: Vec<Instruction>,
+    labels: HashMap<String, usize>,
+    pointer: usize,
+
+    local_env: Option<HashMap<String, Type>>,
+    immutable_stack: Vec<HashMap<String, Type>>,
+
+    stack_base: usize,
+    function_name: String,
+}
 pub struct VM {
     // Operand stack
     stack: Vec<Type>,
@@ -27,23 +39,28 @@ pub struct VM {
     labels: HashMap<String, usize>,
 
     // Runtime heaps
-    struct_defs: HashMap<String, Vec<(String, Option<StructFieldInit>)>>,
+    struct_defs: HashMap<String, Vec<(String, Option<CompiledStructFieldInit>)>>,
     heap: Vec<StructInstance>,
     array_heap: Vec<Vec<Type>>,
     array_immutables: Vec<HashSet<usize>>,
+    vec_heap: Vec<Vec<Type>>,
+    vec_immutables: Vec<HashSet<usize>>,
+    buffer_heap: Vec<Vec<u32>>,
 
     // Module import memoization
     imported_modules: HashSet<String>,
 
-    // Debugging
-    debug: bool,
-    debug_reactive_ctx: Vec<String>,
+    // call stack
+    call_stack: Vec<CallFrame>,
+
+    // native function registry
+    native_functions: HashMap<String, NativeFunction>,
 }
 
 impl VM {
     pub fn new(code: Vec<Instruction>) -> Self {
         let labels = Self::build_labels(&code);
-        Self {
+        let vm = Self {
             stack: Vec::new(),
             global_env: HashMap::new(),
             local_env: None,
@@ -55,10 +72,14 @@ impl VM {
             heap: Vec::new(),
             array_heap: Vec::new(),
             array_immutables: Vec::new(),
+            vec_heap: Vec::new(),
+            vec_immutables: Vec::new(),
+            buffer_heap: Vec::new(),
             imported_modules: HashSet::new(),
-            debug: true,
-            debug_reactive_ctx: Vec::new(),
-        }
+            call_stack: Vec::new(),
+            native_functions: HashMap::new(),
+        };
+        vm
     }
 
     fn build_labels(code: &[Instruction]) -> HashMap<String, usize> {
@@ -69,5 +90,14 @@ impl VM {
             }
         }
         labels
+    }
+
+    pub(crate) fn runtime_error(&self, message: &str) -> ! {
+        println!("Runtime error: {message}");
+        println!("Stack trace (most recent call last):");
+        for frame in self.call_stack.iter().rev() {
+            println!("  at {}()", frame.function_name);
+        }
+        std::process::exit(1);
     }
 }

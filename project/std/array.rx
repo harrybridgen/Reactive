@@ -1,0 +1,188 @@
+#
+=========================================
+Array Utilities
+=========================================
+
+This module provides basic utilities
+for working with fixed-size arrays.
+
+Arrays are heap-allocated, indexed
+containers with a fixed length.
+
+All operations are deterministic and
+safe for use in reactive and non-reactive
+contexts.
+
+=========================================
+#
+
+#
+-----------------------------------------
+len
+-----------------------------------------
+Return the length of an array.
+
+Args:
+a : array
+
+Returns:
+number of elements
+-----------------------------------------
+#
+func len(a) {
+    return (int)a;
+}
+
+#
+-----------------------------------------
+is_empty
+-----------------------------------------
+Check whether an array is empty.
+
+Args:
+a : array
+
+Returns:
+1 if empty
+0 otherwise
+-----------------------------------------
+#
+func is_empty(a) {
+    return (int)a == 0;
+}
+
+#
+-----------------------------------------
+get
+-----------------------------------------
+Retrieve an element from an array.
+
+No bounds checking is performed.
+
+Args:
+a : array
+i : index
+
+Returns:
+value at index i
+-----------------------------------------
+#
+func get(a, i) {
+    return a[i];
+}
+
+#
+-----------------------------------------
+set
+-----------------------------------------
+Assign a value to an array element.
+
+No bounds checking is performed.
+
+Args:
+a : array
+i : index
+v : value to assign
+-----------------------------------------
+#
+func set(a, i, v) {
+    a[i] = v;
+}
+
+#
+-----------------------------------------
+copy
+-----------------------------------------
+Create a shallow copy of an array.
+
+Elements are copied by value.
+
+Args:
+a : source array
+
+Returns:
+new array with copied contents
+-----------------------------------------
+#
+func copy(a) {
+    n := (int)a;
+    out := [n];
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= n { break; }
+        out[i] = a[i];
+        i = di;
+    }
+
+    return out;
+}
+
+#
+-----------------------------------------
+fill
+-----------------------------------------
+Create an array filled with a value.
+
+Args:
+n : number of elements
+v : value to fill
+
+Returns:
+new array of size n
+-----------------------------------------
+#
+func fill(n, v) {
+    out := [n];
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= n { break; }
+        out[i] = v;
+        i = di;
+    }
+
+    return out;
+}
+
+#
+-----------------------------------------
+equals
+-----------------------------------------
+Check whether two arrays are equal.
+
+Arrays are equal if they have the same
+length and all corresponding elements
+are equal.
+
+Args:
+a : first array
+b : second array
+
+Returns:
+1 if equal
+0 otherwise
+-----------------------------------------
+#
+func equals(a, b) {
+    if (int)a != (int)b {
+        return 0;
+    }
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= a { break; }
+        if a[i] != b[i] {
+            return 0;
+        }
+        i = di;
+    }
+
+    return 1;
+}

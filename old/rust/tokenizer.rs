@@ -9,7 +9,7 @@ pub fn tokenize(input: &str) -> Vec<Token> {
     while let Some(c) = chars.next() {
         match c {
             '0'..='9' => tokens.push(read_number(c, &mut chars)),
-            'a'..='z' | 'A'..='Z' => tokens.push(read_ident(c, &mut chars)),
+            'a'..='z' | 'A'..='Z' | '_' => tokens.push(read_ident(c, &mut chars)),
             '.' => tokens.push(Token::Dot),
             ',' => tokens.push(Token::Comma),
             '?' => tokens.push(Token::Question),
@@ -137,8 +137,11 @@ fn read_ident(first: char, chars: &mut Peekable<Chars>) -> Token {
         "break" => Token::Break,
         "func" => Token::Func,
         "return" => Token::Return,
+        "continue" => Token::Continue,
         "struct" => Token::Struct,
         "import" => Token::Import,
+        "assert" => Token::Assert,
+        "error" => Token::Error,
         _ => Token::Ident(s),
     }
 }

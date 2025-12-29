@@ -1,0 +1,138 @@
+# ------------------------------------------------ #
+# Bouncing String via Reactive Framebuffer         #
+# ------------------------------------------------ #
+
+struct Text {
+    str;
+    len;
+
+    x = 0;
+    y = 0;
+    vx = 1;
+    vy = 1;
+
+    dx ::= x + vx;
+    dy ::= y + vy;
+}
+
+func new_text(str){
+    text := struct Text;
+    text.str = str;
+    text.len ::= text.str;
+    return text;
+}
+
+struct Screen {
+    width;
+    height;
+    buf;
+}
+
+func new_screen(width, height) {
+    screen := struct Screen;
+    screen.width := width;
+    screen.height := height;
+    screen.buf := [screen.height];
+
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+
+        screen.buf[y] = [screen.width];
+
+        y = dy;
+    }
+    return screen;
+}
+
+func framebuffer(screen, text) {
+
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+
+        x = 0;
+        dx ::= x + 1;
+
+        loop {
+            if x >= screen.width { break; }
+
+            yy := y;
+            xx := x;
+
+            screen.buf[yy][xx] ::=
+            (yy == text.y &&
+            xx >= text.x &&
+            xx < text.x + text.len)
+            ? text.str[xx - text.x]
+            : (' ');
+
+            x = dx;
+        }
+
+        y = dy;
+    }
+}
+func render(screen) {
+    print "\033[2J";
+    print "\033[H";
+
+    y = 0;
+    dy ::= y + 1;
+
+    loop {
+        if y >= screen.height { break; }
+        println screen.buf[y];
+        y = dy;
+    }
+}
+func delay(n) {
+    d = 0;
+    dd ::= d + 1;
+
+    loop {
+        if d >= n { break; }
+        d = dd;
+    }
+}
+func main(){
+    text := new_text("HELLO REACTIVE");
+    screen := new_screen(50,8);
+
+    framebuffer(screen, text);
+    loop {
+        render(screen);
+        delay(50000);
+
+        text.x = text.dx;
+        text.y = text.dy;
+
+        if text.x < 0 {
+            text.x = -text.x;
+            text.vx = -text.vx;
+            text.str = "HELLO REACTIVE"
+        }
+
+        if (text.x + text.len) > screen.width {
+            text.x = (screen.width - text.len) - ((text.x + text.len) - screen.width);
+            text.vx = -text.vx;
+            text.str = "REACTIVE HELLO"
+        }
+
+        if text.y < 0 {
+            text.y = -text.y;
+            text.vy = -text.vy;
+            text.str = "HELLO REACTIVE"
+        }
+
+        if text.y > (screen.height - 1) {
+            text.y = (screen.height - 1) - (text.y - (screen.height - 1));
+            text.vy = -text.vy;
+            text.str = "REACTIVE HELLO"
+        }
+    }
+}

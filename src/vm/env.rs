@@ -28,7 +28,7 @@ impl VM {
 
         // Only block mutation when assigning in the global scope
         if self.immutable_exists(name) {
-            panic!("cannot assign to immutable variable `{name}`");
+            self.runtime_error(&format!("cannot assign to immutable variable `{name}`"));
         }
     }
 }
