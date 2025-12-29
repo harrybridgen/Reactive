@@ -1,0 +1,18 @@
+import std.buf;
+
+func main() {
+    b := buf_new(8);
+
+    buf_push_str(b, "Hello");
+    buf_push_char(b, ' ');
+    buf_push_str(b, "World");
+
+    s := buf_to_string(b);
+
+    assert (int)s == 11;
+    assert s[0] == 'H';
+    assert s[5] == ' ';
+    assert s[10] == 'd';
+
+    println "ok";
+}

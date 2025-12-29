@@ -18,6 +18,7 @@ pub enum Type {
     Char(u32),
 
     ArrayRef(usize),
+    BufferRef(usize),
     StructRef(usize),
 
     Function {

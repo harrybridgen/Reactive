@@ -1,0 +1,96 @@
+#
+=========================================
+Growable text buffer (native)
+=========================================
+
+Wrapper for VM-backed growable buffers.
+=========================================
+#
+
+#
+-----------------------------------------
+buf_new
+-----------------------------------------
+Create a new buffer with initial capacity.
+
+Args:
+cap : int
+
+Returns:
+buffer handle
+-----------------------------------------
+#
+func buf_new(cap) {
+    return internal_buf_new(cap);
+}
+
+#
+-----------------------------------------
+buf_push_char
+-----------------------------------------
+Append a char to the buffer.
+
+Args:
+buf : buffer
+c   : char
+
+Returns:
+buffer handle
+-----------------------------------------
+#
+func buf_push_char(buf, c) {
+    return internal_buf_push_char(buf, c);
+}
+
+#
+-----------------------------------------
+buf_push_str
+-----------------------------------------
+Append a string to the buffer.
+
+Args:
+buf : buffer
+s   : string (array of chars)
+
+Returns:
+buffer handle
+-----------------------------------------
+#
+func buf_push_str(buf, s) {
+    return internal_buf_push_str(buf, s);
+}
+
+#
+-----------------------------------------
+buf_to_string
+-----------------------------------------
+Convert the buffer to a string.
+
+Args:
+buf : buffer
+
+Returns:
+string (array of chars)
+-----------------------------------------
+#
+func buf_to_string(buf) {
+    return internal_buf_to_string(buf);
+}
+
+#
+-----------------------------------------
+buf_write_file
+-----------------------------------------
+Write buffer contents to a file.
+
+Args:
+buf  : buffer
+path : string
+
+Returns:
+number of chars written
+-----------------------------------------
+#
+func buf_write_file(buf, path) {
+    return internal_buf_write_file(buf, path);
+}

@@ -160,7 +160,9 @@ impl VM {
                 }
                 self.array_heap[id][idx] = val;
             }
-            other => self.runtime_error(&format!("type error: StoreIndex on non-array {:?}", other)),
+            other => {
+                self.runtime_error(&format!("type error: StoreIndex on non-array {:?}", other))
+            }
         }
     }
 
@@ -257,8 +259,7 @@ impl VM {
                             index: idx,
                         }));
                     }
-                    other => self
-                        .runtime_error(&format!("indexing non-array (found {:?})", other)),
+                    other => self.runtime_error(&format!("indexing non-array (found {:?})", other)),
                 }
             }
 
@@ -267,7 +268,9 @@ impl VM {
                     .fields
                     .get(&field)
                     .cloned()
-                    .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{field}`")));
+                    .unwrap_or_else(|| {
+                        self.runtime_error(&format!("missing struct field `{field}`"))
+                    });
 
                 let arr_val = self.force(field_val);
                 match arr_val {
@@ -412,10 +415,9 @@ impl VM {
 
                 match inst.fields.get(&field) {
                     Some(Type::Uninitialized) => {}
-                    Some(_) => self.runtime_error(&format!(
-                        "cannot reassign immutable field `{}`",
-                        field
-                    )),
+                    Some(_) => {
+                        self.runtime_error(&format!("cannot reassign immutable field `{}`", field))
+                    }
                     None => self.runtime_error(&format!("unknown struct field `{}`", field)),
                 }
 
@@ -453,7 +455,9 @@ impl VM {
                     .fields
                     .get(&field)
                     .cloned()
-                    .unwrap_or_else(|| self.runtime_error(&format!("missing struct field `{field}`")));
+                    .unwrap_or_else(|| {
+                        self.runtime_error(&format!("missing struct field `{field}`"))
+                    });
 
                 if matches!(v, Type::Uninitialized) {
                     self.runtime_error(&format!("use of uninitialized struct field `{}`", field));
@@ -642,12 +646,14 @@ impl VM {
                 self.heap.push(inst);
                 Type::StructRef(new_id)
             }
+
             Type::LazyValue(expr, captured) => Type::LazyValue(expr, captured),
             Type::Integer(n) => Type::Integer(n),
             Type::Function { params, code } => Type::Function { params, code },
             Type::NativeFunction(name) => Type::NativeFunction(name),
             Type::LValue(_) => self.runtime_error("cannot clone lvalue"),
             Type::Char(c) => Type::Char(c),
+            Type::BufferRef(id) => Type::BufferRef(id),
             Type::Uninitialized => Type::Uninitialized,
         }
     }

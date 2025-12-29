@@ -5,7 +5,7 @@
 struct Text {
     str;
     len;
-    
+
     x = 0;
     y = 0;
     vx = 1;
@@ -39,7 +39,7 @@ func new_screen(width, height) {
 
     loop {
         if y >= screen.height { break; }
-        
+
         screen.buf[y] = [screen.width];
 
         y = dy;
@@ -48,7 +48,7 @@ func new_screen(width, height) {
 }
 
 func framebuffer(screen, text) {
-    
+
     y = 0;
     dy ::= y + 1;
 
@@ -65,11 +65,11 @@ func framebuffer(screen, text) {
             xx := x;
 
             screen.buf[yy][xx] ::=
-                (yy == text.y &&
-                 xx >= text.x &&
-                 xx < text.x + text.len)
-                    ? text.str[xx - text.x]
-                    : (' ');
+            (yy == text.y &&
+            xx >= text.x &&
+            xx < text.x + text.len)
+            ? text.str[xx - text.x]
+            : (' ');
 
             x = dx;
         }
@@ -84,7 +84,7 @@ func render(screen) {
     y = 0;
     dy ::= y + 1;
 
-    loop { 
+    loop {
         if y >= screen.height { break; }
         println screen.buf[y];
         y = dy;

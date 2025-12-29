@@ -3,9 +3,87 @@ import bootstrap.stable.util;
 import bootstrap.stable.tokenizer;
 import bootstrap.stable.parser;
 import std.file;
+import std.buf;
 
 struct LabelGen {
     counter = 0;
+}
+
+struct TextBuf {
+    buf;
+    first = 1;
+}
+
+func textbuf_new(cap) {
+    out := struct TextBuf;
+    out.buf = buf_new(cap);
+    out.first = 1;
+    return out;
+}
+
+func textbuf_line_start(out) {
+    if out.first == 0 {
+        buf_push_char(out.buf, '\n');
+    }
+    else {
+        out.first = 0;
+    }
+}
+
+func textbuf_push(out, s) {
+    buf_push_str(out.buf, s);
+}
+
+func textbuf_push_char(out, c) {
+    buf_push_char(out.buf, c);
+}
+
+func textbuf_finish(out) {
+    return buf_to_string(out.buf);
+}
+
+func append_int(out, n) {
+    textbuf_push(out, str_from_int(n));
+}
+
+func append_quoted(out, s) {
+    textbuf_push_char(out, '"');
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= s { break; }
+        c := s[i];
+        ci := (int)c;
+
+        if c == '\\' {
+            textbuf_push(out, "\\\\");
+        }
+        else if c == '"' {
+            textbuf_push(out, "\\\"");
+        }
+        else if c == '\n' {
+            textbuf_push(out, "\\n");
+        }
+        else if c == '\r' {
+            textbuf_push(out, "\\r");
+        }
+        else if c == '\t' {
+            textbuf_push(out, "\\t");
+        }
+        else if ci < 32 || ci > 126 {
+            textbuf_push(out, "\\u{");
+            textbuf_push(out, str_from_hex(ci));
+            textbuf_push_char(out, '}');
+        }
+        else {
+            textbuf_push_char(out, c);
+        }
+
+        i = di;
+    }
+
+    textbuf_push_char(out, '"');
 }
 
 func new_labelgen() {
@@ -750,421 +828,366 @@ func compile_string_literal(s, code, labels) {
 }
 
 func serialize_instructions(code) {
-    lines := vec_new(64);
-    vec_push(lines, "RXB1");
-    append_instructions(lines, code);
-    return join_lines(lines);
+    out := textbuf_new(1024);
+    textbuf_line_start(out);
+    textbuf_push(out, "RXB1");
+    append_instructions(out, code);
+    return textbuf_finish(out);
 }
 
-func append_instructions(lines, code) {
+func append_instructions(out, code) {
     i = 0;
     di ::= i + 1;
     loop {
         if i >= code { break; }
-        append_instruction(lines, code[i]);
+        append_instruction(out, code[i]);
         i = di;
     }
 }
 
-func append_line(lines, line) {
-    vec_push(lines, line);
-}
-
-func append_instruction(lines, instr) {
+func append_instruction(out, instr) {
     if instr.kind == INSTR_Push {
-        line := str_append("Push ", str_from_int(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Push ");
+        append_int(out, instr.a);
         return;
     }
     if instr.kind == INSTR_PushChar {
-        line := str_append("PushChar ", str_from_int(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "PushChar ");
+        append_int(out, instr.a);
         return;
     }
     if instr.kind == INSTR_Load {
-        line := str_append("Load ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Load ");
+        append_quoted(out, instr.a);
         return;
     }
 
     if instr.kind == INSTR_Store {
-        line := str_append("Store ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Store ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_StoreImmutable {
-        line := str_append("StoreImmutable ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "StoreImmutable ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_StoreReactive {
-        append_reactive_named(lines, "StoreReactive", instr.a, instr.b);
+        append_reactive_named(out, "StoreReactive", instr.a, instr.b);
         return;
     }
 
-    if instr.kind == INSTR_Add { append_line(lines, "Add"); return; }
-    if instr.kind == INSTR_Sub { append_line(lines, "Sub"); return; }
-    if instr.kind == INSTR_Mul { append_line(lines, "Mul"); return; }
-    if instr.kind == INSTR_Div { append_line(lines, "Div"); return; }
-    if instr.kind == INSTR_Modulo { append_line(lines, "Modulo"); return; }
+    if instr.kind == INSTR_Add { textbuf_line_start(out); textbuf_push(out, "Add"); return; }
+    if instr.kind == INSTR_Sub { textbuf_line_start(out); textbuf_push(out, "Sub"); return; }
+    if instr.kind == INSTR_Mul { textbuf_line_start(out); textbuf_push(out, "Mul"); return; }
+    if instr.kind == INSTR_Div { textbuf_line_start(out); textbuf_push(out, "Div"); return; }
+    if instr.kind == INSTR_Modulo { textbuf_line_start(out); textbuf_push(out, "Modulo"); return; }
 
-    if instr.kind == INSTR_Greater { append_line(lines, "Greater"); return; }
-    if instr.kind == INSTR_Less { append_line(lines, "Less"); return; }
-    if instr.kind == INSTR_GreaterEqual { append_line(lines, "GreaterEqual"); return; }
-    if instr.kind == INSTR_LessEqual { append_line(lines, "LessEqual"); return; }
-    if instr.kind == INSTR_Equal { append_line(lines, "Equal"); return; }
-    if instr.kind == INSTR_NotEqual { append_line(lines, "NotEqual"); return; }
-    if instr.kind == INSTR_And { append_line(lines, "And"); return; }
-    if instr.kind == INSTR_Or { append_line(lines, "Or"); return; }
+    if instr.kind == INSTR_Greater { textbuf_line_start(out); textbuf_push(out, "Greater"); return; }
+    if instr.kind == INSTR_Less { textbuf_line_start(out); textbuf_push(out, "Less"); return; }
+    if instr.kind == INSTR_GreaterEqual { textbuf_line_start(out); textbuf_push(out, "GreaterEqual"); return; }
+    if instr.kind == INSTR_LessEqual { textbuf_line_start(out); textbuf_push(out, "LessEqual"); return; }
+    if instr.kind == INSTR_Equal { textbuf_line_start(out); textbuf_push(out, "Equal"); return; }
+    if instr.kind == INSTR_NotEqual { textbuf_line_start(out); textbuf_push(out, "NotEqual"); return; }
+    if instr.kind == INSTR_And { textbuf_line_start(out); textbuf_push(out, "And"); return; }
+    if instr.kind == INSTR_Or { textbuf_line_start(out); textbuf_push(out, "Or"); return; }
 
     if instr.kind == INSTR_Label {
-        line := str_append("Label ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Label ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_Jump {
-        line := str_append("Jump ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Jump ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_JumpIfZero {
-        line := str_append("JumpIfZero ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "JumpIfZero ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_Return {
-        append_line(lines, "Return");
+        textbuf_line_start(out);
+        textbuf_push(out, "Return");
         return;
     }
 
-    if instr.kind == INSTR_ArrayNew { append_line(lines, "ArrayNew"); return; }
-    if instr.kind == INSTR_ArrayGet { append_line(lines, "ArrayGet"); return; }
-    if instr.kind == INSTR_ArrayLValue { append_line(lines, "ArrayLValue"); return; }
+    if instr.kind == INSTR_ArrayNew { textbuf_line_start(out); textbuf_push(out, "ArrayNew"); return; }
+    if instr.kind == INSTR_ArrayGet { textbuf_line_start(out); textbuf_push(out, "ArrayGet"); return; }
+    if instr.kind == INSTR_ArrayLValue { textbuf_line_start(out); textbuf_push(out, "ArrayLValue"); return; }
 
     if instr.kind == INSTR_StoreIndex {
-        line := str_append("StoreIndex ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "StoreIndex ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_StoreIndexReactive {
-        append_reactive_named(lines, "StoreIndexReactive", instr.a, instr.b);
+        append_reactive_named(out, "StoreIndexReactive", instr.a, instr.b);
         return;
     }
 
     if instr.kind == INSTR_StoreStruct {
-        append_store_struct(lines, instr.a, instr.b);
+        append_store_struct(out, instr.a, instr.b);
         return;
     }
     if instr.kind == INSTR_NewStruct {
-        line := str_append("NewStruct ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "NewStruct ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_FieldGet {
-        line := str_append("FieldGet ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "FieldGet ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_FieldSet {
-        line := str_append("FieldSet ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "FieldSet ");
+        append_quoted(out, instr.a);
         return;
     }
     if instr.kind == INSTR_FieldSetReactive {
-        append_reactive_named(lines, "FieldSetReactive", instr.a, instr.b);
+        append_reactive_named(out, "FieldSetReactive", instr.a, instr.b);
         return;
     }
     if instr.kind == INSTR_FieldLValue {
-        line := str_append("FieldLValue ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "FieldLValue ");
+        append_quoted(out, instr.a);
         return;
     }
 
-    if instr.kind == INSTR_StoreThrough { append_line(lines, "StoreThrough"); return; }
+    if instr.kind == INSTR_StoreThrough { textbuf_line_start(out); textbuf_push(out, "StoreThrough"); return; }
     if instr.kind == INSTR_StoreThroughReactive {
-        append_reactive_unnamed(lines, "StoreThroughReactive", instr.a);
+        append_reactive_unnamed(out, "StoreThroughReactive", instr.a);
         return;
     }
     if instr.kind == INSTR_StoreThroughImmutable {
-        append_line(lines, "StoreThroughImmutable");
+        textbuf_line_start(out);
+        textbuf_push(out, "StoreThroughImmutable");
         return;
     }
 
     if instr.kind == INSTR_StoreFunction {
-        append_store_function(lines, instr.a, instr.b, instr.c);
+        append_store_function(out, instr.a, instr.b, instr.c);
         return;
     }
     if instr.kind == INSTR_Call {
-        line := str_append("Call ", quote_string(instr.a));
-        line = str_append(line, " ");
-        line = str_append(line, str_from_int(instr.b));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Call ");
+        append_quoted(out, instr.a);
+        textbuf_push(out, " ");
+        append_int(out, instr.b);
         return;
     }
 
     if instr.kind == INSTR_PushImmutableContext {
-        append_line(lines, "PushImmutableContext");
+        textbuf_line_start(out);
+        textbuf_push(out, "PushImmutableContext");
         return;
     }
     if instr.kind == INSTR_PopImmutableContext {
-        append_line(lines, "PopImmutableContext");
+        textbuf_line_start(out);
+        textbuf_push(out, "PopImmutableContext");
         return;
     }
     if instr.kind == INSTR_ClearImmutableContext {
-        append_line(lines, "ClearImmutableContext");
+        textbuf_line_start(out);
+        textbuf_push(out, "ClearImmutableContext");
         return;
     }
 
-    if instr.kind == INSTR_Print { append_line(lines, "Print"); return; }
-    if instr.kind == INSTR_Println { append_line(lines, "Println"); return; }
-    if instr.kind == INSTR_Assert { append_line(lines, "Assert"); return; }
+    if instr.kind == INSTR_Print { textbuf_line_start(out); textbuf_push(out, "Print"); return; }
+    if instr.kind == INSTR_Println { textbuf_line_start(out); textbuf_push(out, "Println"); return; }
+    if instr.kind == INSTR_Assert { textbuf_line_start(out); textbuf_push(out, "Assert"); return; }
     if instr.kind == INSTR_Error {
-        line := str_append("Error ", quote_string(instr.a));
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Error ");
+        append_quoted(out, instr.a);
         return;
     }
 
     if instr.kind == INSTR_Import {
-        append_import(lines, instr.a);
+        append_import(out, instr.a);
         return;
     }
 
     if instr.kind == INSTR_Cast {
-        line := "Cast ";
+        textbuf_line_start(out);
+        textbuf_push(out, "Cast ");
         if instr.a == CAST_Int {
-            line = str_append(line, "Int");
+            textbuf_push(out, "Int");
         }
         else {
-            line = str_append(line, "Char");
+            textbuf_push(out, "Char");
         }
-        append_line(lines, line);
         return;
     }
 
     error "serialize: unknown instruction";
 }
 
-func append_import(lines, path) {
-    line := str_append("Import ", str_from_int((int)path));
+func append_import(out, path) {
+    textbuf_line_start(out);
+    textbuf_push(out, "Import ");
+    append_int(out, (int)path);
     i = 0;
     di ::= i + 1;
     loop {
         if i >= path { break; }
-        line = str_append(line, " ");
-        line = str_append(line, quote_string(path[i]));
+        textbuf_push(out, " ");
+        append_quoted(out, path[i]);
         i = di;
     }
-    append_line(lines, line);
 }
 
-func append_store_function(lines, name, params, body) {
-    line := str_append("StoreFunction ", quote_string(name));
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)params));
+func append_store_function(out, name, params, body) {
+    textbuf_line_start(out);
+    textbuf_push(out, "StoreFunction ");
+    append_quoted(out, name);
+    textbuf_push(out, " ");
+    append_int(out, (int)params);
 
     i = 0;
     di ::= i + 1;
     loop {
         if i >= params { break; }
-        line = str_append(line, " ");
-        line = str_append(line, quote_string(params[i]));
+        textbuf_push(out, " ");
+        append_quoted(out, params[i]);
         i = di;
     }
 
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)body));
+    textbuf_push(out, " ");
+    append_int(out, (int)body);
 
-    append_line(lines, line);
-    append_instructions(lines, body);
+    append_instructions(out, body);
 }
 
-func append_store_struct(lines, name, fields) {
-    line := str_append("StoreStruct ", quote_string(name));
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)fields));
-    append_line(lines, line);
+func append_store_struct(out, name, fields) {
+    textbuf_line_start(out);
+    textbuf_push(out, "StoreStruct ");
+    append_quoted(out, name);
+    textbuf_push(out, " ");
+    append_int(out, (int)fields);
 
     i = 0;
     di ::= i + 1;
     loop {
         if i >= fields { break; }
-        append_struct_field(lines, fields[i]);
+        append_struct_field(out, fields[i]);
         i = di;
     }
 }
 
-func append_struct_field(lines, field) {
+func append_struct_field(out, field) {
     if field.kind == FIELD_INIT_None {
-        line := str_append("Field ", quote_string(field.name));
-        line = str_append(line, " None");
-        append_line(lines, line);
+        textbuf_line_start(out);
+        textbuf_push(out, "Field ");
+        append_quoted(out, field.name);
+        textbuf_push(out, " None");
         return;
     }
 
     if field.kind == FIELD_INIT_Mutable {
-        line := str_append("Field ", quote_string(field.name));
-        line = str_append(line, " Mutable ");
-        line = str_append(line, str_from_int((int)field.value));
-        append_line(lines, line);
-        append_instructions(lines, field.value);
+        textbuf_line_start(out);
+        textbuf_push(out, "Field ");
+        append_quoted(out, field.name);
+        textbuf_push(out, " Mutable ");
+        append_int(out, (int)field.value);
+        append_instructions(out, field.value);
         return;
     }
 
     if field.kind == FIELD_INIT_Immutable {
-        line := str_append("Field ", quote_string(field.name));
-        line = str_append(line, " Immutable ");
-        line = str_append(line, str_from_int((int)field.value));
-        append_line(lines, line);
-        append_instructions(lines, field.value);
+        textbuf_line_start(out);
+        textbuf_push(out, "Field ");
+        append_quoted(out, field.name);
+        textbuf_push(out, " Immutable ");
+        append_int(out, (int)field.value);
+        append_instructions(out, field.value);
         return;
     }
 
     if field.kind == FIELD_INIT_Reactive {
         expr := field.value;
-        line := str_append("Field ", quote_string(field.name));
-        line = str_append(line, " Reactive ");
-        line = str_append(line, str_from_int((int)expr.captures));
+        textbuf_line_start(out);
+        textbuf_push(out, "Field ");
+        append_quoted(out, field.name);
+        textbuf_push(out, " Reactive ");
+        append_int(out, (int)expr.captures);
 
         i = 0;
         di ::= i + 1;
         loop {
             if i >= expr.captures { break; }
-            line = str_append(line, " ");
-            line = str_append(line, quote_string(expr.captures[i]));
+            textbuf_push(out, " ");
+            append_quoted(out, expr.captures[i]);
             i = di;
         }
 
-        line = str_append(line, " ");
-        line = str_append(line, str_from_int((int)expr.code));
+        textbuf_push(out, " ");
+        append_int(out, (int)expr.code);
 
-        append_line(lines, line);
-        append_instructions(lines, expr.code);
+        append_instructions(out, expr.code);
         return;
     }
 
     error "serialize: unknown field init";
 }
 
-func append_reactive_named(lines, keyword, name, expr) {
-    line := str_append(keyword, " ");
-    line = str_append(line, quote_string(name));
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)expr.captures));
+func append_reactive_named(out, keyword, name, expr) {
+    textbuf_line_start(out);
+    textbuf_push(out, keyword);
+    textbuf_push(out, " ");
+    append_quoted(out, name);
+    textbuf_push(out, " ");
+    append_int(out, (int)expr.captures);
 
     i = 0;
     di ::= i + 1;
     loop {
         if i >= expr.captures { break; }
-        line = str_append(line, " ");
-        line = str_append(line, quote_string(expr.captures[i]));
+        textbuf_push(out, " ");
+        append_quoted(out, expr.captures[i]);
         i = di;
     }
 
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)expr.code));
+    textbuf_push(out, " ");
+    append_int(out, (int)expr.code);
 
-    append_line(lines, line);
-    append_instructions(lines, expr.code);
+    append_instructions(out, expr.code);
 }
 
-func append_reactive_unnamed(lines, keyword, expr) {
-    line := str_append(keyword, " ");
-    line = str_append(line, str_from_int((int)expr.captures));
+func append_reactive_unnamed(out, keyword, expr) {
+    textbuf_line_start(out);
+    textbuf_push(out, keyword);
+    textbuf_push(out, " ");
+    append_int(out, (int)expr.captures);
 
     i = 0;
     di ::= i + 1;
     loop {
         if i >= expr.captures { break; }
-        line = str_append(line, " ");
-        line = str_append(line, quote_string(expr.captures[i]));
+        textbuf_push(out, " ");
+        append_quoted(out, expr.captures[i]);
         i = di;
     }
 
-    line = str_append(line, " ");
-    line = str_append(line, str_from_int((int)expr.code));
+    textbuf_push(out, " ");
+    append_int(out, (int)expr.code);
 
-    append_line(lines, line);
-    append_instructions(lines, expr.code);
+    append_instructions(out, expr.code);
 }
 
-func join_lines(lines) {
-    if lines.len == 0 {
-        return str_empty();
-    }
-
-    total = 0;
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= lines.len { break; }
-        total = total + (int)lines.items[i];
-        i = di;
-    }
-    total = total + (lines.len - 1);
-
-    out := [total];
-    pos = 0;
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= lines.len { break; }
-        if i > 0 {
-            out[pos] = '\n';
-            pos = pos + 1;
-        }
-        line := lines.items[i];
-        j = 0;
-        dj ::= j + 1;
-        loop {
-            if j >= line { break; }
-            out[pos] = line[j];
-            pos = pos + 1;
-            j = dj;
-        }
-        i = di;
-    }
-
-    return out;
-}
-
-func quote_string(s) {
-    out := str_append_char(str_empty(), '"');
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= s { break; }
-        c := s[i];
-        ci := (int)c;
-
-        if c == '\\' {
-            out = str_append(out, "\\\\");
-        }
-        else if c == '"' {
-            out = str_append(out, "\\\"");
-        }
-        else if c == '\n' {
-            out = str_append(out, "\\n");
-        }
-        else if c == '\r' {
-            out = str_append(out, "\\r");
-        }
-        else if c == '\t' {
-            out = str_append(out, "\\t");
-        }
-        else if ci < 32 || ci > 126 {
-            out = str_append(out, "\\u{");
-            out = str_append(out, str_from_hex(ci));
-            out = str_append(out, "}");
-        }
-        else {
-            out = str_append_char(out, c);
-        }
-
-        i = di;
-    }
-
-    out = str_append_char(out, '"');
-    return out;
-}

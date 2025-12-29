@@ -6933,9 +6933,327 @@ Load "path"
 Call "internal_file_remove" 1
 Return
 Return
+Import 2 "std" "buf"
+StoreFunction "buf_new" 1 "cap" 4
+Load "cap"
+Call "internal_buf_new" 1
+Return
+Return
+StoreFunction "buf_push_char" 2 "buf" "c" 5
+Load "buf"
+Load "c"
+Call "internal_buf_push_char" 2
+Return
+Return
+StoreFunction "buf_push_str" 2 "buf" "s" 5
+Load "buf"
+Load "s"
+Call "internal_buf_push_str" 2
+Return
+Return
+StoreFunction "buf_to_string" 1 "buf" 4
+Load "buf"
+Call "internal_buf_to_string" 1
+Return
+Return
+StoreFunction "buf_write_file" 2 "buf" "path" 5
+Load "buf"
+Load "path"
+Call "internal_buf_write_file" 2
+Return
+Return
 StoreStruct "LabelGen" 1
 Field "counter" Mutable 2
 Push 0
+Return
+StoreStruct "TextBuf" 2
+Field "buf" None
+Field "first" Mutable 2
+Push 1
+Return
+StoreFunction "textbuf_new" 1 "cap" 14
+NewStruct "TextBuf"
+StoreImmutable "out"
+Load "out"
+FieldLValue "buf"
+Load "cap"
+Call "buf_new" 1
+StoreThrough
+Load "out"
+FieldLValue "first"
+Push 1
+StoreThrough
+Load "out"
+Return
+Return
+StoreFunction "textbuf_line_start" 1 "out" 21
+Load "out"
+FieldGet "first"
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Load "out"
+FieldGet "buf"
+PushChar 10
+Call "buf_push_char" 2
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+Load "out"
+FieldLValue "first"
+Push 0
+StoreThrough
+PopImmutableContext
+Label "ifend_1"
+Return
+StoreFunction "textbuf_push" 2 "out" "s" 5
+Load "out"
+FieldGet "buf"
+Load "s"
+Call "buf_push_str" 2
+Return
+StoreFunction "textbuf_push_char" 2 "out" "c" 5
+Load "out"
+FieldGet "buf"
+Load "c"
+Call "buf_push_char" 2
+Return
+StoreFunction "textbuf_finish" 1 "out" 5
+Load "out"
+FieldGet "buf"
+Call "buf_to_string" 1
+Return
+Return
+StoreFunction "append_int" 2 "out" "n" 5
+Load "out"
+Load "n"
+Call "str_from_int" 1
+Call "textbuf_push" 2
+Return
+StoreFunction "append_quoted" 2 "out" "s" 218
+Load "out"
+PushChar 34
+Call "textbuf_push_char" 2
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "s"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "s"
+Load "i"
+ArrayGet
+StoreImmutable "c"
+Load "c"
+Cast Int
+StoreImmutable "ci"
+Load "c"
+PushChar 92
+Equal
+JumpIfZero "else_4"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_6"
+Load "__strlit_6"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_6"
+Push 1
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_6"
+Call "textbuf_push" 2
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+Load "c"
+PushChar 34
+Equal
+JumpIfZero "else_7"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_9"
+Load "__strlit_9"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_9"
+Push 1
+ArrayLValue
+PushChar 34
+StoreThrough
+Load "__strlit_9"
+Call "textbuf_push" 2
+PopImmutableContext
+Jump "ifend_8"
+Label "else_7"
+PushImmutableContext
+Load "c"
+PushChar 10
+Equal
+JumpIfZero "else_10"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_12"
+Load "__strlit_12"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_12"
+Push 1
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_12"
+Call "textbuf_push" 2
+PopImmutableContext
+Jump "ifend_11"
+Label "else_10"
+PushImmutableContext
+Load "c"
+PushChar 13
+Equal
+JumpIfZero "else_13"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_15"
+Load "__strlit_15"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_15"
+Push 1
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_15"
+Call "textbuf_push" 2
+PopImmutableContext
+Jump "ifend_14"
+Label "else_13"
+PushImmutableContext
+Load "c"
+PushChar 9
+Equal
+JumpIfZero "else_16"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_18"
+Load "__strlit_18"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_18"
+Push 1
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_18"
+Call "textbuf_push" 2
+PopImmutableContext
+Jump "ifend_17"
+Label "else_16"
+PushImmutableContext
+Load "ci"
+Push 32
+Less
+Load "ci"
+Push 126
+Greater
+Or
+JumpIfZero "else_19"
+PushImmutableContext
+Load "out"
+Push 3
+ArrayNew
+Store "__strlit_21"
+Load "__strlit_21"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_21"
+Push 1
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_21"
+Push 2
+ArrayLValue
+PushChar 123
+StoreThrough
+Load "__strlit_21"
+Call "textbuf_push" 2
+Load "out"
+Load "ci"
+Call "str_from_hex" 1
+Call "textbuf_push" 2
+Load "out"
+PushChar 125
+Call "textbuf_push_char" 2
+PopImmutableContext
+Jump "ifend_20"
+Label "else_19"
+PushImmutableContext
+Load "out"
+Load "c"
+Call "textbuf_push_char" 2
+PopImmutableContext
+Label "ifend_20"
+PopImmutableContext
+Label "ifend_17"
+PopImmutableContext
+Label "ifend_14"
+PopImmutableContext
+Label "ifend_11"
+PopImmutableContext
+Label "ifend_8"
+PopImmutableContext
+Label "ifend_5"
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "out"
+PushChar 34
+Call "textbuf_push_char" 2
 Return
 StoreFunction "new_labelgen" 0 9
 NewStruct "LabelGen"
@@ -10901,11 +11219,13 @@ Load "code"
 Load "inst"
 Call "vec_push" 2
 Return
-StoreFunction "serialize_instructions" 1 "code" 36
-Push 64
-Call "vec_new" 1
-StoreImmutable "lines"
-Load "lines"
+StoreFunction "serialize_instructions" 1 "code" 38
+Push 1024
+Call "textbuf_new" 1
+StoreImmutable "out"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 4
 ArrayNew
 Store "__strlit_0"
@@ -10930,15 +11250,15 @@ ArrayLValue
 PushChar 49
 StoreThrough
 Load "__strlit_0"
-Call "vec_push" 2
-Load "lines"
+Call "textbuf_push" 2
+Load "out"
 Load "code"
 Call "append_instructions" 2
-Load "lines"
-Call "join_lines" 1
+Load "out"
+Call "textbuf_finish" 1
 Return
 Return
-StoreFunction "append_instructions" 2 "lines" "code" 29
+StoreFunction "append_instructions" 2 "out" "code" 29
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -10961,7 +11281,7 @@ Label "else_2"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_3"
-Load "lines"
+Load "out"
 Load "code"
 Load "i"
 ArrayGet
@@ -10972,18 +11292,16 @@ Jump "loop_start_0"
 Label "loop_end_1"
 PopImmutableContext
 Return
-StoreFunction "append_line" 2 "lines" "line" 4
-Load "lines"
-Load "line"
-Call "vec_push" 2
-Return
-StoreFunction "append_instruction" 2 "lines" "instr" 3187
+StoreFunction "append_instruction" 2 "out" "instr" 3232
 Load "instr"
 FieldGet "kind"
 Load "INSTR_Push"
 Equal
 JumpIfZero "else_0"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_2"
@@ -11013,14 +11331,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_2"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "str_from_int" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_int" 2
 Push 0
 Return
 PopImmutableContext
@@ -11035,6 +11350,9 @@ Load "INSTR_PushChar"
 Equal
 JumpIfZero "else_3"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 9
 ArrayNew
 Store "__strlit_5"
@@ -11084,14 +11402,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_5"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "str_from_int" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_int" 2
 Push 0
 Return
 PopImmutableContext
@@ -11106,6 +11421,9 @@ Load "INSTR_Load"
 Equal
 JumpIfZero "else_6"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_8"
@@ -11135,14 +11453,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_8"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -11157,6 +11472,9 @@ Load "INSTR_Store"
 Equal
 JumpIfZero "else_9"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_11"
@@ -11191,14 +11509,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_11"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -11213,6 +11528,9 @@ Load "INSTR_StoreImmutable"
 Equal
 JumpIfZero "else_12"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 15
 ArrayNew
 Store "__strlit_14"
@@ -11292,14 +11610,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_14"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -11314,7 +11629,7 @@ Load "INSTR_StoreReactive"
 Equal
 JumpIfZero "else_15"
 PushImmutableContext
-Load "lines"
+Load "out"
 Push 13
 ArrayNew
 Store "__strlit_17"
@@ -11403,7 +11718,9 @@ Load "INSTR_Add"
 Equal
 JumpIfZero "else_18"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_20"
@@ -11423,7 +11740,7 @@ ArrayLValue
 PushChar 100
 StoreThrough
 Load "__strlit_20"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11438,7 +11755,9 @@ Load "INSTR_Sub"
 Equal
 JumpIfZero "else_21"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_23"
@@ -11458,7 +11777,7 @@ ArrayLValue
 PushChar 98
 StoreThrough
 Load "__strlit_23"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11473,7 +11792,9 @@ Load "INSTR_Mul"
 Equal
 JumpIfZero "else_24"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_26"
@@ -11493,7 +11814,7 @@ ArrayLValue
 PushChar 108
 StoreThrough
 Load "__strlit_26"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11508,7 +11829,9 @@ Load "INSTR_Div"
 Equal
 JumpIfZero "else_27"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_29"
@@ -11528,7 +11851,7 @@ ArrayLValue
 PushChar 118
 StoreThrough
 Load "__strlit_29"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11543,7 +11866,9 @@ Load "INSTR_Modulo"
 Equal
 JumpIfZero "else_30"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_32"
@@ -11578,7 +11903,7 @@ ArrayLValue
 PushChar 111
 StoreThrough
 Load "__strlit_32"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11593,7 +11918,9 @@ Load "INSTR_Greater"
 Equal
 JumpIfZero "else_33"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 7
 ArrayNew
 Store "__strlit_35"
@@ -11633,7 +11960,7 @@ ArrayLValue
 PushChar 114
 StoreThrough
 Load "__strlit_35"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11648,7 +11975,9 @@ Load "INSTR_Less"
 Equal
 JumpIfZero "else_36"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 4
 ArrayNew
 Store "__strlit_38"
@@ -11673,7 +12002,7 @@ ArrayLValue
 PushChar 115
 StoreThrough
 Load "__strlit_38"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11688,7 +12017,9 @@ Load "INSTR_GreaterEqual"
 Equal
 JumpIfZero "else_39"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 12
 ArrayNew
 Store "__strlit_41"
@@ -11753,7 +12084,7 @@ ArrayLValue
 PushChar 108
 StoreThrough
 Load "__strlit_41"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11768,7 +12099,9 @@ Load "INSTR_LessEqual"
 Equal
 JumpIfZero "else_42"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 9
 ArrayNew
 Store "__strlit_44"
@@ -11818,7 +12151,7 @@ ArrayLValue
 PushChar 108
 StoreThrough
 Load "__strlit_44"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11833,7 +12166,9 @@ Load "INSTR_Equal"
 Equal
 JumpIfZero "else_45"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_47"
@@ -11863,7 +12198,7 @@ ArrayLValue
 PushChar 108
 StoreThrough
 Load "__strlit_47"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11878,7 +12213,9 @@ Load "INSTR_NotEqual"
 Equal
 JumpIfZero "else_48"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 8
 ArrayNew
 Store "__strlit_50"
@@ -11923,7 +12260,7 @@ ArrayLValue
 PushChar 108
 StoreThrough
 Load "__strlit_50"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11938,7 +12275,9 @@ Load "INSTR_And"
 Equal
 JumpIfZero "else_51"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_53"
@@ -11958,7 +12297,7 @@ ArrayLValue
 PushChar 100
 StoreThrough
 Load "__strlit_53"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -11973,7 +12312,9 @@ Load "INSTR_Or"
 Equal
 JumpIfZero "else_54"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 2
 ArrayNew
 Store "__strlit_56"
@@ -11988,7 +12329,7 @@ ArrayLValue
 PushChar 114
 StoreThrough
 Load "__strlit_56"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -12003,6 +12344,9 @@ Load "INSTR_Label"
 Equal
 JumpIfZero "else_57"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_59"
@@ -12037,14 +12381,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_59"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12059,6 +12400,9 @@ Load "INSTR_Jump"
 Equal
 JumpIfZero "else_60"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_62"
@@ -12088,14 +12432,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_62"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12110,6 +12451,9 @@ Load "INSTR_JumpIfZero"
 Equal
 JumpIfZero "else_63"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 11
 ArrayNew
 Store "__strlit_65"
@@ -12169,14 +12513,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_65"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12191,7 +12532,9 @@ Load "INSTR_Return"
 Equal
 JumpIfZero "else_66"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_68"
@@ -12226,7 +12569,7 @@ ArrayLValue
 PushChar 110
 StoreThrough
 Load "__strlit_68"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -12241,7 +12584,9 @@ Load "INSTR_ArrayNew"
 Equal
 JumpIfZero "else_69"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 8
 ArrayNew
 Store "__strlit_71"
@@ -12286,7 +12631,7 @@ ArrayLValue
 PushChar 119
 StoreThrough
 Load "__strlit_71"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -12301,7 +12646,9 @@ Load "INSTR_ArrayGet"
 Equal
 JumpIfZero "else_72"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 8
 ArrayNew
 Store "__strlit_74"
@@ -12346,7 +12693,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_74"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -12361,7 +12708,9 @@ Load "INSTR_ArrayLValue"
 Equal
 JumpIfZero "else_75"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 11
 ArrayNew
 Store "__strlit_77"
@@ -12421,7 +12770,7 @@ ArrayLValue
 PushChar 101
 StoreThrough
 Load "__strlit_77"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -12436,6 +12785,9 @@ Load "INSTR_StoreIndex"
 Equal
 JumpIfZero "else_78"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 11
 ArrayNew
 Store "__strlit_80"
@@ -12495,14 +12847,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_80"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12517,7 +12866,7 @@ Load "INSTR_StoreIndexReactive"
 Equal
 JumpIfZero "else_81"
 PushImmutableContext
-Load "lines"
+Load "out"
 Push 18
 ArrayNew
 Store "__strlit_83"
@@ -12631,7 +12980,7 @@ Load "INSTR_StoreStruct"
 Equal
 JumpIfZero "else_84"
 PushImmutableContext
-Load "lines"
+Load "out"
 Load "instr"
 FieldGet "a"
 Load "instr"
@@ -12651,6 +13000,9 @@ Load "INSTR_NewStruct"
 Equal
 JumpIfZero "else_86"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 10
 ArrayNew
 Store "__strlit_88"
@@ -12705,14 +13057,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_88"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12727,6 +13076,9 @@ Load "INSTR_FieldGet"
 Equal
 JumpIfZero "else_89"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 9
 ArrayNew
 Store "__strlit_91"
@@ -12776,14 +13128,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_91"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12798,6 +13147,9 @@ Load "INSTR_FieldSet"
 Equal
 JumpIfZero "else_92"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 9
 ArrayNew
 Store "__strlit_94"
@@ -12847,14 +13199,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_94"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -12869,7 +13218,7 @@ Load "INSTR_FieldSetReactive"
 Equal
 JumpIfZero "else_95"
 PushImmutableContext
-Load "lines"
+Load "out"
 Push 16
 ArrayNew
 Store "__strlit_97"
@@ -12973,6 +13322,9 @@ Load "INSTR_FieldLValue"
 Equal
 JumpIfZero "else_98"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 12
 ArrayNew
 Store "__strlit_100"
@@ -13037,14 +13389,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_100"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -13059,7 +13408,9 @@ Load "INSTR_StoreThrough"
 Equal
 JumpIfZero "else_101"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 12
 ArrayNew
 Store "__strlit_103"
@@ -13124,7 +13475,7 @@ ArrayLValue
 PushChar 104
 StoreThrough
 Load "__strlit_103"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13139,7 +13490,7 @@ Load "INSTR_StoreThroughReactive"
 Equal
 JumpIfZero "else_104"
 PushImmutableContext
-Load "lines"
+Load "out"
 Push 20
 ArrayNew
 Store "__strlit_106"
@@ -13261,7 +13612,9 @@ Load "INSTR_StoreThroughImmutable"
 Equal
 JumpIfZero "else_107"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 21
 ArrayNew
 Store "__strlit_109"
@@ -13371,7 +13724,7 @@ ArrayLValue
 PushChar 101
 StoreThrough
 Load "__strlit_109"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13386,7 +13739,7 @@ Load "INSTR_StoreFunction"
 Equal
 JumpIfZero "else_110"
 PushImmutableContext
-Load "lines"
+Load "out"
 Load "instr"
 FieldGet "a"
 Load "instr"
@@ -13408,6 +13761,9 @@ Load "INSTR_Call"
 Equal
 JumpIfZero "else_112"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_114"
@@ -13437,12 +13793,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_114"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_115"
@@ -13452,17 +13808,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_115"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "b"
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_int" 2
 Push 0
 Return
 PopImmutableContext
@@ -13477,7 +13827,9 @@ Load "INSTR_PushImmutableContext"
 Equal
 JumpIfZero "else_116"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 20
 ArrayNew
 Store "__strlit_118"
@@ -13582,7 +13934,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_118"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13597,7 +13949,9 @@ Load "INSTR_PopImmutableContext"
 Equal
 JumpIfZero "else_119"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 19
 ArrayNew
 Store "__strlit_121"
@@ -13697,7 +14051,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_121"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13712,7 +14066,9 @@ Load "INSTR_ClearImmutableContext"
 Equal
 JumpIfZero "else_122"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 21
 ArrayNew
 Store "__strlit_124"
@@ -13822,7 +14178,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_124"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13837,7 +14193,9 @@ Load "INSTR_Print"
 Equal
 JumpIfZero "else_125"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_127"
@@ -13867,7 +14225,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_127"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13882,7 +14240,9 @@ Load "INSTR_Println"
 Equal
 JumpIfZero "else_128"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 7
 ArrayNew
 Store "__strlit_130"
@@ -13922,7 +14282,7 @@ ArrayLValue
 PushChar 110
 StoreThrough
 Load "__strlit_130"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13937,7 +14297,9 @@ Load "INSTR_Assert"
 Equal
 JumpIfZero "else_131"
 PushImmutableContext
-Load "lines"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_133"
@@ -13972,7 +14334,7 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_133"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -13987,6 +14349,9 @@ Load "INSTR_Error"
 Equal
 JumpIfZero "else_134"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_136"
@@ -14021,14 +14386,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_136"
+Call "textbuf_push" 2
+Load "out"
 Load "instr"
 FieldGet "a"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_quoted" 2
 Push 0
 Return
 PopImmutableContext
@@ -14043,7 +14405,7 @@ Load "INSTR_Import"
 Equal
 JumpIfZero "else_137"
 PushImmutableContext
-Load "lines"
+Load "out"
 Load "instr"
 FieldGet "a"
 Call "append_import" 2
@@ -14061,6 +14423,9 @@ Load "INSTR_Cast"
 Equal
 JumpIfZero "else_139"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_141"
@@ -14090,14 +14455,14 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_141"
-StoreImmutable "line"
+Call "textbuf_push" 2
 Load "instr"
 FieldGet "a"
 Load "CAST_Int"
 Equal
 JumpIfZero "else_142"
 PushImmutableContext
-Load "line"
+Load "out"
 Push 3
 ArrayNew
 Store "__strlit_144"
@@ -14117,13 +14482,12 @@ ArrayLValue
 PushChar 116
 StoreThrough
 Load "__strlit_144"
-Call "str_append" 2
-Store "line"
+Call "textbuf_push" 2
 PopImmutableContext
 Jump "ifend_143"
 Label "else_142"
 PushImmutableContext
-Load "line"
+Load "out"
 Push 4
 ArrayNew
 Store "__strlit_145"
@@ -14148,13 +14512,9 @@ ArrayLValue
 PushChar 114
 StoreThrough
 Load "__strlit_145"
-Call "str_append" 2
-Store "line"
+Call "textbuf_push" 2
 PopImmutableContext
 Label "ifend_143"
-Load "lines"
-Load "line"
-Call "append_line" 2
 Push 0
 Return
 PopImmutableContext
@@ -14165,7 +14525,10 @@ PopImmutableContext
 Label "ifend_140"
 Error "serialize: unknown instruction"
 Return
-StoreFunction "append_import" 2 "lines" "path" 90
+StoreFunction "append_import" 2 "out" "path" 87
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 7
 ArrayNew
 Store "__strlit_0"
@@ -14205,11 +14568,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_0"
+Call "textbuf_push" 2
+Load "out"
 Load "path"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-StoreImmutable "line"
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -14232,7 +14595,7 @@ Label "else_3"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_4"
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_5"
@@ -14242,25 +14605,22 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_5"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "path"
 Load "i"
 ArrayGet
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
+Call "append_quoted" 2
 Load "di"
 Store "i"
 Jump "loop_start_1"
 Label "loop_end_2"
 PopImmutableContext
-Load "lines"
-Load "line"
-Call "append_line" 2
 Return
-StoreFunction "append_store_function" 4 "lines" "name" "params" "body" 163
+StoreFunction "append_store_function" 4 "out" "name" "params" "body" 154
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 14
 ArrayNew
 Store "__strlit_0"
@@ -14335,11 +14695,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_0"
+Call "textbuf_push" 2
+Load "out"
 Load "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_1"
@@ -14349,14 +14709,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_1"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "params"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -14379,7 +14736,7 @@ Label "else_4"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_5"
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_6"
@@ -14389,21 +14746,18 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_6"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "params"
 Load "i"
 ArrayGet
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
+Call "append_quoted" 2
 Load "di"
 Store "i"
 Jump "loop_start_2"
 Label "loop_end_3"
 PopImmutableContext
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_7"
@@ -14413,22 +14767,19 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_7"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "body"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "body"
 Call "append_instructions" 2
 Return
-StoreFunction "append_store_struct" 3 "lines" "name" "fields" 118
+StoreFunction "append_store_struct" 3 "out" "name" "fields" 115
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 12
 ArrayNew
 Store "__strlit_0"
@@ -14493,11 +14844,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_0"
+Call "textbuf_push" 2
+Load "out"
 Load "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_1"
@@ -14507,17 +14858,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_1"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "fields"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -14540,7 +14885,7 @@ Label "else_4"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_5"
-Load "lines"
+Load "out"
 Load "fields"
 Load "i"
 ArrayGet
@@ -14551,13 +14896,16 @@ Jump "loop_start_2"
 Label "loop_end_3"
 PopImmutableContext
 Return
-StoreFunction "append_struct_field" 2 "lines" "field" 528
+StoreFunction "append_struct_field" 2 "out" "field" 512
 Load "field"
 FieldGet "kind"
 Load "FIELD_INIT_None"
 Equal
 JumpIfZero "else_0"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_2"
@@ -14592,12 +14940,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_2"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 5
 ArrayNew
 Store "__strlit_3"
@@ -14627,11 +14975,7 @@ ArrayLValue
 PushChar 101
 StoreThrough
 Load "__strlit_3"
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
+Call "textbuf_push" 2
 Push 0
 Return
 PopImmutableContext
@@ -14646,6 +14990,9 @@ Load "FIELD_INIT_Mutable"
 Equal
 JumpIfZero "else_4"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_6"
@@ -14680,12 +15027,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_6"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 9
 ArrayNew
 Store "__strlit_7"
@@ -14735,19 +15082,13 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_7"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "value"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "field"
 FieldGet "value"
 Call "append_instructions" 2
@@ -14765,6 +15106,9 @@ Load "FIELD_INIT_Immutable"
 Equal
 JumpIfZero "else_8"
 PushImmutableContext
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_10"
@@ -14799,12 +15143,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_10"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 11
 ArrayNew
 Store "__strlit_11"
@@ -14864,19 +15208,13 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_11"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "value"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "field"
 FieldGet "value"
 Call "append_instructions" 2
@@ -14897,6 +15235,9 @@ PushImmutableContext
 Load "field"
 FieldGet "value"
 StoreImmutable "expr"
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Push 6
 ArrayNew
 Store "__strlit_14"
@@ -14931,12 +15272,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_14"
+Call "textbuf_push" 2
+Load "out"
 Load "field"
 FieldGet "name"
-Call "quote_string" 1
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 10
 ArrayNew
 Store "__strlit_15"
@@ -14991,15 +15332,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_15"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -15023,7 +15361,7 @@ Label "else_18"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_19"
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_20"
@@ -15033,22 +15371,19 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_20"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Load "i"
 ArrayGet
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
+Call "append_quoted" 2
 Load "di"
 Store "i"
 Jump "loop_start_16"
 Label "loop_end_17"
 PopImmutableContext
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_21"
@@ -15058,19 +15393,13 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_21"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Call "append_instructions" 2
@@ -15084,8 +15413,13 @@ PopImmutableContext
 Label "ifend_13"
 Error "serialize: unknown field init"
 Return
-StoreFunction "append_reactive_named" 4 "lines" "keyword" "name" "expr" 107
+StoreFunction "append_reactive_named" 4 "out" "keyword" "name" "expr" 97
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Load "keyword"
+Call "textbuf_push" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_0"
@@ -15095,14 +15429,11 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_0"
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "name"
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "append_quoted" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_1"
@@ -15112,15 +15443,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_1"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -15144,7 +15472,7 @@ Label "else_4"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_5"
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_6"
@@ -15154,22 +15482,19 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_6"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Load "i"
 ArrayGet
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
+Call "append_quoted" 2
 Load "di"
 Store "i"
 Jump "loop_start_2"
 Label "loop_end_3"
 PopImmutableContext
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_7"
@@ -15179,25 +15504,24 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_7"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Call "append_instructions" 2
 Return
-StoreFunction "append_reactive_unnamed" 3 "lines" "keyword" "expr" 90
+StoreFunction "append_reactive_unnamed" 3 "out" "keyword" "expr" 83
+Load "out"
+Call "textbuf_line_start" 1
+Load "out"
 Load "keyword"
+Call "textbuf_push" 2
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_0"
@@ -15207,15 +15531,12 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_0"
-Call "str_append" 2
-StoreImmutable "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
+Call "append_int" 2
 Push 0
 Store "i"
 StoreReactive "di" 1 "i" 4
@@ -15239,7 +15560,7 @@ Label "else_3"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_4"
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_5"
@@ -15249,22 +15570,19 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_5"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "captures"
 Load "i"
 ArrayGet
-Call "quote_string" 1
-Call "str_append" 2
-Store "line"
+Call "append_quoted" 2
 Load "di"
 Store "i"
 Jump "loop_start_1"
 Label "loop_end_2"
 PopImmutableContext
-Load "line"
+Load "out"
 Push 1
 ArrayNew
 Store "__strlit_6"
@@ -15274,423 +15592,14 @@ ArrayLValue
 PushChar 32
 StoreThrough
 Load "__strlit_6"
-Call "str_append" 2
-Store "line"
-Load "line"
+Call "textbuf_push" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Cast Int
-Call "str_from_int" 1
-Call "str_append" 2
-Store "line"
-Load "lines"
-Load "line"
-Call "append_line" 2
-Load "lines"
+Call "append_int" 2
+Load "out"
 Load "expr"
 FieldGet "code"
 Call "append_instructions" 2
-Return
-StoreFunction "join_lines" 1 "lines" 146
-Load "lines"
-FieldGet "len"
-Push 0
-Equal
-JumpIfZero "else_0"
-PushImmutableContext
-Call "str_empty" 0
-Return
-PopImmutableContext
-Jump "ifend_1"
-Label "else_0"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_1"
-Push 0
-Store "total"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_2"
-ClearImmutableContext
-Load "i"
-Load "lines"
-FieldGet "len"
-GreaterEqual
-JumpIfZero "else_4"
-PushImmutableContext
-Jump "loop_end_3"
-PopImmutableContext
-Jump "ifend_5"
-Label "else_4"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_5"
-Load "total"
-Load "lines"
-FieldGet "items"
-Load "i"
-ArrayGet
-Cast Int
-Add
-Store "total"
-Load "di"
-Store "i"
-Jump "loop_start_2"
-Label "loop_end_3"
-PopImmutableContext
-Load "total"
-Load "lines"
-FieldGet "len"
-Push 1
-Sub
-Add
-Store "total"
-Load "total"
-ArrayNew
-StoreImmutable "out"
-Push 0
-Store "pos"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_6"
-ClearImmutableContext
-Load "i"
-Load "lines"
-FieldGet "len"
-GreaterEqual
-JumpIfZero "else_8"
-PushImmutableContext
-Jump "loop_end_7"
-PopImmutableContext
-Jump "ifend_9"
-Label "else_8"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_9"
-Load "i"
-Push 0
-Greater
-JumpIfZero "else_10"
-PushImmutableContext
-Load "out"
-Load "pos"
-ArrayLValue
-PushChar 10
-StoreThrough
-Load "pos"
-Push 1
-Add
-Store "pos"
-PopImmutableContext
-Jump "ifend_11"
-Label "else_10"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_11"
-Load "lines"
-FieldGet "items"
-Load "i"
-ArrayGet
-StoreImmutable "line"
-Push 0
-Store "j"
-StoreReactive "dj" 1 "j" 4
-Load "j"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_12"
-ClearImmutableContext
-Load "j"
-Load "line"
-GreaterEqual
-JumpIfZero "else_14"
-PushImmutableContext
-Jump "loop_end_13"
-PopImmutableContext
-Jump "ifend_15"
-Label "else_14"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_15"
-Load "out"
-Load "pos"
-ArrayLValue
-Load "line"
-Load "j"
-ArrayGet
-StoreThrough
-Load "pos"
-Push 1
-Add
-Store "pos"
-Load "dj"
-Store "j"
-Jump "loop_start_12"
-Label "loop_end_13"
-PopImmutableContext
-Load "di"
-Store "i"
-Jump "loop_start_6"
-Label "loop_end_7"
-PopImmutableContext
-Load "out"
-Return
-Return
-StoreFunction "quote_string" 1 "s" 239
-Call "str_empty" 0
-PushChar 34
-Call "str_append_char" 2
-StoreImmutable "out"
-Push 0
-Store "i"
-StoreReactive "di" 1 "i" 4
-Load "i"
-Push 1
-Add
-Return
-PushImmutableContext
-Label "loop_start_0"
-ClearImmutableContext
-Load "i"
-Load "s"
-GreaterEqual
-JumpIfZero "else_2"
-PushImmutableContext
-Jump "loop_end_1"
-PopImmutableContext
-Jump "ifend_3"
-Label "else_2"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_3"
-Load "s"
-Load "i"
-ArrayGet
-StoreImmutable "c"
-Load "c"
-Cast Int
-StoreImmutable "ci"
-Load "c"
-PushChar 92
-Equal
-JumpIfZero "else_4"
-PushImmutableContext
-Load "out"
-Push 2
-ArrayNew
-Store "__strlit_6"
-Load "__strlit_6"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_6"
-Push 1
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_6"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_5"
-Label "else_4"
-PushImmutableContext
-Load "c"
-PushChar 34
-Equal
-JumpIfZero "else_7"
-PushImmutableContext
-Load "out"
-Push 2
-ArrayNew
-Store "__strlit_9"
-Load "__strlit_9"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_9"
-Push 1
-ArrayLValue
-PushChar 34
-StoreThrough
-Load "__strlit_9"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_8"
-Label "else_7"
-PushImmutableContext
-Load "c"
-PushChar 10
-Equal
-JumpIfZero "else_10"
-PushImmutableContext
-Load "out"
-Push 2
-ArrayNew
-Store "__strlit_12"
-Load "__strlit_12"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_12"
-Push 1
-ArrayLValue
-PushChar 110
-StoreThrough
-Load "__strlit_12"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_11"
-Label "else_10"
-PushImmutableContext
-Load "c"
-PushChar 13
-Equal
-JumpIfZero "else_13"
-PushImmutableContext
-Load "out"
-Push 2
-ArrayNew
-Store "__strlit_15"
-Load "__strlit_15"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_15"
-Push 1
-ArrayLValue
-PushChar 114
-StoreThrough
-Load "__strlit_15"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_14"
-Label "else_13"
-PushImmutableContext
-Load "c"
-PushChar 9
-Equal
-JumpIfZero "else_16"
-PushImmutableContext
-Load "out"
-Push 2
-ArrayNew
-Store "__strlit_18"
-Load "__strlit_18"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_18"
-Push 1
-ArrayLValue
-PushChar 116
-StoreThrough
-Load "__strlit_18"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_17"
-Label "else_16"
-PushImmutableContext
-Load "ci"
-Push 32
-Less
-Load "ci"
-Push 126
-Greater
-Or
-JumpIfZero "else_19"
-PushImmutableContext
-Load "out"
-Push 3
-ArrayNew
-Store "__strlit_21"
-Load "__strlit_21"
-Push 0
-ArrayLValue
-PushChar 92
-StoreThrough
-Load "__strlit_21"
-Push 1
-ArrayLValue
-PushChar 117
-StoreThrough
-Load "__strlit_21"
-Push 2
-ArrayLValue
-PushChar 123
-StoreThrough
-Load "__strlit_21"
-Call "str_append" 2
-Store "out"
-Load "out"
-Load "ci"
-Call "str_from_hex" 1
-Call "str_append" 2
-Store "out"
-Load "out"
-Push 1
-ArrayNew
-Store "__strlit_22"
-Load "__strlit_22"
-Push 0
-ArrayLValue
-PushChar 125
-StoreThrough
-Load "__strlit_22"
-Call "str_append" 2
-Store "out"
-PopImmutableContext
-Jump "ifend_20"
-Label "else_19"
-PushImmutableContext
-Load "out"
-Load "c"
-Call "str_append_char" 2
-Store "out"
-PopImmutableContext
-Label "ifend_20"
-PopImmutableContext
-Label "ifend_17"
-PopImmutableContext
-Label "ifend_14"
-PopImmutableContext
-Label "ifend_11"
-PopImmutableContext
-Label "ifend_8"
-PopImmutableContext
-Label "ifend_5"
-Load "di"
-Store "i"
-Jump "loop_start_0"
-Label "loop_end_1"
-PopImmutableContext
-Load "out"
-PushChar 34
-Call "str_append_char" 2
-Store "out"
-Load "out"
-Return
 Return
