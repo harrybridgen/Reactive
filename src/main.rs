@@ -1,13 +1,8 @@
 use std::env;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use reactive_language::bytecode::read_instructions_from_file;
-use reactive_language::bytecode::write_instructions_to_file;
-use reactive_language::compiler::{CompileContext, LabelGenerator, compile_module};
 use reactive_language::grammar::Instruction;
-use reactive_language::parser::parse;
-use reactive_language::tokenizer::tokenize;
 use reactive_language::vm::VM;
 
 fn main() {
@@ -18,7 +13,15 @@ fn main() {
                 eprintln!("Usage: reactive bootstrap");
                 std::process::exit(1);
             }
-            run_bootstrap();
+            let input_path = PathBuf::from("project")
+                .join("bootstrap")
+                .join("stable")
+                .join("compiler.rx");
+            let output_path = PathBuf::from("project")
+                .join("bootstrap")
+                .join("experimental")
+                .join("compiler.rxb");
+            run_bootstrap_vm_entry(&input_path, &output_path, "compile_file_module");
         }
         "compile" => {
             if args.len() < 2 || args.len() > 3 {
@@ -120,46 +123,11 @@ fn ensure_extension(path: &Path, expected: &str) -> Result<(), String> {
     }
 }
 
-fn run_bootstrap() {
-    let compiler_path = PathBuf::from("project")
-        .join("bootstrap")
-        .join("compiler.rx");
-    let source = fs::read_to_string(&compiler_path).unwrap_or_else(|e| {
-        exit_error(&format!(
-            "failed to read `{}`: {}",
-            compiler_path.display(),
-            e
-        ))
-    });
-
-    let tokens = tokenize(&source);
-    let ast = parse(tokens);
-
-    let mut bytecode: Vec<Instruction> = Vec::new();
-    let mut label_gen = LabelGenerator::new();
-    let mut break_stack = Vec::new();
-    let mut continue_stack = Vec::new();
-    let mut compile_ctx = CompileContext::new();
-
-    compile_module(
-        ast,
-        &mut bytecode,
-        &mut label_gen,
-        &mut break_stack,
-        &mut continue_stack,
-        &mut compile_ctx,
-    );
-
-    let out_path = PathBuf::from("target").join("bootstrap_compiler.rxb");
-    write_instructions_to_file(out_path.to_str().unwrap(), &bytecode)
-        .unwrap_or_else(|e| exit_error(&format!("failed to write `{}`: {}", out_path.display(), e)));
-}
-
-fn emit_string_literal(code: &mut Vec<Instruction>, labels: &mut LabelGenerator, value: &str) {
+fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     code.push(Instruction::Push(value.chars().count() as i32));
     code.push(Instruction::ArrayNew);
 
-    let tmp = labels.fresh("__bootstrap_str");
+    let tmp = "__cli_str".to_string();
     code.push(Instruction::Store(tmp.clone()));
 
     for (i, ch) in value.chars().enumerate() {
@@ -185,19 +153,21 @@ fn exit_error(message: &str) -> ! {
 }
 
 fn run_bootstrap_vm_entry(input_path: &Path, output_path: &Path, entry: &str) {
-    let compiler_path = PathBuf::from("target").join("bootstrap_compiler.rxb");
+    let compiler_path = PathBuf::from("project")
+        .join("bootstrap")
+        .join("stable")
+        .join("compiler.rxb");
     if !compiler_path.exists() {
-        exit_error("bootstrap compiler missing: run `reactive bootstrap` first");
+        exit_error("compiler bytecode missing: expected `project/bootstrap/stable/compiler.rxb`");
     }
 
     let mut bytecode = read_instructions_from_file(compiler_path.to_str().unwrap())
         .unwrap_or_else(|e| exit_error(&e));
 
-    let mut arg_labels = LabelGenerator::new();
     let input_str = input_path.to_string_lossy();
     let output_str = output_path.to_string_lossy();
-    emit_string_literal(&mut bytecode, &mut arg_labels, &input_str);
-    emit_string_literal(&mut bytecode, &mut arg_labels, &output_str);
+    emit_string_literal(&mut bytecode, &input_str);
+    emit_string_literal(&mut bytecode, &output_str);
     bytecode.push(Instruction::Call(entry.to_string(), 2));
     bytecode.push(Instruction::Return);
 

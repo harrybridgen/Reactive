@@ -3,6 +3,15 @@ use std::fs;
 
 const MAGIC: &str = "RXB1";
 
+pub fn serialize_instructions(code: &[Instruction]) -> String {
+    let mut lines = Vec::new();
+    lines.push(MAGIC.to_string());
+    for instr in code {
+        write_instruction(instr, &mut lines);
+    }
+    lines.join("\n")
+}
+
 pub fn deserialize_instructions(input: &str) -> Result<Vec<Instruction>, String> {
     let mut lines: Vec<&str> = input.lines().collect();
     if lines.is_empty() {
@@ -21,10 +30,215 @@ pub fn deserialize_instructions(input: &str) -> Result<Vec<Instruction>, String>
     Ok(instructions)
 }
 
+pub fn write_instructions_to_file(path: &str, code: &[Instruction]) -> std::io::Result<()> {
+    fs::write(path, serialize_instructions(code))
+}
+
 pub fn read_instructions_from_file(path: &str) -> Result<Vec<Instruction>, String> {
     let input = fs::read_to_string(path)
         .map_err(|e| format!("failed to read bytecode `{}`: {}", path, e))?;
     deserialize_instructions(&input)
+}
+
+fn write_instruction(instr: &Instruction, lines: &mut Vec<String>) {
+    match instr {
+        Instruction::Push(n) => lines.push(format!("Push {n}")),
+        Instruction::PushChar(c) => lines.push(format!("PushChar {c}")),
+        Instruction::Load(name) => lines.push(format!("Load {}", quote_string(name))),
+
+        Instruction::Store(name) => lines.push(format!("Store {}", quote_string(name))),
+        Instruction::StoreImmutable(name) => {
+            lines.push(format!("StoreImmutable {}", quote_string(name)))
+        }
+        Instruction::StoreReactive(name, expr) => {
+            write_reactive_header("StoreReactive", Some(name), expr, lines);
+        }
+
+        Instruction::Add => lines.push("Add".to_string()),
+        Instruction::Sub => lines.push("Sub".to_string()),
+        Instruction::Mul => lines.push("Mul".to_string()),
+        Instruction::Div => lines.push("Div".to_string()),
+        Instruction::Modulo => lines.push("Modulo".to_string()),
+
+        Instruction::Greater => lines.push("Greater".to_string()),
+        Instruction::Less => lines.push("Less".to_string()),
+        Instruction::GreaterEqual => lines.push("GreaterEqual".to_string()),
+        Instruction::LessEqual => lines.push("LessEqual".to_string()),
+        Instruction::Equal => lines.push("Equal".to_string()),
+        Instruction::NotEqual => lines.push("NotEqual".to_string()),
+        Instruction::And => lines.push("And".to_string()),
+        Instruction::Or => lines.push("Or".to_string()),
+
+        Instruction::Label(name) => lines.push(format!("Label {}", quote_string(name))),
+        Instruction::Jump(name) => lines.push(format!("Jump {}", quote_string(name))),
+        Instruction::JumpIfZero(name) => lines.push(format!("JumpIfZero {}", quote_string(name))),
+        Instruction::Return => lines.push("Return".to_string()),
+
+        Instruction::ArrayNew => lines.push("ArrayNew".to_string()),
+        Instruction::ArrayGet => lines.push("ArrayGet".to_string()),
+        Instruction::ArrayLValue => lines.push("ArrayLValue".to_string()),
+        Instruction::StoreIndex(name) => lines.push(format!("StoreIndex {}", quote_string(name))),
+        Instruction::StoreIndexReactive(name, expr) => {
+            write_reactive_header("StoreIndexReactive", Some(name), expr, lines);
+        }
+
+        Instruction::StoreStruct(name, fields) => {
+            lines.push(format!(
+                "StoreStruct {} {}",
+                quote_string(name),
+                fields.len()
+            ));
+            for (field_name, init) in fields {
+                write_struct_field(field_name, init.as_ref(), lines);
+            }
+        }
+        Instruction::NewStruct(name) => lines.push(format!("NewStruct {}", quote_string(name))),
+        Instruction::FieldGet(name) => lines.push(format!("FieldGet {}", quote_string(name))),
+        Instruction::FieldSet(name) => lines.push(format!("FieldSet {}", quote_string(name))),
+        Instruction::FieldSetReactive(name, expr) => {
+            write_reactive_header("FieldSetReactive", Some(name), expr, lines);
+        }
+        Instruction::FieldLValue(name) => lines.push(format!("FieldLValue {}", quote_string(name))),
+
+        Instruction::StoreThrough => lines.push("StoreThrough".to_string()),
+        Instruction::StoreThroughReactive(expr) => {
+            write_reactive_header("StoreThroughReactive", None, expr, lines);
+        }
+        Instruction::StoreThroughImmutable => lines.push("StoreThroughImmutable".to_string()),
+
+        Instruction::StoreFunction(name, params, body) => {
+            let mut line = format!("StoreFunction {} {}", quote_string(name), params.len());
+            for p in params {
+                line.push(' ');
+                line.push_str(&quote_string(p));
+            }
+            line.push(' ');
+            line.push_str(&body.len().to_string());
+            lines.push(line);
+            for instr in body {
+                write_instruction(instr, lines);
+            }
+        }
+        Instruction::Call(name, argc) => {
+            lines.push(format!("Call {} {}", quote_string(name), argc))
+        }
+
+        Instruction::PushImmutableContext => lines.push("PushImmutableContext".to_string()),
+        Instruction::PopImmutableContext => lines.push("PopImmutableContext".to_string()),
+        Instruction::ClearImmutableContext => lines.push("ClearImmutableContext".to_string()),
+
+        Instruction::Print => lines.push("Print".to_string()),
+        Instruction::Println => lines.push("Println".to_string()),
+        Instruction::Assert => lines.push("Assert".to_string()),
+        Instruction::Error(message) => lines.push(format!("Error {}", quote_string(message))),
+
+        Instruction::Import(path) => {
+            let mut line = format!("Import {}", path.len());
+            for segment in path {
+                line.push(' ');
+                line.push_str(&quote_string(segment));
+            }
+            lines.push(line);
+        }
+
+        Instruction::Cast(target) => {
+            let tag = match target {
+                CastType::Int => "Int",
+                CastType::Char => "Char",
+            };
+            lines.push(format!("Cast {tag}"));
+        }
+    }
+}
+
+fn write_struct_field(name: &str, init: Option<&CompiledStructFieldInit>, lines: &mut Vec<String>) {
+    match init {
+        None => lines.push(format!("Field {} None", quote_string(name))),
+        Some(CompiledStructFieldInit::Mutable(code)) => {
+            lines.push(format!(
+                "Field {} Mutable {}",
+                quote_string(name),
+                code.len()
+            ));
+            for instr in code {
+                write_instruction(instr, lines);
+            }
+        }
+        Some(CompiledStructFieldInit::Immutable(code)) => {
+            lines.push(format!(
+                "Field {} Immutable {}",
+                quote_string(name),
+                code.len()
+            ));
+            for instr in code {
+                write_instruction(instr, lines);
+            }
+        }
+        Some(CompiledStructFieldInit::Reactive(expr)) => {
+            write_reactive_field(name, expr, lines);
+        }
+    }
+}
+
+fn write_reactive_field(name: &str, expr: &ReactiveExpr, lines: &mut Vec<String>) {
+    let mut line = format!("Field {} Reactive {}", quote_string(name), expr.captures.len());
+    for cap in &expr.captures {
+        line.push(' ');
+        line.push_str(&quote_string(cap));
+    }
+    line.push(' ');
+    line.push_str(&expr.code.len().to_string());
+    lines.push(line);
+    for instr in &expr.code {
+        write_instruction(instr, lines);
+    }
+}
+
+fn write_reactive_header(
+    keyword: &str,
+    name: Option<&str>,
+    expr: &ReactiveExpr,
+    lines: &mut Vec<String>,
+) {
+    let mut line = String::new();
+    line.push_str(keyword);
+    if let Some(name) = name {
+        line.push(' ');
+        line.push_str(&quote_string(name));
+    }
+    line.push(' ');
+    line.push_str(&expr.captures.len().to_string());
+    for cap in &expr.captures {
+        line.push(' ');
+        line.push_str(&quote_string(cap));
+    }
+    line.push(' ');
+    line.push_str(&expr.code.len().to_string());
+    lines.push(line);
+    for instr in &expr.code {
+        write_instruction(instr, lines);
+    }
+}
+
+fn quote_string(s: &str) -> String {
+    let mut out = String::new();
+    out.push('"');
+    for ch in s.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => {
+                let code = c as u32;
+                out.push_str(&format!("\\u{{{:x}}}", code));
+            }
+            c => out.push(c),
+        }
+    }
+    out.push('"');
+    out
 }
 
 struct Parser<'a> {

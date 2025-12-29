@@ -1,0 +1,258 @@
+import std.char;
+import std.maths;
+
+struct Vec {
+    items;
+    len = 0;
+}
+
+func vec_new(cap) {
+    v := struct Vec;
+    v.items = [cap];
+    v.len = 0;
+    return v;
+}
+
+func vec_len(v) {
+    return v.len;
+}
+
+func vec_push(v, val) {
+    if v.len >= v.items {
+        newcap = v.items * 2 + 1;
+        newitems := [newcap];
+
+        i = 0;
+        di ::= i + 1;
+        loop {
+            if i >= v.len { break; }
+            newitems[i] = v.items[i];
+            i = di;
+        }
+
+        v.items = newitems;
+    }
+    v.items[v.len] = val;
+    v.len = v.len + 1;
+}
+
+func vec_last(v) {
+    if v.len == 0 {
+        error "vec_last on empty vec";
+    }
+    return v.items[v.len - 1];
+}
+
+func vec_pop(v) {
+    if v.len == 0 {
+        error "vec_pop on empty vec";
+    }
+    v.len = v.len - 1;
+    return v.items[v.len];
+}
+
+func vec_to_array(v) {
+    out := [v.len];
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= v.len { break; }
+        out[i] = v.items[i];
+        i = di;
+    }
+    return out;
+}
+
+func str_len(s) {
+    return (int)s;
+}
+
+func str_empty() {
+    return [0];
+}
+
+func str_from_char(c) {
+    out := [1];
+    out[0] = c;
+    return out;
+}
+
+func str_append(a, b) {
+    na := (int)a;
+    nb := (int)b;
+    out := [na + nb];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= na { break; }
+        out[i] = a[i];
+        i = di;
+    }
+
+    j = 0;
+    dj ::= j + 1;
+    loop {
+        if j >= nb { break; }
+        out[na + j] = b[j];
+        j = dj;
+    }
+    return out;
+}
+
+func str_append_char(a, c) {
+    na := (int)a;
+    out := [na + 1];
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= na { break; }
+        out[i] = a[i];
+        i = di;
+    }
+
+    out[na] = c;
+    return out;
+}
+
+func str_equals(a, b) {
+    if (int)a != (int)b {
+        return 0;
+    }
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= a { break; }
+        if a[i] != b[i] {
+            return 0;
+        }
+        i = di;
+    }
+    return 1;
+}
+
+func str_compare(a, b) {
+    la := (int)a;
+    lb := (int)b;
+    n = la;
+    if lb < n { n = lb; }
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= n { break; }
+        ca := (int)a[i];
+        cb := (int)b[i];
+        if ca < cb { return -1; }
+        if ca > cb { return 1; }
+        i = di;
+    }
+
+    if la < lb { return -1; }
+    if la > lb { return 1; }
+    return 0;
+}
+
+func str_from_int(n) {
+    if n == 0 {
+        return "0";
+    }
+
+    neg = 0;
+    if n < 0 {
+        neg = 1;
+        n = -n;
+    }
+
+    digits := [0];
+    loop {
+        if n == 0 { break; }
+        d := n % 10;
+        digits = str_append_char(digits, (char)(d + (int)'0'));
+        n = n / 10;
+    }
+
+    len := (int)digits;
+    out := [len + neg];
+    if neg == 1 {
+        out[0] = '-';
+    }
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= len { break; }
+        out[neg + i] = digits[len - 1 - i];
+        i = di;
+    }
+    return out;
+}
+
+func str_from_hex(n) {
+    if n == 0 {
+        return "0";
+    }
+
+    digits := [0];
+    loop {
+        if n == 0 { break; }
+        d := n % 16;
+        c := d < 10 ? (char)(d + (int)'0') : (char)(d - 10 + (int)'a');
+        digits = str_append_char(digits, c);
+        n = n / 16;
+    }
+
+    len := (int)digits;
+    out := [len];
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= len { break; }
+        out[i] = digits[len - 1 - i];
+        i = di;
+    }
+    return out;
+}
+
+func str_quote(s) {
+    out := str_append_char(str_empty(), '"');
+
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= s { break; }
+        c := s[i];
+        ci := (int)c;
+
+        if c == '\\' {
+            out = str_append(out, "\\\\");
+        }
+        else if c == '"' {
+            out = str_append(out, "\\\"");
+        }
+        else if c == '\n' {
+            out = str_append(out, "\\n");
+        }
+        else if c == '\r' {
+            out = str_append(out, "\\r");
+        }
+        else if c == '\t' {
+            out = str_append(out, "\\t");
+        }
+        else if ci < 32 || ci > 126 {
+            out = str_append(out, "\\u{");
+            out = str_append(out, str_from_hex(ci));
+            out = str_append(out, "}");
+        }
+        else {
+            out = str_append_char(out, c);
+        }
+
+        i = di;
+    }
+
+    out = str_append_char(out, '"');
+    return out;
+}

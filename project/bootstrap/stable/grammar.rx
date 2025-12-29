@@ -1,0 +1,527 @@
+# TOKENS #
+TK_Number := 1;
+TK_Ident := 2;
+TK_Char := 3;
+TK_String := 4;
+
+TK_Add := 5;
+TK_Sub := 6;
+TK_Mul := 7;
+TK_Div := 8;
+TK_Modulo := 9;
+
+TK_Greater := 10;
+TK_Less := 11;
+TK_GreaterEqual := 12;
+TK_LessEqual := 13;
+TK_Equal := 14;
+TK_NotEqual := 15;
+TK_And := 16;
+TK_Or := 17;
+TK_Not := 18;
+
+TK_Assign := 19;
+TK_ImmutableAssign := 20;
+TK_ReactiveAssign := 21;
+
+TK_LParen := 22;
+TK_RParen := 23;
+TK_LBrace := 24;
+TK_RBrace := 25;
+TK_LSquare := 26;
+TK_RSquare := 27;
+TK_Semicolon := 28;
+TK_Dot := 29;
+TK_Comma := 30;
+TK_Colon := 31;
+TK_Question := 32;
+
+TK_If := 33;
+TK_Else := 34;
+TK_Loop := 35;
+TK_Break := 36;
+TK_Func := 37;
+TK_Return := 38;
+TK_Struct := 39;
+TK_Import := 40;
+TK_Print := 41;
+TK_Println := 42;
+TK_Continue := 43;
+TK_Assert := 44;
+TK_Error := 45;
+
+# OPERATORS #
+OP_Add := 1;
+OP_Sub := 2;
+OP_Mul := 3;
+OP_Div := 4;
+OP_Mod := 5;
+OP_Greater := 6;
+OP_Less := 7;
+OP_GreaterEqual := 8;
+OP_LessEqual := 9;
+OP_Equal := 10;
+OP_NotEqual := 11;
+OP_And := 12;
+OP_Or := 13;
+
+# CASTS #
+CAST_Int := 1;
+CAST_Char := 2;
+
+# AST #
+AST_Number := 1;
+AST_Char := 2;
+AST_String := 3;
+AST_Var := 4;
+AST_Operation := 5;
+AST_Ternary := 6;
+AST_ArrayNew := 7;
+AST_Index := 8;
+AST_Assign := 9;
+AST_ImmutableAssign := 10;
+AST_ReactiveAssign := 11;
+AST_AssignTarget := 12;
+AST_ReactiveAssignTarget := 13;
+AST_ImmutableAssignTarget := 14;
+AST_Program := 15;
+AST_IfElse := 16;
+AST_Loop := 17;
+AST_Break := 18;
+AST_Continue := 19;
+AST_Return := 20;
+AST_Print := 21;
+AST_Println := 22;
+AST_Assert := 23;
+AST_Error := 24;
+AST_FuncDef := 25;
+AST_Call := 26;
+AST_StructDef := 27;
+AST_StructNew := 28;
+AST_FieldAccess := 29;
+AST_FieldAssign := 30;
+AST_Import := 31;
+AST_Cast := 32;
+
+# FIELD ASSIGN KINDS #
+FIELD_ASSIGN_Normal := 1;
+FIELD_ASSIGN_Reactive := 2;
+FIELD_ASSIGN_Immutable := 3;
+
+# STRUCT FIELD INIT KINDS #
+FIELD_INIT_None := 0;
+FIELD_INIT_Mutable := 1;
+FIELD_INIT_Immutable := 2;
+FIELD_INIT_Reactive := 3;
+
+# INSTRUCTION KINDS #
+INSTR_Push := 1;
+INSTR_PushChar := 2;
+INSTR_Load := 3;
+INSTR_Store := 4;
+INSTR_StoreImmutable := 5;
+INSTR_StoreReactive := 6;
+INSTR_Add := 7;
+INSTR_Sub := 8;
+INSTR_Mul := 9;
+INSTR_Div := 10;
+INSTR_Modulo := 11;
+INSTR_Greater := 12;
+INSTR_Less := 13;
+INSTR_GreaterEqual := 14;
+INSTR_LessEqual := 15;
+INSTR_Equal := 16;
+INSTR_NotEqual := 17;
+INSTR_And := 18;
+INSTR_Or := 19;
+INSTR_Label := 20;
+INSTR_Jump := 21;
+INSTR_JumpIfZero := 22;
+INSTR_Return := 23;
+INSTR_ArrayNew := 24;
+INSTR_ArrayGet := 25;
+INSTR_ArrayLValue := 26;
+INSTR_StoreIndex := 27;
+INSTR_StoreIndexReactive := 28;
+INSTR_StoreStruct := 29;
+INSTR_NewStruct := 30;
+INSTR_FieldGet := 31;
+INSTR_FieldSet := 32;
+INSTR_FieldSetReactive := 33;
+INSTR_FieldLValue := 34;
+INSTR_StoreThrough := 35;
+INSTR_StoreThroughReactive := 36;
+INSTR_StoreThroughImmutable := 37;
+INSTR_StoreFunction := 38;
+INSTR_Call := 39;
+INSTR_PushImmutableContext := 40;
+INSTR_PopImmutableContext := 41;
+INSTR_ClearImmutableContext := 42;
+INSTR_Print := 43;
+INSTR_Println := 44;
+INSTR_Assert := 45;
+INSTR_Error := 46;
+INSTR_Import := 47;
+INSTR_Cast := 48;
+
+struct Token {
+    kind = 0;
+    ival = 0;
+    sval;
+    cval = 0;
+}
+
+func token_simple(kind) {
+    t := struct Token;
+    t.kind = kind;
+    return t;
+}
+
+func token_number(n) {
+    t := struct Token;
+    t.kind = TK_Number;
+    t.ival = n;
+    return t;
+}
+
+func token_ident(name) {
+    t := struct Token;
+    t.kind = TK_Ident;
+    t.sval = name;
+    return t;
+}
+
+func token_string(s) {
+    t := struct Token;
+    t.kind = TK_String;
+    t.sval = s;
+    return t;
+}
+
+func token_char(c) {
+    t := struct Token;
+    t.kind = TK_Char;
+    t.cval = c;
+    return t;
+}
+
+struct AST {
+    kind = 0;
+    a;
+    b;
+    c;
+    name;
+    list;
+    params;
+    body;
+    op = 0;
+    flag = 0;
+}
+
+func ast_number(n) {
+    t := struct AST;
+    t.kind = AST_Number;
+    t.a = n;
+    return t;
+}
+
+func ast_char(c) {
+    t := struct AST;
+    t.kind = AST_Char;
+    t.a = c;
+    return t;
+}
+
+func ast_string(s) {
+    t := struct AST;
+    t.kind = AST_String;
+    t.a = s;
+    return t;
+}
+
+func ast_var(name) {
+    t := struct AST;
+    t.kind = AST_Var;
+    t.name = name;
+    return t;
+}
+
+func ast_operation(left, op, right) {
+    t := struct AST;
+    t.kind = AST_Operation;
+    t.a = left;
+    t.b = right;
+    t.op = op;
+    return t;
+}
+
+func ast_ternary(cond, then_expr, else_expr) {
+    t := struct AST;
+    t.kind = AST_Ternary;
+    t.a = cond;
+    t.b = then_expr;
+    t.c = else_expr;
+    return t;
+}
+
+func ast_array_new(size) {
+    t := struct AST;
+    t.kind = AST_ArrayNew;
+    t.a = size;
+    return t;
+}
+
+func ast_index(base, index) {
+    t := struct AST;
+    t.kind = AST_Index;
+    t.a = base;
+    t.b = index;
+    return t;
+}
+
+func ast_assign(name, expr) {
+    t := struct AST;
+    t.kind = AST_Assign;
+    t.name = name;
+    t.a = expr;
+    return t;
+}
+
+func ast_immutable_assign(name, expr) {
+    t := struct AST;
+    t.kind = AST_ImmutableAssign;
+    t.name = name;
+    t.a = expr;
+    return t;
+}
+
+func ast_reactive_assign(name, expr) {
+    t := struct AST;
+    t.kind = AST_ReactiveAssign;
+    t.name = name;
+    t.a = expr;
+    return t;
+}
+
+func ast_assign_target(target, value) {
+    t := struct AST;
+    t.kind = AST_AssignTarget;
+    t.a = target;
+    t.b = value;
+    return t;
+}
+
+func ast_reactive_assign_target(target, value) {
+    t := struct AST;
+    t.kind = AST_ReactiveAssignTarget;
+    t.a = target;
+    t.b = value;
+    return t;
+}
+
+func ast_immutable_assign_target(target, value) {
+    t := struct AST;
+    t.kind = AST_ImmutableAssignTarget;
+    t.a = target;
+    t.b = value;
+    return t;
+}
+
+func ast_program(items) {
+    t := struct AST;
+    t.kind = AST_Program;
+    t.list = items;
+    return t;
+}
+
+func ast_if_else(cond, then_block, else_block) {
+    t := struct AST;
+    t.kind = AST_IfElse;
+    t.a = cond;
+    t.b = then_block;
+    t.c = else_block;
+    return t;
+}
+
+func ast_loop(body) {
+    t := struct AST;
+    t.kind = AST_Loop;
+    t.list = body;
+    return t;
+}
+
+func ast_break() {
+    t := struct AST;
+    t.kind = AST_Break;
+    return t;
+}
+
+func ast_continue() {
+    t := struct AST;
+    t.kind = AST_Continue;
+    return t;
+}
+
+func ast_return(expr, has_expr) {
+    t := struct AST;
+    t.kind = AST_Return;
+    t.a = expr;
+    t.flag = has_expr;
+    return t;
+}
+
+func ast_print(expr) {
+    t := struct AST;
+    t.kind = AST_Print;
+    t.a = expr;
+    return t;
+}
+
+func ast_println(expr) {
+    t := struct AST;
+    t.kind = AST_Println;
+    t.a = expr;
+    return t;
+}
+
+func ast_assert(expr) {
+    t := struct AST;
+    t.kind = AST_Assert;
+    t.a = expr;
+    return t;
+}
+
+func ast_error(msg) {
+    t := struct AST;
+    t.kind = AST_Error;
+    t.a = msg;
+    return t;
+}
+
+func ast_func_def(name, params, body) {
+    t := struct AST;
+    t.kind = AST_FuncDef;
+    t.name = name;
+    t.params = params;
+    t.body = body;
+    return t;
+}
+
+func ast_call(name, args) {
+    t := struct AST;
+    t.kind = AST_Call;
+    t.name = name;
+    t.list = args;
+    return t;
+}
+
+func ast_struct_def(name, fields) {
+    t := struct AST;
+    t.kind = AST_StructDef;
+    t.name = name;
+    t.list = fields;
+    return t;
+}
+
+func ast_struct_new(name) {
+    t := struct AST;
+    t.kind = AST_StructNew;
+    t.name = name;
+    return t;
+}
+
+func ast_field_access(base, field) {
+    t := struct AST;
+    t.kind = AST_FieldAccess;
+    t.a = base;
+    t.name = field;
+    return t;
+}
+
+func ast_field_assign(base, field, value, kind) {
+    t := struct AST;
+    t.kind = AST_FieldAssign;
+    t.a = base;
+    t.name = field;
+    t.b = value;
+    t.flag = kind;
+    return t;
+}
+
+func ast_import(path) {
+    t := struct AST;
+    t.kind = AST_Import;
+    t.list = path;
+    return t;
+}
+
+func ast_cast(target, expr) {
+    t := struct AST;
+    t.kind = AST_Cast;
+    t.a = expr;
+    t.flag = target;
+    return t;
+}
+
+struct FieldInit {
+    name;
+    kind = 0;
+    value;
+}
+
+func field_init(name, kind, value) {
+    f := struct FieldInit;
+    f.name = name;
+    f.kind = kind;
+    f.value = value;
+    return f;
+}
+
+struct ReactiveExpr {
+    captures;
+    code;
+}
+
+func reactive_expr(captures, code) {
+    r := struct ReactiveExpr;
+    r.captures = captures;
+    r.code = code;
+    return r;
+}
+
+struct Instruction {
+    kind = 0;
+    a;
+    b;
+    c;
+}
+
+func instr0(kind) {
+    i := struct Instruction;
+    i.kind = kind;
+    return i;
+}
+
+func instr1(kind, a) {
+    i := struct Instruction;
+    i.kind = kind;
+    i.a = a;
+    return i;
+}
+
+func instr2(kind, a, b) {
+    i := struct Instruction;
+    i.kind = kind;
+    i.a = a;
+    i.b = b;
+    return i;
+}
+
+func instr3(kind, a, b, c) {
+    i := struct Instruction;
+    i.kind = kind;
+    i.a = a;
+    i.b = b;
+    i.c = c;
+    return i;
+}

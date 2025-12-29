@@ -1,0 +1,335 @@
+import bootstrap.stable.grammar;
+import bootstrap.stable.util;
+import std.char;
+
+struct Lexer {
+    tokens;
+    len = 0;
+}
+
+struct ReadResult {
+    value;
+    index = 0;
+}
+
+func tokenize(src) {
+    println "[Reactive] Tokenizer";
+    r := struct Lexer;
+    r.tokens := [(int)src + 1];
+    r.len = 0;
+
+    i = 0;
+    di ::= i + 1;
+
+    loop {
+        if i >= src { break; }
+        c := src[i];
+
+        if is_space(c) {
+            i = di;
+        }
+        else if is_digit(c) {
+            res := read_number(src, i);
+            r.tokens[r.len] = token_number(res.value);
+            r.len = r.len + 1;
+            i = res.index;
+        }
+        else if is_alpha(c) {
+            res := read_ident(src, i);
+            r.tokens[r.len] = res.value;
+            r.len = r.len + 1;
+            i = res.index;
+        }
+        else if c == '#' {
+            i = skip_comment(src, i);
+        }
+        else if c == '"' {
+            res := read_string(src, i + 1);
+            r.tokens[r.len] = token_string(res.value);
+            r.len = r.len + 1;
+            i = res.index;
+        }
+        else if c == '\'' {
+            res := read_char(src, i + 1);
+            r.tokens[r.len] = token_char(res.value);
+            r.len = r.len + 1;
+            i = res.index;
+        }
+        else if c == '+' { push_simple(r, TK_Add); i = di; }
+        else if c == '-' { push_simple(r, TK_Sub); i = di; }
+        else if c == '*' { push_simple(r, TK_Mul); i = di; }
+        else if c == '/' { push_simple(r, TK_Div); i = di; }
+        else if c == '%' { push_simple(r, TK_Modulo); i = di; }
+        else if c == '(' { push_simple(r, TK_LParen); i = di; }
+        else if c == ')' { push_simple(r, TK_RParen); i = di; }
+        else if c == '{' { push_simple(r, TK_LBrace); i = di; }
+        else if c == '}' { push_simple(r, TK_RBrace); i = di; }
+        else if c == '[' { push_simple(r, TK_LSquare); i = di; }
+        else if c == ']' { push_simple(r, TK_RSquare); i = di; }
+        else if c == ';' { push_simple(r, TK_Semicolon); i = di; }
+        else if c == '.' { push_simple(r, TK_Dot); i = di; }
+        else if c == ',' { push_simple(r, TK_Comma); i = di; }
+        else if c == '?' { push_simple(r, TK_Question); i = di; }
+
+        else if c == ':' {
+            if i + 1 < src && src[i + 1] == ':' {
+                if i + 2 < src && src[i + 2] == '=' {
+                    push_simple(r, TK_ReactiveAssign);
+                    i = i + 3;
+                }
+                else {
+                    error "tokenizer: expected '=' after '::'";
+                }
+            }
+            else if i + 1 < src && src[i + 1] == '=' {
+                push_simple(r, TK_ImmutableAssign);
+                i = i + 2;
+            }
+            else {
+                push_simple(r, TK_Colon);
+                i = di;
+            }
+        }
+
+        else if c == '=' {
+            if i + 1 < src && src[i + 1] == '=' {
+                push_simple(r, TK_Equal);
+                i = i + 2;
+            }
+            else {
+                push_simple(r, TK_Assign);
+                i = di;
+            }
+        }
+
+        else if c == '!' {
+            if i + 1 < src && src[i + 1] == '=' {
+                push_simple(r, TK_NotEqual);
+                i = i + 2;
+            }
+            else {
+                push_simple(r, TK_Not);
+                i = di;
+            }
+        }
+
+        else if c == '>' {
+            if i + 1 < src && src[i + 1] == '=' {
+                push_simple(r, TK_GreaterEqual);
+                i = i + 2;
+            }
+            else {
+                push_simple(r, TK_Greater);
+                i = di;
+            }
+        }
+
+        else if c == '<' {
+            if i + 1 < src && src[i + 1] == '=' {
+                push_simple(r, TK_LessEqual);
+                i = i + 2;
+            }
+            else {
+                push_simple(r, TK_Less);
+                i = di;
+            }
+        }
+
+        else if c == '|' {
+            if i + 1 < src && src[i + 1] == '|' {
+                push_simple(r, TK_Or);
+                i = i + 2;
+            }
+            else {
+                error "tokenizer: expected '||'";
+            }
+        }
+        else if c == '&' {
+            if i + 1 < src && src[i + 1] == '&' {
+                push_simple(r, TK_And);
+                i = i + 2;
+            }
+            else {
+                error "tokenizer: expected '&&'";
+            }
+        }
+        else {
+            error "tokenizer: invalid character";
+        }
+    }
+
+    return r;
+}
+
+func push_simple(r, kind) {
+    r.tokens[r.len] = token_simple(kind);
+    r.len = r.len + 1;
+}
+
+func read_number(src, start) {
+    res := struct ReadResult;
+    val = digit_to_int(src[start]);
+
+    i = start + 1;
+    loop {
+        if i >= src { break; }
+        if !is_digit(src[i]) { break; }
+        val = val * 10 + digit_to_int(src[i]);
+        i = i + 1;
+    }
+
+    res.value = val;
+    res.index = i;
+    return res;
+}
+
+func read_ident(src, start) {
+    res := struct ReadResult;
+    name := str_empty();
+
+    i = start;
+    loop {
+        if i >= src { break; }
+        c := src[i];
+        if !is_alnum(c) { break; }
+        name = str_append_char(name, c);
+        i = i + 1;
+    }
+
+    res.value = ident_token(name);
+    res.index = i;
+    return res;
+}
+
+func ident_token(name) {
+    if str_equals(name, "print") { return token_simple(TK_Print); }
+    if str_equals(name, "println") { return token_simple(TK_Println); }
+    if str_equals(name, "if") { return token_simple(TK_If); }
+    if str_equals(name, "else") { return token_simple(TK_Else); }
+    if str_equals(name, "loop") { return token_simple(TK_Loop); }
+    if str_equals(name, "break") { return token_simple(TK_Break); }
+    if str_equals(name, "func") { return token_simple(TK_Func); }
+    if str_equals(name, "return") { return token_simple(TK_Return); }
+    if str_equals(name, "continue") { return token_simple(TK_Continue); }
+    if str_equals(name, "struct") { return token_simple(TK_Struct); }
+    if str_equals(name, "import") { return token_simple(TK_Import); }
+    if str_equals(name, "assert") { return token_simple(TK_Assert); }
+    if str_equals(name, "error") { return token_simple(TK_Error); }
+    return token_ident(name);
+}
+
+func read_string(src, start) {
+    res := struct ReadResult;
+    out := str_empty();
+
+    i = start;
+    loop {
+        if i >= src {
+            error "tokenizer: unterminated string";
+        }
+        c := src[i];
+        if c == '"' {
+            i = i + 1;
+            break;
+        }
+        if c == '\\' {
+            esc := read_escape(src, i + 1);
+            out = str_append_char(out, esc.value);
+            i = esc.index;
+        }
+        else {
+            out = str_append_char(out, c);
+            i = i + 1;
+        }
+    }
+
+    res.value = out;
+    res.index = i;
+    return res;
+}
+
+func read_char(src, start) {
+    res := struct ReadResult;
+
+    if start >= src {
+        error "tokenizer: unterminated char";
+    }
+
+    c := src[start];
+    if c == '\\' {
+        esc := read_escape(src, start + 1);
+        res.value = esc.value;
+        if esc.index >= src || src[esc.index] != '\'' {
+            error "tokenizer: unterminated char";
+        }
+        res.index = esc.index + 1;
+        return res;
+    }
+
+    if start + 1 >= src || src[start + 1] != '\'' {
+        error "tokenizer: unterminated char";
+    }
+
+    res.value = c;
+    res.index = start + 2;
+    return res;
+}
+
+func read_escape(src, start) {
+    res := struct ReadResult;
+    if start >= src {
+        error "tokenizer: unterminated escape";
+    }
+
+    c := src[start];
+
+    if c == 'n' { res.value = '\n'; res.index = start + 1; return res; }
+    if c == 't' { res.value = '\t'; res.index = start + 1; return res; }
+    if c == 'r' { res.value = '\r'; res.index = start + 1; return res; }
+    if c == '"' { res.value = '"'; res.index = start + 1; return res; }
+    if c == '\'' { res.value = '\''; res.index = start + 1; return res; }
+    if c == '\\' { res.value = '\\'; res.index = start + 1; return res; }
+
+    if is_octal_digit(c) {
+        return read_octal(src, start);
+    }
+
+    error "tokenizer: invalid escape";
+}
+
+func is_octal_digit(c) {
+    return (int)c >= (int)'0' && (int)c <= (int)'7';
+}
+
+func read_octal(src, start) {
+    res := struct ReadResult;
+    val = (int)(src[start] - '0');
+    i = start + 1;
+    count = 1;
+
+    loop {
+        if i >= src { break; }
+        if count >= 3 { break; }
+        if !is_octal_digit(src[i]) { break; }
+        val = val * 8 + (int)(src[i] - '0');
+        i = i + 1;
+        count = count + 1;
+    }
+
+    res.value = (char)val;
+    res.index = i;
+    return res;
+}
+
+func skip_comment(src, start) {
+    i = start + 1;
+    loop {
+        if i >= src { break; }
+        if src[i] == '#' {
+            i = i + 1;
+            break;
+        }
+        i = i + 1;
+    }
+    return i;
+}
