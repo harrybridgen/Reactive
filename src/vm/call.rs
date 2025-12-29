@@ -153,5 +153,8 @@ impl VM {
         if path.len() == 2 && path[0] == "std" && path[1] == "buf" {
             self.install_native_buf();
         }
+        if path.len() == 2 && path[0] == "std" && path[1] == "vec" {
+            self.install_native_vec();
+        }
     }
 }

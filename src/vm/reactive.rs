@@ -35,6 +35,10 @@ impl VM {
                     let val = self.read_lvalue(LValue::ArrayElem { array_id, index });
                     self.force(val)
                 }
+                LValue::VecElem { vec_id, index } => {
+                    let val = self.read_lvalue(LValue::VecElem { vec_id, index });
+                    self.force(val)
+                }
             },
 
             other => other,

@@ -20,6 +20,12 @@ impl VM {
         self.register_native("internal_buf_write_file", native_buf_write_file);
     }
 
+    pub(crate) fn install_native_vec(&mut self) {
+        self.register_native("internal_vec_new", native_vec_new);
+        self.register_native("internal_vec_push", native_vec_push);
+        self.register_native("internal_vec_pop", native_vec_pop);
+    }
+
     fn register_native(&mut self, name: &str, f: NativeFunction) {
         self.native_functions.insert(name.to_string(), f);
         self.global_env
@@ -30,6 +36,24 @@ impl VM {
         match self.force(v) {
             Type::ArrayRef(id) => {
                 let elems = self.array_heap[id].clone();
+                let mut out = String::with_capacity(elems.len());
+                for elem in elems {
+                    match self.force(elem) {
+                        Type::Char(c) => match char::from_u32(c) {
+                            Some(ch) => out.push(ch),
+                            None => self
+                                .runtime_error(&format!("{what} contains invalid char code {c}")),
+                        },
+                        other => self.runtime_error(&format!(
+                            "{what} must be a string (array of chars), found {:?}",
+                            other
+                        )),
+                    }
+                }
+                out
+            }
+            Type::VecRef(id) => {
+                let elems = self.vec_heap[id].clone();
                 let mut out = String::with_capacity(elems.len());
                 for elem in elems {
                     match self.force(elem) {
@@ -286,4 +310,65 @@ fn native_buf_write_file(vm: &mut VM, args: Vec<Type>) -> Type {
     let count_i32 = i32::try_from(count)
         .unwrap_or_else(|_| vm.runtime_error("buffer too large for int"));
     Type::Integer(count_i32)
+}
+
+fn native_vec_new(vm: &mut VM, args: Vec<Type>) -> Type {
+    if args.len() != 1 {
+        vm.runtime_error(&format!(
+            "internal_vec_new expects 1 argument, got {}",
+            args.len()
+        ));
+    }
+
+    let cap = vm.as_usize_nonneg(args[0].clone(), "internal_vec_new capacity");
+    let id = vm.vec_heap.len();
+    vm.vec_heap.push(Vec::with_capacity(cap));
+    vm.vec_immutables.push(HashSet::new());
+    Type::VecRef(id)
+}
+
+fn native_vec_push(vm: &mut VM, args: Vec<Type>) -> Type {
+    if args.len() != 2 {
+        vm.runtime_error(&format!(
+            "internal_vec_push expects 2 arguments, got {}",
+            args.len()
+        ));
+    }
+
+    let id = match vm.force(args[0].clone()) {
+        Type::VecRef(id) => id,
+        other => vm.runtime_error(&format!(
+            "internal_vec_push expects vec, found {:?}",
+            other
+        )),
+    };
+
+    let val = args[1].clone();
+    vm.vec_heap[id].push(val);
+    Type::VecRef(id)
+}
+
+fn native_vec_pop(vm: &mut VM, args: Vec<Type>) -> Type {
+    if args.len() != 1 {
+        vm.runtime_error(&format!(
+            "internal_vec_pop expects 1 argument, got {}",
+            args.len()
+        ));
+    }
+
+    let id = match vm.force(args[0].clone()) {
+        Type::VecRef(id) => id,
+        other => vm.runtime_error(&format!(
+            "internal_vec_pop expects vec, found {:?}",
+            other
+        )),
+    };
+
+    let value = vm
+        .vec_heap[id]
+        .pop()
+        .unwrap_or_else(|| vm.runtime_error("internal_vec_pop on empty vec"));
+    let len = vm.vec_heap[id].len();
+    vm.vec_immutables[id].remove(&len);
+    value
 }

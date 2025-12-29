@@ -43,6 +43,8 @@ pub struct VM {
     heap: Vec<StructInstance>,
     array_heap: Vec<Vec<Type>>,
     array_immutables: Vec<HashSet<usize>>,
+    vec_heap: Vec<Vec<Type>>,
+    vec_immutables: Vec<HashSet<usize>>,
     buffer_heap: Vec<Vec<u32>>,
 
     // Module import memoization
@@ -70,6 +72,8 @@ impl VM {
             heap: Vec::new(),
             array_heap: Vec::new(),
             array_immutables: Vec::new(),
+            vec_heap: Vec::new(),
+            vec_immutables: Vec::new(),
             buffer_heap: Vec::new(),
             imported_modules: HashSet::new(),
             call_stack: Vec::new(),

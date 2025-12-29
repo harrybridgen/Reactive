@@ -1,89 +1,17 @@
 import bootstrap.experimental.grammar;
+import bootstrap.experimental.serialize;
 import bootstrap.experimental.util;
 import bootstrap.experimental.tokenizer;
 import bootstrap.experimental.parser;
 import std.file;
-import std.buf;
 
+#
+-----------------------------------------
+Helpers
+-----------------------------------------
+#
 struct LabelGen {
     counter = 0;
-}
-
-struct TextBuf {
-    buf;
-    first = 1;
-}
-
-func textbuf_new(cap) {
-    out := struct TextBuf;
-    out.buf = buf_new(cap);
-    out.first = 1;
-    return out;
-}
-
-func textbuf_line_start(out) {
-    if out.first == 0 {
-        buf_push_char(out.buf, '\n');
-    }
-    else {
-        out.first = 0;
-    }
-}
-
-func textbuf_push(out, s) {
-    buf_push_str(out.buf, s);
-}
-
-func textbuf_push_char(out, c) {
-    buf_push_char(out.buf, c);
-}
-
-func textbuf_finish(out) {
-    return buf_to_string(out.buf);
-}
-
-func append_int(out, n) {
-    textbuf_push(out, str_from_int(n));
-}
-
-func append_quoted(out, s) {
-    textbuf_push_char(out, '"');
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= s { break; }
-        c := s[i];
-        ci := (int)c;
-
-        if c == '\\' {
-            textbuf_push(out, "\\\\");
-        }
-        else if c == '"' {
-            textbuf_push(out, "\\\"");
-        }
-        else if c == '\n' {
-            textbuf_push(out, "\\n");
-        }
-        else if c == '\r' {
-            textbuf_push(out, "\\r");
-        }
-        else if c == '\t' {
-            textbuf_push(out, "\\t");
-        }
-        else if ci < 32 || ci > 126 {
-            textbuf_push(out, "\\u{");
-            textbuf_push(out, str_from_hex(ci));
-            textbuf_push_char(out, '}');
-        }
-        else {
-            textbuf_push_char(out, c);
-        }
-
-        i = di;
-    }
-
-    textbuf_push_char(out, '"');
 }
 
 func new_labelgen() {
@@ -152,6 +80,11 @@ func join_segments(parts, sep) {
     return out;
 }
 
+#
+-----------------------------------------
+Compiler entrypoints
+-----------------------------------------
+#
 func compile_source(src) {
     lex := tokenize(src);
     ast := parse(lex.tokens, lex.len);
@@ -198,6 +131,11 @@ func compile_file_module(input_path, output_path) {
     file_write(output_path, text);
 }
 
+#
+-----------------------------------------
+Compilation (AST -> instructions)
+-----------------------------------------
+#
 func compile_module(ast, code, labels, break_stack, continue_stack, imports) {
     if ast.kind == AST_Program {
         items := ast.list;
@@ -564,6 +502,11 @@ func compile(ast, code, labels, break_stack, continue_stack, imports) {
     error "compiler: unknown AST node";
 }
 
+#
+-----------------------------------------
+Block / expression helpers
+-----------------------------------------
+#
 func compile_block(block, code, labels, break_stack, continue_stack, imports) {
     i = 0;
     di ::= i + 1;
@@ -640,6 +583,11 @@ func compile_reactive_expr(ast, imports) {
     return reactive_expr(vec_to_array(names), code);
 }
 
+#
+-----------------------------------------
+Free variable collection (reactive captures)
+-----------------------------------------
+#
 func collect_free_vars_list(list, out) {
     i = 0;
     di ::= i + 1;
@@ -730,6 +678,11 @@ func collect_free_vars(ast, out) {
     }
 }
 
+#
+-----------------------------------------
+LValue compilation
+-----------------------------------------
+#
 func compile_lvalue(ast, code, labels, break_stack, continue_stack, imports) {
     if ast.kind == AST_Var {
         name := ast.name;
@@ -757,6 +710,11 @@ func compile_lvalue(ast, code, labels, break_stack, continue_stack, imports) {
     error "compiler: invalid assignment target";
 }
 
+#
+-----------------------------------------
+Imports
+-----------------------------------------
+#
 func compile_import(path, code, labels, break_stack, continue_stack, imports) {
     inst := instr1(INSTR_Import, path);
     vec_push(code, inst);
@@ -778,6 +736,11 @@ func compile_import(path, code, labels, break_stack, continue_stack, imports) {
     compile_module(ast, code, labels, break_stack, continue_stack, imports);
 }
 
+#
+-----------------------------------------
+Operators
+-----------------------------------------
+#
 func emit_operator(op, code) {
     if op == OP_Add { inst := instr0(INSTR_Add); vec_push(code, inst); return; }
     if op == OP_Sub { inst := instr0(INSTR_Sub); vec_push(code, inst); return; }
@@ -795,6 +758,11 @@ func emit_operator(op, code) {
     error "compiler: unknown operator";
 }
 
+#
+-----------------------------------------
+String literals
+-----------------------------------------
+#
 func compile_string_literal(s, code, labels) {
     len := str_len(s);
     inst := instr1(INSTR_Push, len);
@@ -825,369 +793,5 @@ func compile_string_literal(s, code, labels) {
 
     inst = instr1(INSTR_Load, tmp);
     vec_push(code, inst);
-}
-
-func serialize_instructions(code) {
-    out := textbuf_new(1024);
-    textbuf_line_start(out);
-    textbuf_push(out, "RXB1");
-    append_instructions(out, code);
-    return textbuf_finish(out);
-}
-
-func append_instructions(out, code) {
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= code { break; }
-        append_instruction(out, code[i]);
-        i = di;
-    }
-}
-
-func append_instruction(out, instr) {
-    if instr.kind == INSTR_Push {
-        textbuf_line_start(out);
-        textbuf_push(out, "Push ");
-        append_int(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_PushChar {
-        textbuf_line_start(out);
-        textbuf_push(out, "PushChar ");
-        append_int(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_Load {
-        textbuf_line_start(out);
-        textbuf_push(out, "Load ");
-        append_quoted(out, instr.a);
-        return;
-    }
-
-    if instr.kind == INSTR_Store {
-        textbuf_line_start(out);
-        textbuf_push(out, "Store ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_StoreImmutable {
-        textbuf_line_start(out);
-        textbuf_push(out, "StoreImmutable ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_StoreReactive {
-        append_reactive_named(out, "StoreReactive", instr.a, instr.b);
-        return;
-    }
-
-    if instr.kind == INSTR_Add { textbuf_line_start(out); textbuf_push(out, "Add"); return; }
-    if instr.kind == INSTR_Sub { textbuf_line_start(out); textbuf_push(out, "Sub"); return; }
-    if instr.kind == INSTR_Mul { textbuf_line_start(out); textbuf_push(out, "Mul"); return; }
-    if instr.kind == INSTR_Div { textbuf_line_start(out); textbuf_push(out, "Div"); return; }
-    if instr.kind == INSTR_Modulo { textbuf_line_start(out); textbuf_push(out, "Modulo"); return; }
-
-    if instr.kind == INSTR_Greater { textbuf_line_start(out); textbuf_push(out, "Greater"); return; }
-    if instr.kind == INSTR_Less { textbuf_line_start(out); textbuf_push(out, "Less"); return; }
-    if instr.kind == INSTR_GreaterEqual { textbuf_line_start(out); textbuf_push(out, "GreaterEqual"); return; }
-    if instr.kind == INSTR_LessEqual { textbuf_line_start(out); textbuf_push(out, "LessEqual"); return; }
-    if instr.kind == INSTR_Equal { textbuf_line_start(out); textbuf_push(out, "Equal"); return; }
-    if instr.kind == INSTR_NotEqual { textbuf_line_start(out); textbuf_push(out, "NotEqual"); return; }
-    if instr.kind == INSTR_And { textbuf_line_start(out); textbuf_push(out, "And"); return; }
-    if instr.kind == INSTR_Or { textbuf_line_start(out); textbuf_push(out, "Or"); return; }
-
-    if instr.kind == INSTR_Label {
-        textbuf_line_start(out);
-        textbuf_push(out, "Label ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_Jump {
-        textbuf_line_start(out);
-        textbuf_push(out, "Jump ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_JumpIfZero {
-        textbuf_line_start(out);
-        textbuf_push(out, "JumpIfZero ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_Return {
-        textbuf_line_start(out);
-        textbuf_push(out, "Return");
-        return;
-    }
-
-    if instr.kind == INSTR_ArrayNew { textbuf_line_start(out); textbuf_push(out, "ArrayNew"); return; }
-    if instr.kind == INSTR_ArrayGet { textbuf_line_start(out); textbuf_push(out, "ArrayGet"); return; }
-    if instr.kind == INSTR_ArrayLValue { textbuf_line_start(out); textbuf_push(out, "ArrayLValue"); return; }
-
-    if instr.kind == INSTR_StoreIndex {
-        textbuf_line_start(out);
-        textbuf_push(out, "StoreIndex ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_StoreIndexReactive {
-        append_reactive_named(out, "StoreIndexReactive", instr.a, instr.b);
-        return;
-    }
-
-    if instr.kind == INSTR_StoreStruct {
-        append_store_struct(out, instr.a, instr.b);
-        return;
-    }
-    if instr.kind == INSTR_NewStruct {
-        textbuf_line_start(out);
-        textbuf_push(out, "NewStruct ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_FieldGet {
-        textbuf_line_start(out);
-        textbuf_push(out, "FieldGet ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_FieldSet {
-        textbuf_line_start(out);
-        textbuf_push(out, "FieldSet ");
-        append_quoted(out, instr.a);
-        return;
-    }
-    if instr.kind == INSTR_FieldSetReactive {
-        append_reactive_named(out, "FieldSetReactive", instr.a, instr.b);
-        return;
-    }
-    if instr.kind == INSTR_FieldLValue {
-        textbuf_line_start(out);
-        textbuf_push(out, "FieldLValue ");
-        append_quoted(out, instr.a);
-        return;
-    }
-
-    if instr.kind == INSTR_StoreThrough { textbuf_line_start(out); textbuf_push(out, "StoreThrough"); return; }
-    if instr.kind == INSTR_StoreThroughReactive {
-        append_reactive_unnamed(out, "StoreThroughReactive", instr.a);
-        return;
-    }
-    if instr.kind == INSTR_StoreThroughImmutable {
-        textbuf_line_start(out);
-        textbuf_push(out, "StoreThroughImmutable");
-        return;
-    }
-
-    if instr.kind == INSTR_StoreFunction {
-        append_store_function(out, instr.a, instr.b, instr.c);
-        return;
-    }
-    if instr.kind == INSTR_Call {
-        textbuf_line_start(out);
-        textbuf_push(out, "Call ");
-        append_quoted(out, instr.a);
-        textbuf_push(out, " ");
-        append_int(out, instr.b);
-        return;
-    }
-
-    if instr.kind == INSTR_PushImmutableContext {
-        textbuf_line_start(out);
-        textbuf_push(out, "PushImmutableContext");
-        return;
-    }
-    if instr.kind == INSTR_PopImmutableContext {
-        textbuf_line_start(out);
-        textbuf_push(out, "PopImmutableContext");
-        return;
-    }
-    if instr.kind == INSTR_ClearImmutableContext {
-        textbuf_line_start(out);
-        textbuf_push(out, "ClearImmutableContext");
-        return;
-    }
-
-    if instr.kind == INSTR_Print { textbuf_line_start(out); textbuf_push(out, "Print"); return; }
-    if instr.kind == INSTR_Println { textbuf_line_start(out); textbuf_push(out, "Println"); return; }
-    if instr.kind == INSTR_Assert { textbuf_line_start(out); textbuf_push(out, "Assert"); return; }
-    if instr.kind == INSTR_Error {
-        textbuf_line_start(out);
-        textbuf_push(out, "Error ");
-        append_quoted(out, instr.a);
-        return;
-    }
-
-    if instr.kind == INSTR_Import {
-        append_import(out, instr.a);
-        return;
-    }
-
-    if instr.kind == INSTR_Cast {
-        textbuf_line_start(out);
-        textbuf_push(out, "Cast ");
-        if instr.a == CAST_Int {
-            textbuf_push(out, "Int");
-        }
-        else {
-            textbuf_push(out, "Char");
-        }
-        return;
-    }
-
-    error "serialize: unknown instruction";
-}
-
-func append_import(out, path) {
-    textbuf_line_start(out);
-    textbuf_push(out, "Import ");
-    append_int(out, (int)path);
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= path { break; }
-        textbuf_push(out, " ");
-        append_quoted(out, path[i]);
-        i = di;
-    }
-}
-
-func append_store_function(out, name, params, body) {
-    textbuf_line_start(out);
-    textbuf_push(out, "StoreFunction ");
-    append_quoted(out, name);
-    textbuf_push(out, " ");
-    append_int(out, (int)params);
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= params { break; }
-        textbuf_push(out, " ");
-        append_quoted(out, params[i]);
-        i = di;
-    }
-
-    textbuf_push(out, " ");
-    append_int(out, (int)body);
-
-    append_instructions(out, body);
-}
-
-func append_store_struct(out, name, fields) {
-    textbuf_line_start(out);
-    textbuf_push(out, "StoreStruct ");
-    append_quoted(out, name);
-    textbuf_push(out, " ");
-    append_int(out, (int)fields);
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= fields { break; }
-        append_struct_field(out, fields[i]);
-        i = di;
-    }
-}
-
-func append_struct_field(out, field) {
-    if field.kind == FIELD_INIT_None {
-        textbuf_line_start(out);
-        textbuf_push(out, "Field ");
-        append_quoted(out, field.name);
-        textbuf_push(out, " None");
-        return;
-    }
-
-    if field.kind == FIELD_INIT_Mutable {
-        textbuf_line_start(out);
-        textbuf_push(out, "Field ");
-        append_quoted(out, field.name);
-        textbuf_push(out, " Mutable ");
-        append_int(out, (int)field.value);
-        append_instructions(out, field.value);
-        return;
-    }
-
-    if field.kind == FIELD_INIT_Immutable {
-        textbuf_line_start(out);
-        textbuf_push(out, "Field ");
-        append_quoted(out, field.name);
-        textbuf_push(out, " Immutable ");
-        append_int(out, (int)field.value);
-        append_instructions(out, field.value);
-        return;
-    }
-
-    if field.kind == FIELD_INIT_Reactive {
-        expr := field.value;
-        textbuf_line_start(out);
-        textbuf_push(out, "Field ");
-        append_quoted(out, field.name);
-        textbuf_push(out, " Reactive ");
-        append_int(out, (int)expr.captures);
-
-        i = 0;
-        di ::= i + 1;
-        loop {
-            if i >= expr.captures { break; }
-            textbuf_push(out, " ");
-            append_quoted(out, expr.captures[i]);
-            i = di;
-        }
-
-        textbuf_push(out, " ");
-        append_int(out, (int)expr.code);
-
-        append_instructions(out, expr.code);
-        return;
-    }
-
-    error "serialize: unknown field init";
-}
-
-func append_reactive_named(out, keyword, name, expr) {
-    textbuf_line_start(out);
-    textbuf_push(out, keyword);
-    textbuf_push(out, " ");
-    append_quoted(out, name);
-    textbuf_push(out, " ");
-    append_int(out, (int)expr.captures);
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= expr.captures { break; }
-        textbuf_push(out, " ");
-        append_quoted(out, expr.captures[i]);
-        i = di;
-    }
-
-    textbuf_push(out, " ");
-    append_int(out, (int)expr.code);
-
-    append_instructions(out, expr.code);
-}
-
-func append_reactive_unnamed(out, keyword, expr) {
-    textbuf_line_start(out);
-    textbuf_push(out, keyword);
-    textbuf_push(out, " ");
-    append_int(out, (int)expr.captures);
-
-    i = 0;
-    di ::= i + 1;
-    loop {
-        if i >= expr.captures { break; }
-        textbuf_push(out, " ");
-        append_quoted(out, expr.captures[i]);
-        i = di;
-    }
-
-    textbuf_push(out, " ");
-    append_int(out, (int)expr.code);
-
-    append_instructions(out, expr.code);
 }
 

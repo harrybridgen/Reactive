@@ -18,6 +18,7 @@ pub enum Type {
     Char(u32),
 
     ArrayRef(usize),
+    VecRef(usize),
     BufferRef(usize),
     StructRef(usize),
 
@@ -35,6 +36,7 @@ pub enum Type {
 #[derive(Debug, Clone)]
 pub enum LValue {
     ArrayElem { array_id: usize, index: usize },
+    VecElem { vec_id: usize, index: usize },
     StructField { struct_id: usize, field: String },
 }
 

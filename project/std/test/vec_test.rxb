@@ -1,0 +1,111 @@
+RXB1
+Import 2 "std" "vec"
+StoreFunction "vec_new" 1 "cap" 4
+Load "cap"
+Call "internal_vec_new" 1
+Return
+Return
+StoreFunction "vec_len" 1 "v" 4
+Load "v"
+Cast Int
+Return
+Return
+StoreFunction "vec_push" 2 "v" "val" 5
+Load "v"
+Load "val"
+Call "internal_vec_push" 2
+Return
+Return
+StoreFunction "vec_pop" 1 "v" 4
+Load "v"
+Call "internal_vec_pop" 1
+Return
+Return
+StoreFunction "vec_get" 2 "v" "i" 5
+Load "v"
+Load "i"
+ArrayGet
+Return
+Return
+StoreFunction "vec_set" 3 "v" "i" "val" 8
+Load "v"
+Load "i"
+ArrayLValue
+Load "val"
+StoreThrough
+Push 0
+Return
+Return
+StoreFunction "main" 0 64
+Push 2
+Call "vec_new" 1
+StoreImmutable "v"
+Load "v"
+Push 10
+Call "vec_push" 2
+Load "v"
+Push 20
+Call "vec_push" 2
+Load "v"
+Cast Int
+Push 2
+Equal
+Assert
+Load "v"
+Push 0
+ArrayGet
+Push 10
+Equal
+Assert
+Load "v"
+Push 1
+ArrayGet
+Push 20
+Equal
+Assert
+Load "v"
+Push 1
+ArrayLValue
+StoreThroughReactive 1 "v" 6
+Load "v"
+Push 0
+ArrayGet
+Push 5
+Add
+Return
+Load "v"
+Push 1
+ArrayGet
+Push 15
+Equal
+Assert
+Load "v"
+Call "vec_pop" 1
+StoreImmutable "x"
+Load "x"
+Push 15
+Equal
+Assert
+Load "v"
+Cast Int
+Push 1
+Equal
+Assert
+Push 2
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 107
+StoreThrough
+Load "__strlit_0"
+Println
+Return
+Call "main" 0
+Return

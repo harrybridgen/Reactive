@@ -39,6 +39,7 @@ impl VM {
             Type::Integer(n) => n,
             Type::Char(c) => c as i32,
             Type::ArrayRef(id) => self.array_heap[id].len() as i32,
+            Type::VecRef(id) => self.vec_heap[id].len() as i32,
             other => self.runtime_error(&format!("type error: cannot coerce {:?} to int", other)),
         }
     }
@@ -87,6 +88,29 @@ impl VM {
                     print!("{}", self.array_heap[id].len());
                 }
             }
+            Type::VecRef(id) => {
+                let elems = self.vec_heap[id].clone();
+                let mut all_chars = true;
+                let mut chars = Vec::with_capacity(elems.len());
+
+                for elem in elems {
+                    match self.force(elem) {
+                        Type::Char(c) => chars.push(c),
+                        _ => {
+                            all_chars = false;
+                            break;
+                        }
+                    }
+                }
+
+                if all_chars {
+                    for c in chars {
+                        print!("{}", char::from_u32(c).unwrap());
+                    }
+                } else {
+                    print!("{}", self.vec_heap[id].len());
+                }
+            }
             other => self.runtime_error(&format!("cannot print value {:?}", other)),
         }
 
@@ -128,6 +152,17 @@ impl VM {
                 let f = self.force(elem);
                 self.stack.push(f);
             }
+            Type::VecRef(id) => {
+                let len = self.vec_heap[id].len();
+                if idx >= len {
+                    self.runtime_error(&format!(
+                        "vec index out of bounds: index {idx}, length {len}"
+                    ));
+                }
+                let elem = self.vec_heap[id][idx].clone();
+                let f = self.force(elem);
+                self.stack.push(f);
+            }
             other => self.runtime_error(&format!(
                 "type error: attempted to index non-array value {:?}",
                 other
@@ -159,6 +194,15 @@ impl VM {
                     ));
                 }
                 self.array_heap[id][idx] = val;
+            }
+            Type::VecRef(id) => {
+                let len = self.vec_heap[id].len();
+                if idx >= len {
+                    self.runtime_error(&format!(
+                        "vec assignment out of bounds: index {idx}, length {len}"
+                    ));
+                }
+                self.vec_heap[id][idx] = val;
             }
             other => {
                 self.runtime_error(&format!("type error: StoreIndex on non-array {:?}", other))
@@ -192,6 +236,15 @@ impl VM {
                 }
                 self.array_heap[id][idx] = value;
             }
+            Type::VecRef(id) => {
+                let len = self.vec_heap[id].len();
+                if idx >= len {
+                    self.runtime_error(&format!(
+                        "reactive vec assignment out of bounds: index {idx}, length {len}"
+                    ));
+                }
+                self.vec_heap[id][idx] = value;
+            }
             other => self.runtime_error(&format!(
                 "type error: StoreIndexReactive on non-array {:?}",
                 other
@@ -213,6 +266,15 @@ impl VM {
                     ));
                 }
                 self.array_heap[array_id][index].clone()
+            }
+            LValue::VecElem { vec_id, index } => {
+                let len = self.vec_heap[vec_id].len();
+                if index >= len {
+                    self.runtime_error(&format!(
+                        "vec lvalue read out of bounds: index {index}, length {len}"
+                    ));
+                }
+                self.vec_heap[vec_id][index].clone()
             }
             LValue::StructField { struct_id, field } => self.heap[struct_id]
                 .fields
@@ -248,6 +310,12 @@ impl VM {
                     index: idx,
                 }));
             }
+            Type::VecRef(id) => {
+                self.stack.push(Type::LValue(LValue::VecElem {
+                    vec_id: id,
+                    index: idx,
+                }));
+            }
 
             Type::LValue(LValue::ArrayElem { array_id, index }) => {
                 let nested_val = self.array_heap[array_id][index].clone();
@@ -256,6 +324,31 @@ impl VM {
                     Type::ArrayRef(nested_id) => {
                         self.stack.push(Type::LValue(LValue::ArrayElem {
                             array_id: nested_id,
+                            index: idx,
+                        }));
+                    }
+                    Type::VecRef(nested_id) => {
+                        self.stack.push(Type::LValue(LValue::VecElem {
+                            vec_id: nested_id,
+                            index: idx,
+                        }));
+                    }
+                    other => self.runtime_error(&format!("indexing non-array (found {:?})", other)),
+                }
+            }
+            Type::LValue(LValue::VecElem { vec_id, index }) => {
+                let nested_val = self.vec_heap[vec_id][index].clone();
+                let nested = self.force(nested_val);
+                match nested {
+                    Type::ArrayRef(array_id) => {
+                        self.stack.push(Type::LValue(LValue::ArrayElem {
+                            array_id,
+                            index: idx,
+                        }));
+                    }
+                    Type::VecRef(nested_id) => {
+                        self.stack.push(Type::LValue(LValue::VecElem {
+                            vec_id: nested_id,
                             index: idx,
                         }));
                     }
@@ -277,6 +370,12 @@ impl VM {
                     Type::ArrayRef(array_id) => {
                         self.stack.push(Type::LValue(LValue::ArrayElem {
                             array_id,
+                            index: idx,
+                        }));
+                    }
+                    Type::VecRef(vec_id) => {
+                        self.stack.push(Type::LValue(LValue::VecElem {
+                            vec_id,
                             index: idx,
                         }));
                     }
@@ -316,6 +415,21 @@ impl VM {
                     )),
                 }
             }
+            Type::LValue(LValue::VecElem { vec_id, index }) => {
+                let elem = self.force(self.vec_heap[vec_id][index].clone());
+                match elem {
+                    Type::StructRef(id) => {
+                        self.stack.push(Type::LValue(LValue::StructField {
+                            struct_id: id,
+                            field,
+                        }));
+                    }
+                    other => self.runtime_error(&format!(
+                        "FieldLValue on non-struct vec element {:?}",
+                        other
+                    )),
+                }
+            }
 
             other => self.runtime_error(&format!("invalid FieldLValue base {:?}", other)),
         }
@@ -339,6 +453,18 @@ impl VM {
                 }
 
                 self.array_heap[array_id][index] = stored;
+            }
+            Type::LValue(LValue::VecElem { vec_id, index }) => {
+                if self.vec_immutables[vec_id].contains(&index) {
+                    self.runtime_error("cannot reassign immutable vec element");
+                }
+
+                let len = self.vec_heap[vec_id].len();
+                if index >= len {
+                    self.runtime_error("vec assignment out of bounds");
+                }
+
+                self.vec_heap[vec_id][index] = stored;
             }
 
             Type::LValue(LValue::StructField { struct_id, field }) => {
@@ -380,6 +506,18 @@ impl VM {
                 }
 
                 self.array_heap[array_id][index] = value;
+            }
+            Type::LValue(LValue::VecElem { vec_id, index }) => {
+                if self.vec_immutables[vec_id].contains(&index) {
+                    self.runtime_error("cannot reassign immutable vec element");
+                }
+
+                let len = self.vec_heap[vec_id].len();
+                if index >= len {
+                    self.runtime_error("reactive vec assignment out of bounds");
+                }
+
+                self.vec_heap[vec_id][index] = value;
             }
 
             Type::LValue(LValue::StructField { struct_id, field }) => {
@@ -433,6 +571,16 @@ impl VM {
                 }
 
                 self.array_heap[array_id][index] = stored;
+                imm.insert(index);
+            }
+            Type::LValue(LValue::VecElem { vec_id, index }) => {
+                let imm = &mut self.vec_immutables[vec_id];
+
+                if imm.contains(&index) {
+                    self.runtime_error("cannot reassign immutable vec element");
+                }
+
+                self.vec_heap[vec_id][index] = stored;
                 imm.insert(index);
             }
 
@@ -638,6 +786,12 @@ impl VM {
                 self.array_immutables
                     .push(self.array_immutables[id].clone());
                 Type::ArrayRef(new_id)
+            }
+            Type::VecRef(id) => {
+                let new_id = self.vec_heap.len();
+                self.vec_heap.push(self.vec_heap[id].clone());
+                self.vec_immutables.push(self.vec_immutables[id].clone());
+                Type::VecRef(new_id)
             }
 
             Type::StructRef(id) => {
