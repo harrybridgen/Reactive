@@ -18,6 +18,7 @@ fn main() {
         "help" | "--help" | "-h" => {
             print_help();
         }
+
         // ------------------------------------------------------------
         // Bootstrap experimental compiler using stable compiler
         // ------------------------------------------------------------
@@ -47,6 +48,7 @@ fn main() {
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
         }
+
         // ------------------------------------------------------------
         // Compile module with stable compiler (no main required)
         // ------------------------------------------------------------
@@ -76,6 +78,7 @@ fn main() {
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
         }
+
         // ------------------------------------------------------------
         // Compile module with experimental compiler (no main required)
         // ------------------------------------------------------------
