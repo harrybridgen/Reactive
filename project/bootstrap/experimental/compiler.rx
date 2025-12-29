@@ -1,7 +1,7 @@
-import bootstrap.stable.grammar;
-import bootstrap.stable.util;
-import bootstrap.stable.tokenizer;
-import bootstrap.stable.parser;
+import bootstrap.experimental.grammar;
+import bootstrap.experimental.util;
+import bootstrap.experimental.tokenizer;
+import bootstrap.experimental.parser;
 import std.file;
 
 struct LabelGen {

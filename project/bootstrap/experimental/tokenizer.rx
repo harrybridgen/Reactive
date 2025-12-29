@@ -1,5 +1,5 @@
-import bootstrap.stable.grammar;
-import bootstrap.stable.util;
+import bootstrap.experimental.grammar;
+import bootstrap.experimental.util;
 import std.char;
 
 struct Lexer {

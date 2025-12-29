@@ -7,122 +7,127 @@ use reactive_language::vm::VM;
 
 fn main() {
     let args: Vec<String> = env::args().skip(1).collect();
+    if args.is_empty() {
+        exit_error("expected command");
+    }
+
     match args[0].as_str() {
+        // ------------------------------------------------------------
+        // Bootstrap experimental compiler using stable compiler
+        // ------------------------------------------------------------
         "bootstrap" => {
             if args.len() != 1 {
-                eprintln!("Usage: reactive bootstrap");
-                std::process::exit(1);
+                exit_error("Usage: reactive bootstrap");
             }
-            let input_path = PathBuf::from("project")
-                .join("bootstrap")
-                .join("stable")
-                .join("compiler.rx");
-            let output_path = PathBuf::from("project")
-                .join("bootstrap")
-                .join("experimental")
-                .join("compiler.rxb");
-            run_bootstrap_vm_entry(&input_path, &output_path, "compile_file_module");
+
+            let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
+            let input = PathBuf::from("project/bootstrap/experimental/compiler.rx");
+            let output = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file_module");
         }
+
+        // ------------------------------------------------------------
+        // Compile program with stable compiler (requires main)
+        // ------------------------------------------------------------
         "compile" => {
             if args.len() < 2 || args.len() > 3 {
-                eprintln!("Usage: reactive compile <input.rx> [output.rxb]");
-                std::process::exit(1);
+                exit_error("Usage: reactive compile <input.rx> [output.rxb]");
             }
-            let input_path = resolve_source_path(&args[1]);
-            ensure_extension(&input_path, "rx").unwrap_or_else(|e| exit_error(&e));
-            let output_path = if args.len() == 3 {
-                PathBuf::from(&args[2])
-            } else {
-                let mut out = input_path.clone();
-                out.set_extension("rxb");
-                out
-            };
-            run_bootstrap_vm_entry(&input_path, &output_path, "compile_file");
+
+            let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
+            let input = resolve_source_path(&args[1]);
+            let output = output_path(&input, args.get(2));
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
         }
+        // Compile program with experimental compiler (requires main)
+        "compile-experimental" => {
+            if args.len() < 2 || args.len() > 3 {
+                exit_error("Usage: reactive compile-experimental <input.rx> [output.rxb]");
+            }
+
+            let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
+            let input = resolve_source_path(&args[1]);
+            let output = output_path(&input, args.get(2));
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+        }
+
+        // ------------------------------------------------------------
+        // Compile module (no main required)
+        // ------------------------------------------------------------
         "compile-module" => {
             if args.len() < 2 || args.len() > 3 {
-                eprintln!("Usage: reactive compile-module <input.rx> [output.rxb]");
-                std::process::exit(1);
+                exit_error("Usage: reactive compile-module <input.rx> [output.rxb]");
             }
-            let input_path = resolve_source_path(&args[1]);
-            ensure_extension(&input_path, "rx").unwrap_or_else(|e| exit_error(&e));
-            let output_path = if args.len() == 3 {
-                PathBuf::from(&args[2])
-            } else {
-                let mut out = input_path.clone();
-                out.set_extension("rxb");
-                out
-            };
-            run_bootstrap_vm_entry(&input_path, &output_path, "compile_file_module");
+
+            let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
+            let input = resolve_source_path(&args[1]);
+            let output = output_path(&input, args.get(2));
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file_module");
         }
+
+        // ------------------------------------------------------------
+        // Run bytecode
+        // ------------------------------------------------------------
         "run" => {
             if args.len() != 2 {
-                eprintln!("Usage: reactive run <input.rxb>");
-                std::process::exit(1);
+                exit_error("Usage: reactive run <input.rxb>");
             }
-            let bytecode_path = resolve_bytecode_path(&args[1]);
-            ensure_extension(&bytecode_path, "rxb").unwrap_or_else(|e| exit_error(&e));
-            let code = read_instructions_from_file(bytecode_path.to_str().unwrap())
-                .unwrap_or_else(|e| exit_error(&e));
-            let mut vm = VM::new(code);
-            vm.run();
+
+            let code = read_instructions_from_file(&args[1]).unwrap_or_else(|e| exit_error(&e));
+            VM::new(code).run();
         }
+
         other => {
             if other.ends_with(".rxb") {
-                let bytecode_path = resolve_bytecode_path(other);
-                let code = read_instructions_from_file(bytecode_path.to_str().unwrap())
+                let code = read_instructions_from_file(other).unwrap_or_else(|e| exit_error(&e));
+                VM::new(code).run();
+            } else if other.ends_with(".rx") {
+                let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
+                let input = resolve_source_path(other);
+                let output = PathBuf::from("target").join("tmp_run.rxb");
+
+                run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+
+                let code = read_instructions_from_file(output.to_str().unwrap())
                     .unwrap_or_else(|e| exit_error(&e));
-                let mut vm = VM::new(code);
-                vm.run();
+                VM::new(code).run();
             } else {
-                let input_path = resolve_source_path(other);
-                let code = compile_source(&input_path);
-                let mut vm = VM::new(code);
-                vm.run();
+                exit_error("unknown command");
             }
         }
     }
 }
 
-fn resolve_source_path(name: &str) -> PathBuf {
-    let mut path = PathBuf::from(name);
-    if path.components().count() == 1 {
-        path = PathBuf::from("project").join(path);
+// ================================================================
+// Core VM compiler runner (single source of truth)
+// ================================================================
+fn run_compiler_vm_entry(compiler_path: &Path, input_path: &Path, output_path: &Path, entry: &str) {
+    if !compiler_path.exists() {
+        exit_error(&format!(
+            "compiler bytecode missing: `{}`",
+            compiler_path.display()
+        ));
     }
-    if path.extension().is_none() {
-        path.set_extension("rx");
-    }
-    path
+
+    let mut bytecode = read_instructions_from_file(compiler_path.to_str().unwrap())
+        .unwrap_or_else(|e| exit_error(&e));
+
+    emit_string_literal(&mut bytecode, &input_path.to_string_lossy());
+    emit_string_literal(&mut bytecode, &output_path.to_string_lossy());
+
+    bytecode.push(Instruction::Call(entry.to_string(), 2));
+    bytecode.push(Instruction::Return);
+
+    VM::new(bytecode).run();
 }
 
-fn resolve_bytecode_path(name: &str) -> PathBuf {
-    let mut path = PathBuf::from(name);
-    if path.components().count() == 1 {
-        path = PathBuf::from("project").join(path);
-    }
-    if path.extension().is_none() {
-        path.set_extension("rxb");
-    }
-    path
-}
-
-fn ensure_extension(path: &Path, expected: &str) -> Result<(), String> {
-    match path.extension().and_then(|ext| ext.to_str()) {
-        Some(ext) if ext == expected => Ok(()),
-        Some(ext) => Err(format!(
-            "expected .{} file, got .{} for `{}`",
-            expected,
-            ext,
-            path.display()
-        )),
-        None => Err(format!(
-            "expected .{} file, got `{}`",
-            expected,
-            path.display()
-        )),
-    }
-}
-
+// ================================================================
+// Helpers
+// ================================================================
 fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     code.push(Instruction::Push(value.chars().count() as i32));
     code.push(Instruction::ArrayNew);
@@ -141,36 +146,23 @@ fn emit_string_literal(code: &mut Vec<Instruction>, value: &str) {
     code.push(Instruction::Load(tmp));
 }
 
-fn compile_source(path: &Path) -> Vec<Instruction> {
-    let output_path = PathBuf::from("target").join("bootstrap_out.rxb");
-    run_bootstrap_vm_entry(path, &output_path, "compile_file");
-    read_instructions_from_file(output_path.to_str().unwrap()).unwrap_or_else(|e| exit_error(&e))
-}
-
-fn exit_error(message: &str) -> ! {
-    eprintln!("{message}");
-    std::process::exit(1);
-}
-
-fn run_bootstrap_vm_entry(input_path: &Path, output_path: &Path, entry: &str) {
-    let compiler_path = PathBuf::from("project")
-        .join("bootstrap")
-        .join("stable")
-        .join("compiler.rxb");
-    if !compiler_path.exists() {
-        exit_error("compiler bytecode missing: expected `project/bootstrap/stable/compiler.rxb`");
+fn resolve_source_path(name: &str) -> PathBuf {
+    let mut path = PathBuf::from(name);
+    if path.extension().is_none() {
+        path.set_extension("rx");
     }
+    path
+}
 
-    let mut bytecode = read_instructions_from_file(compiler_path.to_str().unwrap())
-        .unwrap_or_else(|e| exit_error(&e));
+fn output_path(input: &Path, arg: Option<&String>) -> PathBuf {
+    arg.map(PathBuf::from).unwrap_or_else(|| {
+        let mut out = input.to_path_buf();
+        out.set_extension("rxb");
+        out
+    })
+}
 
-    let input_str = input_path.to_string_lossy();
-    let output_str = output_path.to_string_lossy();
-    emit_string_literal(&mut bytecode, &input_str);
-    emit_string_literal(&mut bytecode, &output_str);
-    bytecode.push(Instruction::Call(entry.to_string(), 2));
-    bytecode.push(Instruction::Return);
-
-    let mut vm = VM::new(bytecode);
-    vm.run();
+fn exit_error(msg: &str) -> ! {
+    eprintln!("{msg}");
+    std::process::exit(1);
 }

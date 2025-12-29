@@ -1,5 +1,5 @@
 RXB1
-Import 2 "bootstrap" "grammar"
+Import 3 "bootstrap" "experimental" "grammar"
 Push 1
 StoreImmutable "TK_Number"
 Push 2
@@ -1032,7 +1032,7 @@ StoreThrough
 Load "i"
 Return
 Return
-Import 2 "bootstrap" "util"
+Import 3 "bootstrap" "experimental" "util"
 Import 2 "std" "char"
 StoreFunction "is_digit" 1 "c" 13
 Load "c"
@@ -2797,9 +2797,9 @@ Store "out"
 Load "out"
 Return
 Return
-Import 2 "bootstrap" "tokenizer"
-Import 2 "bootstrap" "grammar"
-Import 2 "bootstrap" "util"
+Import 3 "bootstrap" "experimental" "tokenizer"
+Import 3 "bootstrap" "experimental" "grammar"
+Import 3 "bootstrap" "experimental" "util"
 Import 2 "std" "char"
 StoreStruct "Lexer" 2
 Field "tokens" None
@@ -4953,9 +4953,9 @@ PopImmutableContext
 Load "i"
 Return
 Return
-Import 2 "bootstrap" "parser"
-Import 2 "bootstrap" "grammar"
-Import 2 "bootstrap" "util"
+Import 3 "bootstrap" "experimental" "parser"
+Import 3 "bootstrap" "experimental" "grammar"
+Import 3 "bootstrap" "experimental" "util"
 StoreStruct "Parser" 3
 Field "tokens" None
 Field "len" Mutable 2
