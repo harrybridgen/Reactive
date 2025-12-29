@@ -47,21 +47,8 @@ fn main() {
 
             run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
         }
-        // Compile program with experimental compiler (requires main)
-        "compile-experimental" => {
-            if args.len() < 2 || args.len() > 3 {
-                exit_error("Usage: reactive compile-experimental <input.rx> [output.rxb]");
-            }
-
-            let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
-            let input = resolve_source_path(&args[1]);
-            let output = output_path(&input, args.get(2));
-
-            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
-        }
-
         // ------------------------------------------------------------
-        // Compile module (no main required)
+        // Compile module with stable compiler (no main required)
         // ------------------------------------------------------------
         "compile-module" => {
             if args.len() < 2 || args.len() > 3 {
@@ -76,6 +63,35 @@ fn main() {
         }
 
         // ------------------------------------------------------------
+        // Compile program with expiermental compiler (requires main)
+        // ------------------------------------------------------------
+        "compile-expi" => {
+            if args.len() < 2 || args.len() > 3 {
+                exit_error("Usage: reactive compile-experimental <input.rx> [output.rxb]");
+            }
+
+            let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
+            let input = resolve_source_path(&args[1]);
+            let output = output_path(&input, args.get(2));
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+        }
+        // ------------------------------------------------------------
+        // Compile module with experimental compiler (no main required)
+        // ------------------------------------------------------------
+        "compile-expi-module" => {
+            if args.len() < 2 || args.len() > 3 {
+                exit_error("Usage: reactive compile-experimental <input.rx> [output.rxb]");
+            }
+
+            let compiler = PathBuf::from("project/bootstrap/experimental/compiler.rxb");
+            let input = resolve_source_path(&args[1]);
+            let output = output_path(&input, args.get(2));
+
+            run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
+        }
+
+        // ------------------------------------------------------------
         // Run bytecode
         // ------------------------------------------------------------
         "run" => {
@@ -87,23 +103,8 @@ fn main() {
             VM::new(code).run();
         }
 
-        other => {
-            if other.ends_with(".rxb") {
-                let code = read_instructions_from_file(other).unwrap_or_else(|e| exit_error(&e));
-                VM::new(code).run();
-            } else if other.ends_with(".rx") {
-                let compiler = PathBuf::from("project/bootstrap/stable/compiler.rxb");
-                let input = resolve_source_path(other);
-                let output = PathBuf::from("target").join("tmp_run.rxb");
-
-                run_compiler_vm_entry(&compiler, &input, &output, "compile_file");
-
-                let code = read_instructions_from_file(output.to_str().unwrap())
-                    .unwrap_or_else(|e| exit_error(&e));
-                VM::new(code).run();
-            } else {
-                exit_error("unknown command (try 'reactive help')");
-            }
+        _ => {
+            exit_error("unknown command (try 'reactive help')");
         }
     }
 }
@@ -145,11 +146,14 @@ Commands:
   compile <input.rx> [output.rxb]
       Compile a program (requires main) using stable compiler
 
-  compile-experimental <input.rx> [output.rxb]
+  compile-module <input.rx> [output.rxb]
+      Compile a module using stable compiler (no main required)
+
+  compile-expi <input.rx> [output.rxb]
       Compile a program using experimental compiler
 
-  compile-module <input.rx> [output.rxb]
-      Compile a module (no main required)
+  compile-expi-module <input.rx> [output.rxb]
+      Compile a program using experimental compiler
 
   run <input.rxb>
       Run bytecode
