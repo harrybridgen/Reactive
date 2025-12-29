@@ -247,7 +247,7 @@ Jump "loop_start_0"
 Label "loop_end_1"
 PopImmutableContext
 Return
-StoreFunction "render" 1 "screen" 50
+StoreFunction "render" 1 "screen" 85
 Push 3
 ArrayNew
 Store "__strlit_0"
@@ -301,6 +301,41 @@ Store "y"
 Jump "loop_start_1"
 Label "loop_end_2"
 PopImmutableContext
+Push 6
+ArrayNew
+Store "__strlit_5"
+Load "__strlit_5"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_5"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_5"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_5"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_5"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_5"
+Push 5
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_5"
+Println
 Return
 StoreFunction "delay" 1 "n" 24
 Push 0

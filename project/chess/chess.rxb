@@ -144,7 +144,7 @@ PopImmutableContext
 Load "board"
 Return
 Return
-StoreFunction "render" 1 "board" 266
+StoreFunction "render" 1 "board" 366
 Push 3
 ArrayNew
 Store "__strlit_0"
@@ -353,6 +353,41 @@ PushChar 32
 StoreThrough
 Load "__strlit_8"
 Print
+Push 6
+ArrayNew
+Store "__strlit_9"
+Load "__strlit_9"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_9"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_9"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_9"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_9"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_9"
+Push 5
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_9"
+Print
 Push 0
 Store "x"
 StoreReactive "dx" 1 "x" 4
@@ -361,38 +396,21 @@ Push 1
 Add
 Return
 PushImmutableContext
-Label "loop_start_9"
+Label "loop_start_10"
 ClearImmutableContext
 Load "x"
 Load "board"
 FieldGet "size"
 GreaterEqual
-JumpIfZero "else_11"
+JumpIfZero "else_12"
 PushImmutableContext
-Jump "loop_end_10"
+Jump "loop_end_11"
 PopImmutableContext
-Jump "ifend_12"
-Label "else_11"
+Jump "ifend_13"
+Label "else_12"
 PushImmutableContext
 PopImmutableContext
-Label "ifend_12"
-Push 1
-ArrayNew
-Store "__strlit_13"
-Load "__strlit_13"
-Push 0
-ArrayLValue
-PushChar 32
-StoreThrough
-Load "__strlit_13"
-Print
-Load "board"
-FieldGet "cells"
-Load "y"
-ArrayGet
-Load "x"
-ArrayGet
-Print
+Label "ifend_13"
 Push 1
 ArrayNew
 Store "__strlit_14"
@@ -403,15 +421,97 @@ PushChar 32
 StoreThrough
 Load "__strlit_14"
 Print
-Load "dx"
-Store "x"
-Jump "loop_start_9"
-Label "loop_end_10"
-PopImmutableContext
-Push 0
+Load "board"
+FieldGet "cells"
+Load "y"
+ArrayGet
+Load "x"
+ArrayGet
+Print
+Push 1
 ArrayNew
 Store "__strlit_15"
 Load "__strlit_15"
+Push 0
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_15"
+Print
+Push 6
+ArrayNew
+Store "__strlit_16"
+Load "__strlit_16"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_16"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_16"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_16"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_16"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_16"
+Push 5
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_16"
+Print
+Load "dx"
+Store "x"
+Jump "loop_start_10"
+Label "loop_end_11"
+PopImmutableContext
+Push 6
+ArrayNew
+Store "__strlit_17"
+Load "__strlit_17"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_17"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_17"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_17"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_17"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_17"
+Push 5
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_17"
 Println
 Load "dy"
 Store "y"

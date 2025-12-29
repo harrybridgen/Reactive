@@ -97,8 +97,11 @@ func render(screen) {
     loop {
         if y >= screen.height { break; }
         println screen.buf[y];
+
         y = dy;
     }
+
+    println "\033[?25l";
 }
 
 func delay(n) {
@@ -134,6 +137,7 @@ func main() {
 
     loop {
         render(screen);
+
         delay(20000);
 
         right_bias_tick = right_bias_tick + 1;

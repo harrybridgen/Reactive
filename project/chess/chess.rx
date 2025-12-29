@@ -64,10 +64,12 @@ func render(board) {
             print board.cells[y][x];
             print " ";
             x = dx;
+
         }
-        println "";
+        println "\033[?25l";
         y = dy;
     }
+
 }
 
 func delay(n) {
