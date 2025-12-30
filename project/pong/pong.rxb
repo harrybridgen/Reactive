@@ -1,4 +1,29 @@
 RXB1
+Import 2 "std" "input"
+Push 1000
+StoreImmutable "KEY_UP"
+Push 1001
+StoreImmutable "KEY_DOWN"
+Push 1002
+StoreImmutable "KEY_LEFT"
+Push 1003
+StoreImmutable "KEY_RIGHT"
+StoreFunction "input_readline" 0 3
+Call "internal_input_readline" 0
+Return
+Return
+StoreFunction "input_init" 0 3
+Call "internal_input_init" 0
+Return
+Return
+StoreFunction "input_poll" 0 3
+Call "internal_input_poll" 0
+Return
+Return
+StoreFunction "input_shutdown" 0 3
+Call "internal_input_shutdown" 0
+Return
+Return
 StoreStruct "Screen" 3
 Field "width" None
 Field "height" None
@@ -366,7 +391,7 @@ Jump "loop_start_0"
 Label "loop_end_1"
 PopImmutableContext
 Return
-StoreFunction "main" 0 539
+StoreFunction "main" 0 584
 Push 4
 ArrayNew
 Store "__strlit_0"
@@ -436,36 +461,185 @@ Load "right"
 Call "framebuffer" 4
 Push 1
 Store "left_bias"
-Push 1
-Store "right_bias"
-Push 1
-Store "right_bias_tick"
+Push 0
+Store "repeat_dir"
+Push 0
+Store "repeat_tick"
+Push 2
+Store "repeat_rate"
+Push 0
+Store "repeat_life"
+Push 6
+Store "repeat_timeout"
+Call "input_init" 0
 PushImmutableContext
 Label "loop_start_1"
 ClearImmutableContext
 Load "screen"
 Call "render" 1
-Push 20000
+Push 10000
 Call "delay" 1
-Load "right_bias_tick"
+Call "input_poll" 0
+StoreImmutable "k"
+Load "k"
+Push 0
 Push 1
-Add
-Store "right_bias_tick"
-Load "right_bias_tick"
-Push 6
-GreaterEqual
+Sub
+NotEqual
 JumpIfZero "else_3"
 PushImmutableContext
-Push 0
-Store "right_bias_tick"
-Push 0
-Load "right_bias"
+Load "k"
+Load "KEY_UP"
+Equal
+Load "k"
+PushChar 119
+Cast Int
+Equal
+Or
+Load "k"
+PushChar 87
+Cast Int
+Equal
+Or
+JumpIfZero "else_5"
+PushImmutableContext
+Load "right"
+FieldLValue "y"
+Load "right"
+FieldGet "y"
+Push 1
 Sub
-Store "right_bias"
+StoreThrough
+Push 0
+Push 1
+Sub
+Store "repeat_dir"
+Push 0
+Store "repeat_tick"
+Load "repeat_timeout"
+Store "repeat_life"
+PopImmutableContext
+Jump "ifend_6"
+Label "else_5"
+PushImmutableContext
+Load "k"
+Load "KEY_DOWN"
+Equal
+Load "k"
+PushChar 115
+Cast Int
+Equal
+Or
+Load "k"
+PushChar 83
+Cast Int
+Equal
+Or
+JumpIfZero "else_7"
+PushImmutableContext
+Load "right"
+FieldLValue "y"
+Load "right"
+FieldGet "y"
+Push 1
+Add
+StoreThrough
+Push 1
+Store "repeat_dir"
+Push 0
+Store "repeat_tick"
+Load "repeat_timeout"
+Store "repeat_life"
+PopImmutableContext
+Jump "ifend_8"
+Label "else_7"
+PushImmutableContext
+Load "k"
+PushChar 113
+Cast Int
+Equal
+Load "k"
+PushChar 81
+Cast Int
+Equal
+Or
+JumpIfZero "else_9"
+PushImmutableContext
+Jump "loop_end_2"
+PopImmutableContext
+Jump "ifend_10"
+Label "else_9"
+PushImmutableContext
+Push 0
+Store "repeat_dir"
+Push 0
+Store "repeat_tick"
+Push 0
+Store "repeat_life"
+PopImmutableContext
+Label "ifend_10"
+PopImmutableContext
+Label "ifend_8"
+PopImmutableContext
+Label "ifend_6"
 PopImmutableContext
 Jump "ifend_4"
 Label "else_3"
 PushImmutableContext
+Load "repeat_dir"
+Push 0
+NotEqual
+JumpIfZero "else_11"
+PushImmutableContext
+Load "repeat_tick"
+Push 1
+Add
+Store "repeat_tick"
+Load "repeat_tick"
+Load "repeat_rate"
+GreaterEqual
+JumpIfZero "else_13"
+PushImmutableContext
+Load "right"
+FieldLValue "y"
+Load "right"
+FieldGet "y"
+Load "repeat_dir"
+Add
+StoreThrough
+Push 0
+Store "repeat_tick"
+PopImmutableContext
+Jump "ifend_14"
+Label "else_13"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_14"
+Load "repeat_life"
+Push 1
+Sub
+Store "repeat_life"
+Load "repeat_life"
+Push 0
+LessEqual
+JumpIfZero "else_15"
+PushImmutableContext
+Push 0
+Store "repeat_dir"
+Push 0
+Store "repeat_tick"
+PopImmutableContext
+Jump "ifend_16"
+Label "else_15"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_16"
+PopImmutableContext
+Jump "ifend_12"
+Label "else_11"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_12"
 PopImmutableContext
 Label "ifend_4"
 Load "ball"
@@ -479,134 +653,14 @@ FieldGet "y"
 Push 2
 Add
 Greater
-JumpIfZero "else_5"
-PushImmutableContext
-Load "left"
-FieldLValue "y"
-Load "left"
-FieldGet "y"
-Push 1
-Add
-StoreThrough
-PopImmutableContext
-Jump "ifend_6"
-Label "else_5"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_6"
-Load "left_target"
-Load "left"
-FieldGet "y"
-Push 2
-Add
-Less
-JumpIfZero "else_7"
-PushImmutableContext
-Load "left"
-FieldLValue "y"
-Load "left"
-FieldGet "y"
-Push 1
-Sub
-StoreThrough
-PopImmutableContext
-Jump "ifend_8"
-Label "else_7"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_8"
-Load "left"
-FieldGet "y"
-Push 0
-Less
-JumpIfZero "else_9"
-PushImmutableContext
-Load "left"
-FieldLValue "y"
-Push 0
-StoreThrough
-PopImmutableContext
-Jump "ifend_10"
-Label "else_9"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_10"
-Load "left"
-FieldGet "y"
-Load "screen"
-FieldGet "height"
-Load "left"
-FieldGet "height"
-Sub
-Greater
-JumpIfZero "else_11"
-PushImmutableContext
-Load "left"
-FieldLValue "y"
-Load "screen"
-FieldGet "height"
-Load "left"
-FieldGet "height"
-Sub
-StoreThrough
-PopImmutableContext
-Jump "ifend_12"
-Label "else_11"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_12"
-Push 0
-Load "left_bias"
-Sub
-Store "left_bias"
-Load "right"
-FieldGet "y"
-Load "right"
-FieldGet "height"
-Push 2
-Div
-Add
-Store "right_center"
-Load "ball"
-FieldGet "x"
-Load "center_x"
-Greater
-JumpIfZero "else_13"
-PushImmutableContext
-Load "ball"
-FieldGet "y"
-Load "right_bias"
-Add
-Store "right_target"
-Load "right_target"
-Load "right_center"
-Greater
-JumpIfZero "else_15"
-PushImmutableContext
-Load "right"
-FieldLValue "y"
-Load "right"
-FieldGet "y"
-Push 1
-Add
-StoreThrough
-PopImmutableContext
-Jump "ifend_16"
-Label "else_15"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_16"
-Load "right_target"
-Load "right_center"
-Less
 JumpIfZero "else_17"
 PushImmutableContext
-Load "right"
+Load "left"
 FieldLValue "y"
-Load "right"
+Load "left"
 FieldGet "y"
 Push 1
-Sub
+Add
 StoreThrough
 PopImmutableContext
 Jump "ifend_18"
@@ -614,25 +668,20 @@ Label "else_17"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_18"
-Load "right"
+Load "left_target"
+Load "left"
 FieldGet "y"
-Load "right"
-FieldGet "height"
 Push 2
-Div
 Add
-Store "right_center"
-Load "right_target"
-Load "right_center"
-Greater
+Less
 JumpIfZero "else_19"
 PushImmutableContext
-Load "right"
+Load "left"
 FieldLValue "y"
-Load "right"
+Load "left"
 FieldGet "y"
 Push 1
-Add
+Sub
 StoreThrough
 PopImmutableContext
 Jump "ifend_20"
@@ -640,17 +689,15 @@ Label "else_19"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_20"
-Load "right_target"
-Load "right_center"
+Load "left"
+FieldGet "y"
+Push 0
 Less
 JumpIfZero "else_21"
 PushImmutableContext
-Load "right"
+Load "left"
 FieldLValue "y"
-Load "right"
-FieldGet "y"
-Push 1
-Sub
+Push 0
 StoreThrough
 PopImmutableContext
 Jump "ifend_22"
@@ -658,21 +705,23 @@ Label "else_21"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_22"
-PopImmutableContext
-Jump "ifend_14"
-Label "else_13"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_14"
-Load "right"
+Load "left"
 FieldGet "y"
-Push 0
-Less
+Load "screen"
+FieldGet "height"
+Load "left"
+FieldGet "height"
+Sub
+Greater
 JumpIfZero "else_23"
 PushImmutableContext
-Load "right"
+Load "left"
 FieldLValue "y"
-Push 0
+Load "screen"
+FieldGet "height"
+Load "left"
+FieldGet "height"
+Sub
 StoreThrough
 PopImmutableContext
 Jump "ifend_24"
@@ -680,6 +729,26 @@ Label "else_23"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_24"
+Push 0
+Load "left_bias"
+Sub
+Store "left_bias"
+Load "right"
+FieldGet "y"
+Push 0
+Less
+JumpIfZero "else_25"
+PushImmutableContext
+Load "right"
+FieldLValue "y"
+Push 0
+StoreThrough
+PopImmutableContext
+Jump "ifend_26"
+Label "else_25"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_26"
 Load "right"
 FieldGet "y"
 Load "screen"
@@ -688,7 +757,7 @@ Load "right"
 FieldGet "height"
 Sub
 Greater
-JumpIfZero "else_25"
+JumpIfZero "else_27"
 PushImmutableContext
 Load "right"
 FieldLValue "y"
@@ -699,11 +768,11 @@ FieldGet "height"
 Sub
 StoreThrough
 PopImmutableContext
-Jump "ifend_26"
-Label "else_25"
+Jump "ifend_28"
+Label "else_27"
 PushImmutableContext
 PopImmutableContext
-Label "ifend_26"
+Label "ifend_28"
 Load "ball"
 FieldLValue "x"
 Load "ball"
@@ -718,50 +787,13 @@ Load "ball"
 FieldGet "y"
 Push 0
 Less
-JumpIfZero "else_27"
-PushImmutableContext
-Load "ball"
-FieldLValue "y"
-Push 0
-Load "ball"
-FieldGet "y"
-Sub
-StoreThrough
-Load "ball"
-FieldLValue "vy"
-Push 0
-Load "ball"
-FieldGet "vy"
-Sub
-StoreThrough
-PopImmutableContext
-Jump "ifend_28"
-Label "else_27"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_28"
-Load "ball"
-FieldGet "y"
-Load "screen"
-FieldGet "height"
-Push 1
-Sub
-Greater
 JumpIfZero "else_29"
 PushImmutableContext
 Load "ball"
 FieldLValue "y"
-Load "screen"
-FieldGet "height"
-Push 1
-Sub
+Push 0
 Load "ball"
 FieldGet "y"
-Load "screen"
-FieldGet "height"
-Push 1
-Sub
-Sub
 Sub
 StoreThrough
 Load "ball"
@@ -777,6 +809,43 @@ Label "else_29"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_30"
+Load "ball"
+FieldGet "y"
+Load "screen"
+FieldGet "height"
+Push 1
+Sub
+Greater
+JumpIfZero "else_31"
+PushImmutableContext
+Load "ball"
+FieldLValue "y"
+Load "screen"
+FieldGet "height"
+Push 1
+Sub
+Load "ball"
+FieldGet "y"
+Load "screen"
+FieldGet "height"
+Push 1
+Sub
+Sub
+Sub
+StoreThrough
+Load "ball"
+FieldLValue "vy"
+Push 0
+Load "ball"
+FieldGet "vy"
+Sub
+StoreThrough
+PopImmutableContext
+Jump "ifend_32"
+Label "else_31"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_32"
 Load "ball"
 FieldGet "vx"
 Push 0
@@ -804,7 +873,7 @@ FieldGet "height"
 Add
 Less
 And
-JumpIfZero "else_31"
+JumpIfZero "else_33"
 PushImmutableContext
 Load "ball"
 FieldLValue "x"
@@ -821,11 +890,11 @@ FieldGet "vx"
 Sub
 StoreThrough
 PopImmutableContext
-Jump "ifend_32"
-Label "else_31"
+Jump "ifend_34"
+Label "else_33"
 PushImmutableContext
 PopImmutableContext
-Label "ifend_32"
+Label "ifend_34"
 Load "ball"
 FieldGet "vx"
 Push 0
@@ -853,7 +922,7 @@ FieldGet "height"
 Add
 Less
 And
-JumpIfZero "else_33"
+JumpIfZero "else_35"
 PushImmutableContext
 Load "ball"
 FieldLValue "x"
@@ -870,19 +939,6 @@ FieldGet "vx"
 Sub
 StoreThrough
 PopImmutableContext
-Jump "ifend_34"
-Label "else_33"
-PushImmutableContext
-PopImmutableContext
-Label "ifend_34"
-Load "ball"
-FieldGet "x"
-Push 0
-Less
-JumpIfZero "else_35"
-PushImmutableContext
-Jump "loop_end_2"
-PopImmutableContext
 Jump "ifend_36"
 Label "else_35"
 PushImmutableContext
@@ -890,9 +946,8 @@ PopImmutableContext
 Label "ifend_36"
 Load "ball"
 FieldGet "x"
-Load "screen"
-FieldGet "width"
-GreaterEqual
+Push 0
+Less
 JumpIfZero "else_37"
 PushImmutableContext
 Jump "loop_end_2"
@@ -902,9 +957,24 @@ Label "else_37"
 PushImmutableContext
 PopImmutableContext
 Label "ifend_38"
+Load "ball"
+FieldGet "x"
+Load "screen"
+FieldGet "width"
+GreaterEqual
+JumpIfZero "else_39"
+PushImmutableContext
+Jump "loop_end_2"
+PopImmutableContext
+Jump "ifend_40"
+Label "else_39"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_40"
 Jump "loop_start_1"
 Label "loop_end_2"
 PopImmutableContext
+Call "input_shutdown" 0
 Return
 Call "main" 0
 Return

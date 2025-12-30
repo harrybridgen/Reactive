@@ -1,6 +1,8 @@
 # ------------------------------------------------ #
-# Reactive Pong (two AI paddles)                   #
+# Reactive Pong (player vs AI)                     #
 # ------------------------------------------------ #
+
+import std.input;
 
 struct Screen {
     width;
@@ -132,18 +134,49 @@ func main() {
     framebuffer(screen, ball, left, right);
 
     left_bias = 1;
-    right_bias = 1;
-    right_bias_tick = 1;
+    repeat_dir = 0;
+    repeat_tick = 0;
+    repeat_rate = 2;
+    repeat_life = 0;
+    repeat_timeout = 6;
+
+    input_init();
 
     loop {
         render(screen);
 
-        delay(20000);
+        delay(10000);
 
-        right_bias_tick = right_bias_tick + 1;
-        if right_bias_tick >= 6 {
-            right_bias_tick = 0;
-            right_bias = -right_bias;
+        k := input_poll();
+        if k != -1 {
+            if k == KEY_UP || k == (int)'w' || k == (int)'W' {
+                right.y = right.y - 1;
+                repeat_dir = -1;
+                repeat_tick = 0;
+                repeat_life = repeat_timeout;
+            } else if k == KEY_DOWN || k == (int)'s' || k == (int)'S' {
+                right.y = right.y + 1;
+                repeat_dir = 1;
+                repeat_tick = 0;
+                repeat_life = repeat_timeout;
+            } else if k == (int)'q' || k == (int)'Q' {
+                break;
+            } else {
+                repeat_dir = 0;
+                repeat_tick = 0;
+                repeat_life = 0;
+            }
+        } else if repeat_dir != 0 {
+            repeat_tick = repeat_tick + 1;
+            if repeat_tick >= repeat_rate {
+                right.y = right.y + repeat_dir;
+                repeat_tick = 0;
+            }
+            repeat_life = repeat_life - 1;
+            if repeat_life <= 0 {
+                repeat_dir = 0;
+                repeat_tick = 0;
+            }
         }
 
         left_target = ball.y + left_bias;
@@ -155,15 +188,6 @@ func main() {
         }
         left_bias = -left_bias;
 
-        right_center = right.y + (right.height/2);
-        if ball.x > center_x {
-            right_target = ball.y + right_bias;
-            if right_target > right_center { right.y = right.y + 1; }
-            if right_target < right_center { right.y = right.y - 1; }
-            right_center = right.y + (right.height/2);
-            if right_target > right_center { right.y = right.y + 1; }
-            if right_target < right_center { right.y = right.y - 1; }
-        }
         if right.y < 0 { right.y = 0; }
         if right.y > (screen.height - right.height) {
             right.y = screen.height - right.height;
@@ -201,4 +225,6 @@ func main() {
         if ball.x < 0 { break; }
         if ball.x >= screen.width { break; }
     }
+
+    input_shutdown();
 }

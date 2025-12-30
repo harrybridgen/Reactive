@@ -1,0 +1,37 @@
+import std.input;
+
+func main() {
+    println "Blocking input test. Type a line and press Enter:";
+    line := input_readline();
+    println "You typed:";
+    println line;
+
+    println "";
+    println "Live input test (raw). Press arrows/letters. Press 'q' to quit.";
+
+    input_init();
+
+    loop {
+        k := input_poll();
+        if k != -1 {
+            if k == (int)'q' {
+                break;
+            }
+
+            if k == KEY_UP {
+                println "UP";
+            } else if k == KEY_DOWN {
+                println "DOWN";
+            } else if k == KEY_LEFT {
+                println "LEFT";
+            } else if k == KEY_RIGHT {
+                println "RIGHT";
+            } else {
+                print "KEY ";
+                println (char)k;
+            }
+        }
+    }
+
+    input_shutdown();
+}

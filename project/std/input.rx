@@ -1,0 +1,77 @@
+#
+=========================================
+Terminal Input (native)
+=========================================
+
+Declarations for VM-backed terminal input
+functions. Importing this module enables
+the native implementations.
+=========================================
+#
+
+KEY_UP := 1000;
+KEY_DOWN := 1001;
+KEY_LEFT := 1002;
+KEY_RIGHT := 1003;
+
+#
+-----------------------------------------
+input_readline
+-----------------------------------------
+Read a full line from standard input.
+
+Blocks execution until Enter is pressed.
+Returns the line without the trailing
+newline.
+
+Returns:
+string
+-----------------------------------------
+#
+func input_readline() {
+    return internal_input_readline();
+}
+
+#
+-----------------------------------------
+input_init
+-----------------------------------------
+Enable raw, non-canonical input mode.
+
+Returns:
+0 on success
+-----------------------------------------
+#
+func input_init() {
+    return internal_input_init();
+}
+
+#
+-----------------------------------------
+input_poll
+-----------------------------------------
+Poll for a single keypress.
+
+Returns:
+-1 if no key is available
+ASCII code for normal keys
+KEY_UP/DOWN/LEFT/RIGHT for arrows
+-----------------------------------------
+#
+func input_poll() {
+    return internal_input_poll();
+}
+
+#
+-----------------------------------------
+input_shutdown
+-----------------------------------------
+Restore terminal settings.
+
+Returns:
+0 on success
+-----------------------------------------
+#
+func input_shutdown() {
+    return internal_input_shutdown();
+}

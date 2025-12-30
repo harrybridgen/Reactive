@@ -156,5 +156,8 @@ impl VM {
         if path.len() == 2 && path[0] == "std" && path[1] == "vec" {
             self.install_native_vec();
         }
+        if path.len() == 2 && path[0] == "std" && path[1] == "input" {
+            self.install_native_input();
+        }
     }
 }

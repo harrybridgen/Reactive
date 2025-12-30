@@ -1414,171 +1414,123 @@ Label "ifend_1"
 Load "ast"
 Return
 Return
-StoreFunction "main" 0 178
-Push 32
+StoreFunction "main" 0 118
+Import 2 "std" "input"
+Push 1000
+StoreImmutable "KEY_UP"
+Push 1001
+StoreImmutable "KEY_DOWN"
+Push 1002
+StoreImmutable "KEY_LEFT"
+Push 1003
+StoreImmutable "KEY_RIGHT"
+StoreFunction "input_readline" 0 3
+Call "internal_input_readline" 0
+Return
+Return
+StoreFunction "input_init" 0 3
+Call "internal_input_init" 0
+Return
+Return
+StoreFunction "input_poll" 0 3
+Call "internal_input_poll" 0
+Return
+Return
+StoreFunction "input_shutdown" 0 3
+Call "internal_input_shutdown" 0
+Return
+Return
+Push 17
 ArrayNew
 Store "__strlit_0"
 Load "__strlit_0"
 Push 0
 ArrayLValue
-PushChar 49
+PushChar 69
 StoreThrough
 Load "__strlit_0"
 Push 1
 ArrayLValue
-PushChar 43
+PushChar 110
 StoreThrough
 Load "__strlit_0"
 Push 2
 ArrayLValue
-PushChar 50
+PushChar 116
 StoreThrough
 Load "__strlit_0"
 Push 3
 ArrayLValue
-PushChar 43
+PushChar 101
 StoreThrough
 Load "__strlit_0"
 Push 4
 ArrayLValue
-PushChar 51
+PushChar 114
 StoreThrough
 Load "__strlit_0"
 Push 5
 ArrayLValue
-PushChar 43
+PushChar 32
 StoreThrough
 Load "__strlit_0"
 Push 6
 ArrayLValue
-PushChar 52
+PushChar 101
 StoreThrough
 Load "__strlit_0"
 Push 7
 ArrayLValue
-PushChar 42
+PushChar 120
 StoreThrough
 Load "__strlit_0"
 Push 8
 ArrayLValue
-PushChar 53
+PushChar 112
 StoreThrough
 Load "__strlit_0"
 Push 9
 ArrayLValue
-PushChar 45
+PushChar 114
 StoreThrough
 Load "__strlit_0"
 Push 10
 ArrayLValue
-PushChar 40
+PushChar 101
 StoreThrough
 Load "__strlit_0"
 Push 11
 ArrayLValue
-PushChar 54
+PushChar 115
 StoreThrough
 Load "__strlit_0"
 Push 12
 ArrayLValue
-PushChar 43
+PushChar 115
 StoreThrough
 Load "__strlit_0"
 Push 13
 ArrayLValue
-PushChar 55
+PushChar 105
 StoreThrough
 Load "__strlit_0"
 Push 14
 ArrayLValue
-PushChar 42
+PushChar 111
 StoreThrough
 Load "__strlit_0"
 Push 15
 ArrayLValue
-PushChar 56
+PushChar 110
 StoreThrough
 Load "__strlit_0"
 Push 16
 ArrayLValue
-PushChar 45
+PushChar 58
 StoreThrough
 Load "__strlit_0"
-Push 17
-ArrayLValue
-PushChar 57
-StoreThrough
-Load "__strlit_0"
-Push 18
-ArrayLValue
-PushChar 41
-StoreThrough
-Load "__strlit_0"
-Push 19
-ArrayLValue
-PushChar 43
-StoreThrough
-Load "__strlit_0"
-Push 20
-ArrayLValue
-PushChar 49
-StoreThrough
-Load "__strlit_0"
-Push 21
-ArrayLValue
-PushChar 48
-StoreThrough
-Load "__strlit_0"
-Push 22
-ArrayLValue
-PushChar 42
-StoreThrough
-Load "__strlit_0"
-Push 23
-ArrayLValue
-PushChar 40
-StoreThrough
-Load "__strlit_0"
-Push 24
-ArrayLValue
-PushChar 49
-StoreThrough
-Load "__strlit_0"
-Push 25
-ArrayLValue
-PushChar 49
-StoreThrough
-Load "__strlit_0"
-Push 26
-ArrayLValue
-PushChar 45
-StoreThrough
-Load "__strlit_0"
-Push 27
-ArrayLValue
-PushChar 51
-StoreThrough
-Load "__strlit_0"
-Push 28
-ArrayLValue
-PushChar 41
-StoreThrough
-Load "__strlit_0"
-Push 29
-ArrayLValue
-PushChar 45
-StoreThrough
-Load "__strlit_0"
-Push 30
-ArrayLValue
-PushChar 52
-StoreThrough
-Load "__strlit_0"
-Push 31
-ArrayLValue
-PushChar 51
-StoreThrough
-Load "__strlit_0"
+Println
+Call "input_readline" 0
 StoreImmutable "src"
 Load "src"
 Call "tokenize" 1

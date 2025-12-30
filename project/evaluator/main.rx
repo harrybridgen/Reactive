@@ -4,7 +4,9 @@ import evaluator.parser;
 
 
 func main() {
-    src := "1+2+3+4*5-(6+7*8-9)+10*(11-3)-43";
+    import std.input;
+    println "Enter expression:";
+    src := input_readline();
 
     lexer := tokenize(src);
     ast := parse(lexer.tokens,lexer.len);
