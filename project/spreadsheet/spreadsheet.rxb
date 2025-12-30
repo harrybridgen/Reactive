@@ -1,0 +1,2872 @@
+RXB1
+Import 2 "std" "input"
+Push 1000
+StoreImmutable "KEY_UP"
+Push 1001
+StoreImmutable "KEY_DOWN"
+Push 1002
+StoreImmutable "KEY_LEFT"
+Push 1003
+StoreImmutable "KEY_RIGHT"
+StoreFunction "input_readline" 0 3
+Call "internal_input_readline" 0
+Return
+Return
+StoreFunction "input_init" 0 3
+Call "internal_input_init" 0
+Return
+Return
+StoreFunction "input_poll" 0 3
+Call "internal_input_poll" 0
+Return
+Return
+StoreFunction "input_shutdown" 0 3
+Call "internal_input_shutdown" 0
+Return
+Return
+Import 2 "std" "str"
+StoreFunction "str_len" 1 "s" 4
+Load "s"
+Cast Int
+Return
+Return
+StoreFunction "str_empty" 0 4
+Push 0
+ArrayNew
+Return
+Return
+StoreFunction "str_from_char" 1 "c" 11
+Push 1
+ArrayNew
+StoreImmutable "out"
+Load "out"
+Push 0
+ArrayLValue
+Load "c"
+StoreThrough
+Load "out"
+Return
+Return
+StoreFunction "str_append" 2 "a" "b" 76
+Load "a"
+Cast Int
+StoreImmutable "na"
+Load "b"
+Cast Int
+StoreImmutable "nb"
+Load "na"
+Load "nb"
+Add
+ArrayNew
+StoreImmutable "out"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "na"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "out"
+Load "i"
+ArrayLValue
+Load "a"
+Load "i"
+ArrayGet
+StoreThrough
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Push 0
+Store "j"
+StoreReactive "dj" 1 "j" 4
+Load "j"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_4"
+ClearImmutableContext
+Load "j"
+Load "nb"
+GreaterEqual
+JumpIfZero "else_6"
+PushImmutableContext
+Jump "loop_end_5"
+PopImmutableContext
+Jump "ifend_7"
+Label "else_6"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_7"
+Load "out"
+Load "na"
+Load "j"
+Add
+ArrayLValue
+Load "b"
+Load "j"
+ArrayGet
+StoreThrough
+Load "dj"
+Store "j"
+Jump "loop_start_4"
+Label "loop_end_5"
+PopImmutableContext
+Load "out"
+Return
+Return
+StoreFunction "str_append_char" 2 "a" "c" 46
+Load "a"
+Cast Int
+StoreImmutable "na"
+Load "na"
+Push 1
+Add
+ArrayNew
+StoreImmutable "out"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "na"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "out"
+Load "i"
+ArrayLValue
+Load "a"
+Load "i"
+ArrayGet
+StoreThrough
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "out"
+Load "na"
+ArrayLValue
+Load "c"
+StoreThrough
+Load "out"
+Return
+Return
+StoreFunction "str_equals" 2 "a" "b" 58
+Load "a"
+Cast Int
+Load "b"
+Cast Int
+NotEqual
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_2"
+ClearImmutableContext
+Load "i"
+Load "a"
+GreaterEqual
+JumpIfZero "else_4"
+PushImmutableContext
+Jump "loop_end_3"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_5"
+Load "a"
+Load "i"
+ArrayGet
+Load "b"
+Load "i"
+ArrayGet
+NotEqual
+JumpIfZero "else_6"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_7"
+Label "else_6"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_7"
+Load "di"
+Store "i"
+Jump "loop_start_2"
+Label "loop_end_3"
+PopImmutableContext
+Push 1
+Return
+Return
+StoreFunction "str_compare" 2 "a" "b" 113
+Load "a"
+Cast Int
+StoreImmutable "la"
+Load "b"
+Cast Int
+StoreImmutable "lb"
+Load "la"
+Store "n"
+Load "lb"
+Load "n"
+Less
+JumpIfZero "else_0"
+PushImmutableContext
+Load "lb"
+Store "n"
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_2"
+ClearImmutableContext
+Load "i"
+Load "n"
+GreaterEqual
+JumpIfZero "else_4"
+PushImmutableContext
+Jump "loop_end_3"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_5"
+Load "a"
+Load "i"
+ArrayGet
+Cast Int
+StoreImmutable "ca"
+Load "b"
+Load "i"
+ArrayGet
+Cast Int
+StoreImmutable "cb"
+Load "ca"
+Load "cb"
+Less
+JumpIfZero "else_6"
+PushImmutableContext
+Push 0
+Push 1
+Sub
+Return
+PopImmutableContext
+Jump "ifend_7"
+Label "else_6"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_7"
+Load "ca"
+Load "cb"
+Greater
+JumpIfZero "else_8"
+PushImmutableContext
+Push 1
+Return
+PopImmutableContext
+Jump "ifend_9"
+Label "else_8"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_9"
+Load "di"
+Store "i"
+Jump "loop_start_2"
+Label "loop_end_3"
+PopImmutableContext
+Load "la"
+Load "lb"
+Less
+JumpIfZero "else_10"
+PushImmutableContext
+Push 0
+Push 1
+Sub
+Return
+PopImmutableContext
+Jump "ifend_11"
+Label "else_10"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_11"
+Load "la"
+Load "lb"
+Greater
+JumpIfZero "else_12"
+PushImmutableContext
+Push 1
+Return
+PopImmutableContext
+Jump "ifend_13"
+Label "else_12"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_13"
+Push 0
+Return
+Return
+StoreFunction "str_from_int" 1 "n" 140
+Load "n"
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 48
+StoreThrough
+Load "__strlit_2"
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Store "neg"
+Load "n"
+Push 0
+Less
+JumpIfZero "else_3"
+PushImmutableContext
+Push 1
+Store "neg"
+Push 0
+Load "n"
+Sub
+Store "n"
+PopImmutableContext
+Jump "ifend_4"
+Label "else_3"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_4"
+Push 0
+ArrayNew
+StoreImmutable "digits"
+PushImmutableContext
+Label "loop_start_5"
+ClearImmutableContext
+Load "n"
+Push 0
+Equal
+JumpIfZero "else_7"
+PushImmutableContext
+Jump "loop_end_6"
+PopImmutableContext
+Jump "ifend_8"
+Label "else_7"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_8"
+Load "n"
+Push 10
+Modulo
+StoreImmutable "d"
+Load "digits"
+Load "d"
+PushChar 48
+Cast Int
+Add
+Cast Char
+Call "str_append_char" 2
+Store "digits"
+Load "n"
+Push 10
+Div
+Store "n"
+Jump "loop_start_5"
+Label "loop_end_6"
+PopImmutableContext
+Load "digits"
+Cast Int
+StoreImmutable "len"
+Load "len"
+Load "neg"
+Add
+ArrayNew
+StoreImmutable "out"
+Load "neg"
+Push 1
+Equal
+JumpIfZero "else_9"
+PushImmutableContext
+Load "out"
+Push 0
+ArrayLValue
+PushChar 45
+StoreThrough
+PopImmutableContext
+Jump "ifend_10"
+Label "else_9"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_10"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_11"
+ClearImmutableContext
+Load "i"
+Load "len"
+GreaterEqual
+JumpIfZero "else_13"
+PushImmutableContext
+Jump "loop_end_12"
+PopImmutableContext
+Jump "ifend_14"
+Label "else_13"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_14"
+Load "out"
+Load "neg"
+Load "i"
+Add
+ArrayLValue
+Load "digits"
+Load "len"
+Push 1
+Sub
+Load "i"
+Sub
+ArrayGet
+StoreThrough
+Load "di"
+Store "i"
+Jump "loop_start_11"
+Label "loop_end_12"
+PopImmutableContext
+Load "out"
+Return
+Return
+StoreFunction "str_from_hex" 1 "n" 117
+Load "n"
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 1
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 48
+StoreThrough
+Load "__strlit_2"
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+ArrayNew
+StoreImmutable "digits"
+PushImmutableContext
+Label "loop_start_3"
+ClearImmutableContext
+Load "n"
+Push 0
+Equal
+JumpIfZero "else_5"
+PushImmutableContext
+Jump "loop_end_4"
+PopImmutableContext
+Jump "ifend_6"
+Label "else_5"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_6"
+Load "n"
+Push 16
+Modulo
+StoreImmutable "d"
+Load "d"
+Push 10
+Less
+JumpIfZero "ternary_else_7"
+Load "d"
+PushChar 48
+Cast Int
+Add
+Cast Char
+Jump "ternary_end_8"
+Label "ternary_else_7"
+Load "d"
+Push 10
+Sub
+PushChar 97
+Cast Int
+Add
+Cast Char
+Label "ternary_end_8"
+StoreImmutable "c"
+Load "digits"
+Load "c"
+Call "str_append_char" 2
+Store "digits"
+Load "n"
+Push 16
+Div
+Store "n"
+Jump "loop_start_3"
+Label "loop_end_4"
+PopImmutableContext
+Load "digits"
+Cast Int
+StoreImmutable "len"
+Load "len"
+ArrayNew
+StoreImmutable "out"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_9"
+ClearImmutableContext
+Load "i"
+Load "len"
+GreaterEqual
+JumpIfZero "else_11"
+PushImmutableContext
+Jump "loop_end_10"
+PopImmutableContext
+Jump "ifend_12"
+Label "else_11"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_12"
+Load "out"
+Load "i"
+ArrayLValue
+Load "digits"
+Load "len"
+Push 1
+Sub
+Load "i"
+Sub
+ArrayGet
+StoreThrough
+Load "di"
+Store "i"
+Jump "loop_start_9"
+Label "loop_end_10"
+PopImmutableContext
+Load "out"
+Return
+Return
+StoreFunction "str_quote" 1 "s" 239
+Call "str_empty" 0
+PushChar 34
+Call "str_append_char" 2
+StoreImmutable "out"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "s"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "s"
+Load "i"
+ArrayGet
+StoreImmutable "c"
+Load "c"
+Cast Int
+StoreImmutable "ci"
+Load "c"
+PushChar 92
+Equal
+JumpIfZero "else_4"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_6"
+Load "__strlit_6"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_6"
+Push 1
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_6"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+Load "c"
+PushChar 34
+Equal
+JumpIfZero "else_7"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_9"
+Load "__strlit_9"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_9"
+Push 1
+ArrayLValue
+PushChar 34
+StoreThrough
+Load "__strlit_9"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_8"
+Label "else_7"
+PushImmutableContext
+Load "c"
+PushChar 10
+Equal
+JumpIfZero "else_10"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_12"
+Load "__strlit_12"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_12"
+Push 1
+ArrayLValue
+PushChar 110
+StoreThrough
+Load "__strlit_12"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_11"
+Label "else_10"
+PushImmutableContext
+Load "c"
+PushChar 13
+Equal
+JumpIfZero "else_13"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_15"
+Load "__strlit_15"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_15"
+Push 1
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_15"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_14"
+Label "else_13"
+PushImmutableContext
+Load "c"
+PushChar 9
+Equal
+JumpIfZero "else_16"
+PushImmutableContext
+Load "out"
+Push 2
+ArrayNew
+Store "__strlit_18"
+Load "__strlit_18"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_18"
+Push 1
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_18"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_17"
+Label "else_16"
+PushImmutableContext
+Load "ci"
+Push 32
+Less
+Load "ci"
+Push 126
+Greater
+Or
+JumpIfZero "else_19"
+PushImmutableContext
+Load "out"
+Push 3
+ArrayNew
+Store "__strlit_21"
+Load "__strlit_21"
+Push 0
+ArrayLValue
+PushChar 92
+StoreThrough
+Load "__strlit_21"
+Push 1
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_21"
+Push 2
+ArrayLValue
+PushChar 123
+StoreThrough
+Load "__strlit_21"
+Call "str_append" 2
+Store "out"
+Load "out"
+Load "ci"
+Call "str_from_hex" 1
+Call "str_append" 2
+Store "out"
+Load "out"
+Push 1
+ArrayNew
+Store "__strlit_22"
+Load "__strlit_22"
+Push 0
+ArrayLValue
+PushChar 125
+StoreThrough
+Load "__strlit_22"
+Call "str_append" 2
+Store "out"
+PopImmutableContext
+Jump "ifend_20"
+Label "else_19"
+PushImmutableContext
+Load "out"
+Load "c"
+Call "str_append_char" 2
+Store "out"
+PopImmutableContext
+Label "ifend_20"
+PopImmutableContext
+Label "ifend_17"
+PopImmutableContext
+Label "ifend_14"
+PopImmutableContext
+Label "ifend_11"
+PopImmutableContext
+Label "ifend_8"
+PopImmutableContext
+Label "ifend_5"
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "out"
+PushChar 34
+Call "str_append_char" 2
+Store "out"
+Load "out"
+Return
+Return
+Import 2 "std" "maths"
+StoreFunction "abs" 1 "x" 18
+Load "x"
+Push 0
+Less
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Load "x"
+Sub
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "x"
+Return
+Return
+StoreFunction "clamp" 3 "x" "lo" "hi" 29
+Load "x"
+Load "lo"
+Less
+JumpIfZero "else_0"
+PushImmutableContext
+Load "lo"
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "x"
+Load "hi"
+Greater
+JumpIfZero "else_2"
+PushImmutableContext
+Load "hi"
+Return
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "x"
+Return
+Return
+StoreFunction "square" 1 "x" 5
+Load "x"
+Load "x"
+Mul
+Return
+Return
+StoreFunction "cube" 1 "x" 7
+Load "x"
+Load "x"
+Mul
+Load "x"
+Mul
+Return
+Return
+StoreFunction "min" 2 "x" "y" 16
+Load "x"
+Load "y"
+Greater
+JumpIfZero "else_0"
+PushImmutableContext
+Load "y"
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "x"
+Return
+Return
+StoreFunction "max" 2 "x" "y" 16
+Load "x"
+Load "y"
+Greater
+JumpIfZero "else_0"
+PushImmutableContext
+Load "x"
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "y"
+Return
+Return
+StoreFunction "sign" 1 "x" 31
+Load "x"
+Push 0
+Greater
+JumpIfZero "else_0"
+PushImmutableContext
+Push 1
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "x"
+Push 0
+Less
+JumpIfZero "else_2"
+PushImmutableContext
+Push 0
+Push 1
+Sub
+Return
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Push 0
+Return
+Return
+StoreFunction "iseven" 1 "x" 19
+Load "x"
+Call "abs" 1
+Push 2
+Modulo
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 1
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Return
+Return
+StoreFunction "isodd" 1 "x" 19
+Load "x"
+Call "abs" 1
+Push 2
+Modulo
+Push 0
+NotEqual
+JumpIfZero "else_0"
+PushImmutableContext
+Push 1
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Return
+Return
+StoreFunction "mod" 2 "a" "b" 24
+Load "b"
+Push 0
+Equal
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "a"
+Call "abs" 1
+Store "a"
+Load "b"
+Call "abs" 1
+Store "b"
+Load "a"
+Load "b"
+Modulo
+Return
+Return
+StoreFunction "sqrt" 1 "x" 45
+Load "x"
+Push 0
+Less
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_2"
+ClearImmutableContext
+Load "i"
+Push 1
+Add
+Load "i"
+Push 1
+Add
+Mul
+Load "x"
+Greater
+JumpIfZero "else_4"
+PushImmutableContext
+Jump "loop_end_3"
+PopImmutableContext
+Jump "ifend_5"
+Label "else_4"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_5"
+Load "di"
+Store "i"
+Jump "loop_start_2"
+Label "loop_end_3"
+PopImmutableContext
+Load "i"
+Return
+Return
+StoreStruct "Screen" 3
+Field "width" None
+Field "height" None
+Field "buf" None
+StoreFunction "new_screen" 2 "width" "height" 51
+NewStruct "Screen"
+StoreImmutable "screen"
+Load "screen"
+FieldLValue "width"
+Load "width"
+StoreThroughImmutable
+Load "screen"
+FieldLValue "height"
+Load "height"
+StoreThroughImmutable
+Load "screen"
+FieldLValue "buf"
+Load "screen"
+FieldGet "height"
+ArrayNew
+StoreThroughImmutable
+Push 0
+Store "y"
+StoreReactive "dy" 1 "y" 4
+Load "y"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "y"
+Load "screen"
+FieldGet "height"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+FieldLValue "buf"
+Load "y"
+ArrayLValue
+Load "screen"
+FieldGet "width"
+ArrayNew
+StoreThrough
+Load "dy"
+Store "y"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Load "screen"
+Return
+Return
+StoreFunction "clear_buf" 1 "screen" 57
+Push 0
+Store "y"
+StoreReactive "dy" 1 "y" 4
+Load "y"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "y"
+Load "screen"
+FieldGet "height"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Push 0
+Store "x"
+StoreReactive "dx" 1 "x" 4
+Load "x"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_4"
+ClearImmutableContext
+Load "x"
+Load "screen"
+FieldGet "width"
+GreaterEqual
+JumpIfZero "else_6"
+PushImmutableContext
+Jump "loop_end_5"
+PopImmutableContext
+Jump "ifend_7"
+Label "else_6"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_7"
+Load "screen"
+FieldLValue "buf"
+Load "y"
+ArrayLValue
+Load "x"
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "dx"
+Store "x"
+Jump "loop_start_4"
+Label "loop_end_5"
+PopImmutableContext
+Load "dy"
+Store "y"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Return
+StoreFunction "put_char" 4 "screen" "x" "y" "c" 47
+Load "x"
+Push 0
+Less
+Load "y"
+Push 0
+Less
+Or
+JumpIfZero "else_0"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_1"
+Label "else_0"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_1"
+Load "x"
+Load "screen"
+FieldGet "width"
+GreaterEqual
+Load "y"
+Load "screen"
+FieldGet "height"
+GreaterEqual
+Or
+JumpIfZero "else_2"
+PushImmutableContext
+Push 0
+Return
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+FieldLValue "buf"
+Load "y"
+ArrayLValue
+Load "x"
+ArrayLValue
+Load "c"
+StoreThrough
+Push 0
+Return
+Return
+StoreFunction "put_str" 4 "screen" "x" "y" "s" 36
+Load "s"
+Cast Int
+StoreImmutable "n"
+Push 0
+Store "i"
+StoreReactive "di" 1 "i" 4
+Load "i"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "i"
+Load "n"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+Load "x"
+Load "i"
+Add
+Load "y"
+Load "s"
+Load "i"
+ArrayGet
+Call "put_char" 4
+Load "di"
+Store "i"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Return
+StoreFunction "draw_hline" 5 "screen" "x0" "x1" "y" "c" 29
+Load "x0"
+Store "x"
+StoreReactive "dx" 1 "x" 4
+Load "x"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "x"
+Load "x1"
+Greater
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+Load "x"
+Load "y"
+Load "c"
+Call "put_char" 4
+Load "dx"
+Store "x"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Return
+StoreFunction "draw_vline" 5 "screen" "x" "y0" "y1" "c" 29
+Load "y0"
+Store "y"
+StoreReactive "dy" 1 "y" 4
+Load "y"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "y"
+Load "y1"
+Greater
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+Load "x"
+Load "y"
+Load "c"
+Call "put_char" 4
+Load "dy"
+Store "y"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Return
+StoreFunction "draw_box" 5 "screen" "x0" "y0" "x1" "y1" 61
+Load "screen"
+Load "x0"
+Push 1
+Add
+Load "x1"
+Push 1
+Sub
+Load "y0"
+PushChar 45
+Call "draw_hline" 5
+Load "screen"
+Load "x0"
+Push 1
+Add
+Load "x1"
+Push 1
+Sub
+Load "y1"
+PushChar 45
+Call "draw_hline" 5
+Load "screen"
+Load "x0"
+Load "y0"
+Push 1
+Add
+Load "y1"
+Push 1
+Sub
+PushChar 124
+Call "draw_vline" 5
+Load "screen"
+Load "x1"
+Load "y0"
+Push 1
+Add
+Load "y1"
+Push 1
+Sub
+PushChar 124
+Call "draw_vline" 5
+Load "screen"
+Load "x0"
+Load "y0"
+PushChar 43
+Call "put_char" 4
+Load "screen"
+Load "x1"
+Load "y0"
+PushChar 43
+Call "put_char" 4
+Load "screen"
+Load "x0"
+Load "y1"
+PushChar 43
+Call "put_char" 4
+Load "screen"
+Load "x1"
+Load "y1"
+PushChar 43
+Call "put_char" 4
+Return
+StoreFunction "cell_label" 2 "cx" "cy" 24
+PushChar 65
+Cast Int
+Load "cx"
+Add
+Cast Char
+StoreImmutable "col"
+Load "cy"
+Push 1
+Add
+Call "str_from_int" 1
+StoreImmutable "row"
+Call "str_empty" 0
+StoreImmutable "out"
+Load "out"
+Load "col"
+Call "str_append_char" 2
+Store "out"
+Load "out"
+Load "row"
+Call "str_append" 2
+Store "out"
+Load "out"
+Return
+Return
+StoreFunction "framebuffer" 12 "screen" "cursor_x_px" "cursor_y_px" "cell_name" "cell_value" "cell_type" "status_line" "grid_cols" "grid_rows" "cells" "edit_mode" "edit_buffer" 472
+Load "screen"
+Call "clear_buf" 1
+Push 13
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 82
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_0"
+Push 2
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_0"
+Push 3
+ArrayLValue
+PushChar 99
+StoreThrough
+Load "__strlit_0"
+Push 4
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_0"
+Push 5
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_0"
+Push 6
+ArrayLValue
+PushChar 118
+StoreThrough
+Load "__strlit_0"
+Push 7
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_0"
+Push 8
+ArrayLValue
+PushChar 83
+StoreThrough
+Load "__strlit_0"
+Push 9
+ArrayLValue
+PushChar 104
+StoreThrough
+Load "__strlit_0"
+Push 10
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_0"
+Push 11
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_0"
+Push 12
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_0"
+StoreImmutable "title"
+Load "screen"
+FieldGet "width"
+StoreImmutable "w"
+Push 3
+Store "row_label_width"
+Push 4
+Store "cell_w"
+Push 1
+Load "row_label_width"
+Add
+Store "grid_start_x"
+Push 2
+Store "grid_start_y"
+Load "grid_start_y"
+Load "grid_rows"
+Add
+Push 1
+Add
+Store "sep1_y"
+Load "sep1_y"
+Push 1
+Add
+Store "info_y"
+Load "info_y"
+Push 3
+Add
+Store "sep2_y"
+Load "sep2_y"
+Push 1
+Add
+Store "status_y"
+Load "screen"
+Push 0
+Push 0
+Load "w"
+Push 1
+Sub
+Load "screen"
+FieldGet "height"
+Push 1
+Sub
+Call "draw_box" 5
+Load "screen"
+Load "w"
+Load "title"
+Cast Int
+Sub
+Push 2
+Div
+Push 0
+Load "title"
+Call "put_str" 4
+Load "screen"
+Push 1
+Load "w"
+Push 2
+Sub
+Load "sep1_y"
+PushChar 45
+Call "draw_hline" 5
+Load "screen"
+Push 1
+Load "w"
+Push 2
+Sub
+Load "sep2_y"
+PushChar 45
+Call "draw_hline" 5
+Load "screen"
+Push 1
+Load "info_y"
+Push 0
+Add
+Push 6
+ArrayNew
+Store "__strlit_1"
+Load "__strlit_1"
+Push 0
+ArrayLValue
+PushChar 67
+StoreThrough
+Load "__strlit_1"
+Push 1
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_1"
+Push 2
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_1"
+Push 3
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_1"
+Push 4
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_1"
+Push 5
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_1"
+Load "cell_name"
+Call "str_append" 2
+Call "put_str" 4
+Load "edit_mode"
+JumpIfZero "else_2"
+PushImmutableContext
+Load "screen"
+Push 1
+Load "info_y"
+Push 1
+Add
+Push 6
+ArrayNew
+Store "__strlit_4"
+Load "__strlit_4"
+Push 0
+ArrayLValue
+PushChar 69
+StoreThrough
+Load "__strlit_4"
+Push 1
+ArrayLValue
+PushChar 100
+StoreThrough
+Load "__strlit_4"
+Push 2
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_4"
+Push 3
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_4"
+Push 4
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_4"
+Push 5
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_4"
+Load "edit_buffer"
+Call "str_append" 2
+Call "put_str" 4
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+Load "screen"
+Push 1
+Load "info_y"
+Push 1
+Add
+Push 7
+ArrayNew
+Store "__strlit_5"
+Load "__strlit_5"
+Push 0
+ArrayLValue
+PushChar 86
+StoreThrough
+Load "__strlit_5"
+Push 1
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_5"
+Push 2
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_5"
+Push 3
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_5"
+Push 4
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_5"
+Push 5
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_5"
+Push 6
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_5"
+Load "cell_value"
+Call "str_append" 2
+Call "put_str" 4
+PopImmutableContext
+Label "ifend_3"
+Load "screen"
+Push 1
+Load "info_y"
+Push 2
+Add
+Push 6
+ArrayNew
+Store "__strlit_6"
+Load "__strlit_6"
+Push 0
+ArrayLValue
+PushChar 84
+StoreThrough
+Load "__strlit_6"
+Push 1
+ArrayLValue
+PushChar 121
+StoreThrough
+Load "__strlit_6"
+Push 2
+ArrayLValue
+PushChar 112
+StoreThrough
+Load "__strlit_6"
+Push 3
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_6"
+Push 4
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_6"
+Push 5
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_6"
+Load "cell_type"
+Call "str_append" 2
+Call "put_str" 4
+Load "screen"
+Push 1
+Load "status_y"
+Load "status_line"
+Call "put_str" 4
+Push 0
+Store "c"
+StoreReactive "dc" 1 "c" 4
+Load "c"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_7"
+ClearImmutableContext
+Load "c"
+Load "grid_cols"
+GreaterEqual
+JumpIfZero "else_9"
+PushImmutableContext
+Jump "loop_end_8"
+PopImmutableContext
+Jump "ifend_10"
+Label "else_9"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_10"
+Load "grid_start_x"
+Load "c"
+Load "cell_w"
+Mul
+Add
+Push 1
+Add
+Store "col_x"
+Load "screen"
+Load "col_x"
+Push 1
+PushChar 65
+Cast Int
+Load "c"
+Add
+Cast Char
+Call "put_char" 4
+Load "dc"
+Store "c"
+Jump "loop_start_7"
+Label "loop_end_8"
+PopImmutableContext
+Push 0
+Store "r"
+StoreReactive "dr" 1 "r" 4
+Load "r"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_11"
+ClearImmutableContext
+Load "r"
+Load "grid_rows"
+GreaterEqual
+JumpIfZero "else_13"
+PushImmutableContext
+Jump "loop_end_12"
+PopImmutableContext
+Jump "ifend_14"
+Label "else_13"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_14"
+Load "screen"
+Push 1
+Load "row_label_width"
+Load "r"
+Push 1
+Add
+Call "str_from_int" 1
+Cast Int
+Sub
+Add
+Load "grid_start_y"
+Load "r"
+Add
+Load "r"
+Push 1
+Add
+Call "str_from_int" 1
+Call "put_str" 4
+Push 0
+Store "c"
+StoreReactive "dc" 1 "c" 4
+Load "c"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_15"
+ClearImmutableContext
+Load "c"
+Load "grid_cols"
+GreaterEqual
+JumpIfZero "else_17"
+PushImmutableContext
+Jump "loop_end_16"
+PopImmutableContext
+Jump "ifend_18"
+Label "else_17"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_18"
+Load "grid_start_x"
+Load "c"
+Load "cell_w"
+Mul
+Add
+Push 1
+Add
+Store "cell_x"
+Load "cells"
+Load "r"
+ArrayGet
+Load "c"
+ArrayGet
+StoreImmutable "s"
+Load "s"
+Cast Int
+Push 0
+Greater
+JumpIfZero "else_19"
+PushImmutableContext
+Load "screen"
+Load "cell_x"
+Load "grid_start_y"
+Load "r"
+Add
+Load "s"
+Push 0
+ArrayGet
+Call "put_char" 4
+PopImmutableContext
+Jump "ifend_20"
+Label "else_19"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_20"
+Load "dc"
+Store "c"
+Jump "loop_start_15"
+Label "loop_end_16"
+PopImmutableContext
+Load "dr"
+Store "r"
+Jump "loop_start_11"
+Label "loop_end_12"
+PopImmutableContext
+Load "screen"
+Load "cursor_x_px"
+Load "cursor_y_px"
+PushChar 64
+Call "put_char" 4
+Return
+StoreFunction "render" 1 "screen" 85
+Push 3
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_0"
+Push 2
+ArrayLValue
+PushChar 72
+StoreThrough
+Load "__strlit_0"
+Print
+Push 0
+Store "y"
+StoreReactive "dy" 1 "y" 4
+Load "y"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_1"
+ClearImmutableContext
+Load "y"
+Load "screen"
+FieldGet "height"
+GreaterEqual
+JumpIfZero "else_3"
+PushImmutableContext
+Jump "loop_end_2"
+PopImmutableContext
+Jump "ifend_4"
+Label "else_3"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_4"
+Load "screen"
+FieldGet "buf"
+Load "y"
+ArrayGet
+Println
+Load "dy"
+Store "y"
+Jump "loop_start_1"
+Label "loop_end_2"
+PopImmutableContext
+Push 6
+ArrayNew
+Store "__strlit_5"
+Load "__strlit_5"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_5"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_5"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_5"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_5"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_5"
+Push 5
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_5"
+Println
+Return
+StoreFunction "delay" 1 "n" 24
+Push 0
+Store "d"
+StoreReactive "dd" 1 "d" 4
+Load "d"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_0"
+ClearImmutableContext
+Load "d"
+Load "n"
+GreaterEqual
+JumpIfZero "else_2"
+PushImmutableContext
+Jump "loop_end_1"
+PopImmutableContext
+Jump "ifend_3"
+Label "else_2"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_3"
+Load "dd"
+Store "d"
+Jump "loop_start_0"
+Label "loop_end_1"
+PopImmutableContext
+Return
+StoreFunction "main" 0 386
+Push 4
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_0"
+Push 2
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_0"
+Push 3
+ArrayLValue
+PushChar 74
+StoreThrough
+Load "__strlit_0"
+Print
+Push 80
+StoreImmutable "w"
+Push 26
+StoreImmutable "h"
+Load "w"
+Load "h"
+Call "new_screen" 2
+StoreImmutable "screen"
+Push 3
+Store "row_label_width"
+Push 4
+Store "cell_w"
+Load "w"
+Push 2
+Sub
+Store "inner_w"
+StoreReactive "grid_cols" 3 "cell_w" "inner_w" "row_label_width" 11
+Load "inner_w"
+Load "row_label_width"
+Sub
+Push 1
+Sub
+Load "cell_w"
+Div
+Push 1
+Push 26
+Call "clamp" 3
+Return
+StoreReactive "grid_rows" 1 "h" 7
+Load "h"
+Push 10
+Sub
+Push 1
+Push 20
+Call "clamp" 3
+Return
+StoreReactive "grid_start_x" 1 "row_label_width" 4
+Push 1
+Load "row_label_width"
+Add
+Return
+StoreReactive "grid_start_y" 0 2
+Push 2
+Return
+Push 0
+Store "cursor_x"
+Push 0
+Store "cursor_y"
+StoreReactive "cursor_x_px" 3 "cell_w" "cursor_x" "grid_start_x" 8
+Load "grid_start_x"
+Load "cursor_x"
+Load "cell_w"
+Mul
+Add
+Push 1
+Add
+Return
+StoreReactive "cursor_y_px" 2 "cursor_y" "grid_start_y" 4
+Load "grid_start_y"
+Load "cursor_y"
+Add
+Return
+Load "grid_rows"
+ArrayNew
+StoreImmutable "cells"
+Push 0
+Store "r"
+StoreReactive "dr" 1 "r" 4
+Load "r"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_1"
+ClearImmutableContext
+Load "r"
+Load "grid_rows"
+GreaterEqual
+JumpIfZero "else_3"
+PushImmutableContext
+Jump "loop_end_2"
+PopImmutableContext
+Jump "ifend_4"
+Label "else_3"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_4"
+Load "cells"
+Load "r"
+ArrayLValue
+Load "grid_cols"
+ArrayNew
+StoreThrough
+Push 0
+Store "c"
+StoreReactive "dc" 1 "c" 4
+Load "c"
+Push 1
+Add
+Return
+PushImmutableContext
+Label "loop_start_5"
+ClearImmutableContext
+Load "c"
+Load "grid_cols"
+GreaterEqual
+JumpIfZero "else_7"
+PushImmutableContext
+Jump "loop_end_6"
+PopImmutableContext
+Jump "ifend_8"
+Label "else_7"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_8"
+Load "cells"
+Load "r"
+ArrayLValue
+Load "c"
+ArrayLValue
+StoreThroughReactive 0 5
+Push 0
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Return
+Load "dc"
+Store "c"
+Jump "loop_start_5"
+Label "loop_end_6"
+PopImmutableContext
+Load "dr"
+Store "r"
+Jump "loop_start_1"
+Label "loop_end_2"
+PopImmutableContext
+StoreReactive "cell_name" 2 "cursor_x" "cursor_y" 4
+Load "cursor_x"
+Load "cursor_y"
+Call "cell_label" 2
+Return
+StoreReactive "cell_value" 3 "cells" "cursor_x" "cursor_y" 6
+Load "cells"
+Load "cursor_y"
+ArrayGet
+Load "cursor_x"
+ArrayGet
+Return
+StoreReactive "cell_type" 0 40
+Push 7
+ArrayNew
+Store "__strlit_0"
+Load "__strlit_0"
+Push 0
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_0"
+Push 1
+ArrayLValue
+PushChar 105
+StoreThrough
+Load "__strlit_0"
+Push 2
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_0"
+Push 3
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_0"
+Push 4
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_0"
+Push 5
+ArrayLValue
+PushChar 97
+StoreThrough
+Load "__strlit_0"
+Push 6
+ArrayLValue
+PushChar 108
+StoreThrough
+Load "__strlit_0"
+Return
+StoreReactive "status_line" 2 "cell_name" "edit_mode" 288
+Load "edit_mode"
+JumpIfZero "ternary_else_0"
+Push 26
+ArrayNew
+Store "__strlit_2"
+Load "__strlit_2"
+Push 0
+ArrayLValue
+PushChar 69
+StoreThrough
+Load "__strlit_2"
+Push 1
+ArrayLValue
+PushChar 68
+StoreThrough
+Load "__strlit_2"
+Push 2
+ArrayLValue
+PushChar 73
+StoreThrough
+Load "__strlit_2"
+Push 3
+ArrayLValue
+PushChar 84
+StoreThrough
+Load "__strlit_2"
+Push 4
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 5
+ArrayLValue
+PushChar 124
+StoreThrough
+Load "__strlit_2"
+Push 6
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 7
+ArrayLValue
+PushChar 83
+StoreThrough
+Load "__strlit_2"
+Push 8
+ArrayLValue
+PushChar 104
+StoreThrough
+Load "__strlit_2"
+Push 9
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_2"
+Push 10
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_2"
+Push 11
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_2"
+Push 12
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 13
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 14
+ArrayLValue
+PushChar 48
+StoreThrough
+Load "__strlit_2"
+Push 15
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 16
+ArrayLValue
+PushChar 124
+StoreThrough
+Load "__strlit_2"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Push 18
+ArrayLValue
+PushChar 67
+StoreThrough
+Load "__strlit_2"
+Push 19
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_2"
+Push 20
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_2"
+Push 21
+ArrayLValue
+PushChar 115
+StoreThrough
+Load "__strlit_2"
+Push 22
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_2"
+Push 23
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_2"
+Push 24
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_2"
+Push 25
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_2"
+Load "cell_name"
+Call "str_append" 2
+Jump "ternary_end_1"
+Label "ternary_else_0"
+Push 28
+ArrayNew
+Store "__strlit_3"
+Load "__strlit_3"
+Push 0
+ArrayLValue
+PushChar 78
+StoreThrough
+Load "__strlit_3"
+Push 1
+ArrayLValue
+PushChar 79
+StoreThrough
+Load "__strlit_3"
+Push 2
+ArrayLValue
+PushChar 82
+StoreThrough
+Load "__strlit_3"
+Push 3
+ArrayLValue
+PushChar 77
+StoreThrough
+Load "__strlit_3"
+Push 4
+ArrayLValue
+PushChar 65
+StoreThrough
+Load "__strlit_3"
+Push 5
+ArrayLValue
+PushChar 76
+StoreThrough
+Load "__strlit_3"
+Push 6
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Push 7
+ArrayLValue
+PushChar 124
+StoreThrough
+Load "__strlit_3"
+Push 8
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Push 9
+ArrayLValue
+PushChar 83
+StoreThrough
+Load "__strlit_3"
+Push 10
+ArrayLValue
+PushChar 104
+StoreThrough
+Load "__strlit_3"
+Push 11
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_3"
+Push 12
+ArrayLValue
+PushChar 101
+StoreThrough
+Load "__strlit_3"
+Push 13
+ArrayLValue
+PushChar 116
+StoreThrough
+Load "__strlit_3"
+Push 14
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_3"
+Push 15
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Push 16
+ArrayLValue
+PushChar 48
+StoreThrough
+Load "__strlit_3"
+Push 17
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Push 18
+ArrayLValue
+PushChar 124
+StoreThrough
+Load "__strlit_3"
+Push 19
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Push 20
+ArrayLValue
+PushChar 67
+StoreThrough
+Load "__strlit_3"
+Push 21
+ArrayLValue
+PushChar 117
+StoreThrough
+Load "__strlit_3"
+Push 22
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_3"
+Push 23
+ArrayLValue
+PushChar 115
+StoreThrough
+Load "__strlit_3"
+Push 24
+ArrayLValue
+PushChar 111
+StoreThrough
+Load "__strlit_3"
+Push 25
+ArrayLValue
+PushChar 114
+StoreThrough
+Load "__strlit_3"
+Push 26
+ArrayLValue
+PushChar 58
+StoreThrough
+Load "__strlit_3"
+Push 27
+ArrayLValue
+PushChar 32
+StoreThrough
+Load "__strlit_3"
+Load "cell_name"
+Call "str_append" 2
+Label "ternary_end_1"
+Return
+Push 0
+Store "edit_mode"
+Push 0
+ArrayNew
+Store "__strlit_9"
+Load "__strlit_9"
+StoreImmutable "edit_buffer"
+Push 0
+Store "edit_cell_x"
+Push 0
+Store "edit_cell_y"
+Call "input_init" 0
+PushImmutableContext
+Label "loop_start_10"
+ClearImmutableContext
+Call "input_poll" 0
+StoreImmutable "key"
+Load "key"
+Push 0
+Push 1
+Sub
+NotEqual
+Load "edit_mode"
+Push 0
+Equal
+And
+JumpIfZero "else_12"
+PushImmutableContext
+Load "key"
+Load "KEY_LEFT"
+Equal
+JumpIfZero "else_14"
+PushImmutableContext
+Load "cursor_x"
+Push 1
+Sub
+Store "cursor_x"
+PopImmutableContext
+Jump "ifend_15"
+Label "else_14"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_15"
+Load "key"
+Load "KEY_RIGHT"
+Equal
+JumpIfZero "else_16"
+PushImmutableContext
+Load "cursor_x"
+Push 1
+Add
+Store "cursor_x"
+PopImmutableContext
+Jump "ifend_17"
+Label "else_16"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_17"
+Load "key"
+Load "KEY_UP"
+Equal
+JumpIfZero "else_18"
+PushImmutableContext
+Load "cursor_y"
+Push 1
+Sub
+Store "cursor_y"
+PopImmutableContext
+Jump "ifend_19"
+Label "else_18"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_19"
+Load "key"
+Load "KEY_DOWN"
+Equal
+JumpIfZero "else_20"
+PushImmutableContext
+Load "cursor_y"
+Push 1
+Add
+Store "cursor_y"
+PopImmutableContext
+Jump "ifend_21"
+Label "else_20"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_21"
+Load "key"
+PushChar 113
+Cast Int
+Equal
+Load "key"
+PushChar 81
+Cast Int
+Equal
+Or
+JumpIfZero "else_22"
+PushImmutableContext
+Jump "loop_end_11"
+PopImmutableContext
+Jump "ifend_23"
+Label "else_22"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_23"
+PopImmutableContext
+Jump "ifend_13"
+Label "else_12"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_13"
+Load "edit_mode"
+Push 0
+Equal
+JumpIfZero "else_24"
+PushImmutableContext
+Load "key"
+Push 13
+Equal
+JumpIfZero "else_26"
+PushImmutableContext
+Push 1
+Store "edit_mode"
+Load "cells"
+Load "cursor_y"
+ArrayGet
+Load "cursor_x"
+ArrayGet
+Store "edit_buffer"
+Load "cursor_x"
+Store "edit_cell_x"
+Load "cursor_y"
+Store "edit_cell_y"
+PopImmutableContext
+Jump "ifend_27"
+Label "else_26"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_27"
+PopImmutableContext
+Jump "ifend_25"
+Label "else_24"
+PushImmutableContext
+Load "key"
+Push 27
+Equal
+JumpIfZero "else_28"
+PushImmutableContext
+Push 0
+Store "edit_mode"
+PopImmutableContext
+Jump "ifend_29"
+Label "else_28"
+PushImmutableContext
+Load "key"
+Push 13
+Equal
+JumpIfZero "else_30"
+PushImmutableContext
+Load "cells"
+Load "edit_cell_y"
+ArrayLValue
+Load "edit_cell_x"
+ArrayLValue
+Load "edit_buffer"
+StoreThrough
+Push 0
+Store "edit_mode"
+PopImmutableContext
+Jump "ifend_31"
+Label "else_30"
+PushImmutableContext
+Load "key"
+Push 32
+GreaterEqual
+Load "key"
+Push 126
+LessEqual
+And
+JumpIfZero "else_32"
+PushImmutableContext
+Load "edit_buffer"
+Load "key"
+Cast Char
+Call "str_append_char" 2
+Store "edit_buffer"
+PopImmutableContext
+Jump "ifend_33"
+Label "else_32"
+PushImmutableContext
+PopImmutableContext
+Label "ifend_33"
+PopImmutableContext
+Label "ifend_31"
+PopImmutableContext
+Label "ifend_29"
+PopImmutableContext
+Label "ifend_25"
+Load "cursor_x"
+Push 0
+Load "grid_cols"
+Push 1
+Sub
+Call "clamp" 3
+Store "cursor_x"
+Load "cursor_y"
+Push 0
+Load "grid_rows"
+Push 1
+Sub
+Call "clamp" 3
+Store "cursor_y"
+Load "screen"
+Load "cursor_x_px"
+Load "cursor_y_px"
+Load "cell_name"
+Load "cell_value"
+Load "cell_type"
+Load "status_line"
+Load "grid_cols"
+Load "grid_rows"
+Load "cells"
+Load "edit_mode"
+Load "edit_buffer"
+Call "framebuffer" 12
+Load "screen"
+Call "render" 1
+Push 4000
+Call "delay" 1
+Jump "loop_start_10"
+Label "loop_end_11"
+PopImmutableContext
+Call "input_shutdown" 0
+Push 6
+ArrayNew
+Store "__strlit_34"
+Load "__strlit_34"
+Push 0
+ArrayLValue
+PushChar 27
+StoreThrough
+Load "__strlit_34"
+Push 1
+ArrayLValue
+PushChar 91
+StoreThrough
+Load "__strlit_34"
+Push 2
+ArrayLValue
+PushChar 63
+StoreThrough
+Load "__strlit_34"
+Push 3
+ArrayLValue
+PushChar 50
+StoreThrough
+Load "__strlit_34"
+Push 4
+ArrayLValue
+PushChar 53
+StoreThrough
+Load "__strlit_34"
+Push 5
+ArrayLValue
+PushChar 104
+StoreThrough
+Load "__strlit_34"
+Print
+Return
+Call "main" 0
+Return
