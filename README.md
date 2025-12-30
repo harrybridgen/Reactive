@@ -1,6 +1,6 @@
 # Reactive Language
 
-Reactive is a small, self-hosted expression-oriented language compiled to bytecode and executed on a stack-based VM.
+Reactive is a small, expression-oriented language compiled to bytecode and executed on a stack-based VM.
 The Rust VM lives in `src/`, and a bootstrapped compiler lives in `project/bootstrap/`.
 
 ## Quick Start
