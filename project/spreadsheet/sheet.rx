@@ -1,6 +1,7 @@
 import std.input;
 import std.str;
 import std.maths;
+import std.char;
 
 struct Screen {
     width;
@@ -98,6 +99,192 @@ func cell_label(cx, cy) {
     return out;
 }
 
+func skip_spaces(s, i) {
+    len := (int)s;
+    loop {
+        if i >= len { break; }
+        c := s[i];
+        if c != ' ' && c != '\t' { break; }
+        i = i + 1;
+    }
+    return i;
+}
+
+func scan_number_len(s, i) {
+    len := (int)s;
+    n = 0;
+    loop {
+        if i + n >= len { break; }
+        c := s[i + n];
+        if !is_digit(c) { break; }
+        n = n + 1;
+    }
+    return n;
+}
+
+func scan_number_value(s, i, n) {
+    val = 0;
+    j = 0;
+    dj ::= j + 1;
+    loop {
+        if j >= n { break; }
+        val = val * 10 + ((int)s[i + j] - (int)'0');
+        j = dj;
+    }
+    return val;
+}
+
+func str_drop_last(s) {
+    len := (int)s;
+    if len <= 0 { return ""; }
+    out := [len - 1];
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= len - 1 { break; }
+        out[i] = s[i];
+        i = di;
+    }
+    return out;
+}
+
+func cell_literal_value(s) {
+    len := (int)s;
+    if len == 0 { return 0; }
+    if s[0] == '-' {
+        nlen := scan_number_len(s, 1);
+        if nlen == len - 1 {
+            return -scan_number_value(s, 1, nlen);
+        }
+        return len;
+    }
+    nlen := scan_number_len(s, 0);
+    if nlen == len {
+        return scan_number_value(s, 0, nlen);
+    }
+    return len;
+}
+
+func parse_cell_ref(expr, i, out) {
+    len := (int)expr;
+    i = skip_spaces(expr, i);
+    if i >= len { return 0; }
+    c := expr[i];
+    if !is_alpha(c) { return 0; }
+    col = (int)c >= (int)'a' ? (int)c - (int)'a' : (int)c - (int)'A';
+    i = i + 1;
+    nlen := scan_number_len(expr, i);
+    if nlen == 0 { return 0; }
+    row := scan_number_value(expr, i, nlen) - 1;
+    i = i + nlen;
+    out[0] = col;
+    out[1] = row;
+    out[2] = i;
+    return 1;
+}
+
+func parse_formula_refs(expr, start, cols, rows, signs, count_out) {
+    len := (int)expr;
+    i = start;
+    sign = 1;
+    count = 0;
+    ref := [3];
+    loop {
+        i = skip_spaces(expr, i);
+        if i >= len { break; }
+        c := expr[i];
+        if c == '+' {
+            sign = 1;
+            i = i + 1;
+            continue;
+        }
+        if c == '-' {
+            sign = -1;
+            i = i + 1;
+            continue;
+        }
+        if !parse_cell_ref(expr, i, ref) { return 0; }
+        cols[count] = ref[0];
+        rows[count] = ref[1];
+        signs[count] = sign;
+        count = count + 1;
+        i = ref[2];
+        sign = 1;
+    }
+    count_out[0] = count;
+    return count > 0;
+}
+
+func sum_formula_refs(cells_value, cols, rows, signs, count, grid_cols, grid_rows) {
+    total = 0;
+    i = 0;
+    di ::= i + 1;
+    loop {
+        if i >= count { break; }
+        cx := cols[i];
+        cy := rows[i];
+        if cx >= 0 && cy >= 0 && cx < grid_cols && cy < grid_rows {
+            total = total + (signs[i] * cells_value[cy][cx]);
+        }
+        i = di;
+    }
+    return total;
+}
+
+func apply_cell_text(cells_text, cells_value, grid_cols, grid_rows, x, y) {
+    s := cells_text[y][x];
+    if (int)s == 0 {
+        cells_value[y][x] = 0;
+        return 0;
+    }
+    if s[0] != '=' {
+        cells_value[y][x] = cell_literal_value(s);
+        return 0;
+    }
+    max_terms := (int)s;
+    cols := [max_terms];
+    rows := [max_terms];
+    signs := [max_terms];
+    count_out := [1];
+    if !parse_formula_refs(s, 1, cols, rows, signs, count_out) {
+        cells_value[y][x] = 0;
+        return 0;
+    }
+    count := count_out[0];
+    cells_value[y][x] ::= sum_formula_refs(
+    cells_value,
+    cols,
+    rows,
+    signs,
+    count,
+    grid_cols,
+    grid_rows
+    );
+    return 0;
+}
+
+func cell_display_value(cells_text, cells_value, grid_cols, grid_rows, x, y) {
+    if x < 0 || y < 0 { return ""; }
+    if x >= grid_cols || y >= grid_rows { return ""; }
+    s := cells_text[y][x];
+    if (int)s == 0 { return ""; }
+    if s[0] == '=' {
+        return str_from_int(cells_value[y][x]);
+    }
+    return s;
+}
+
+func cell_display_type(cells_text, grid_cols, grid_rows, x, y) {
+    if x < 0 || y < 0 { return "literal"; }
+    if x >= grid_cols || y >= grid_rows { return "literal"; }
+    s := cells_text[y][x];
+    if (int)s == 0 { return "literal"; }
+    if s[0] == '=' {
+        return "formula";
+    }
+    return "literal";
+}
+
 func framebuffer(
 screen,
 cursor_x_px,
@@ -108,7 +295,8 @@ cell_type,
 status_line,
 grid_cols,
 grid_rows,
-cells,
+cells_text,
+cells_value,
 edit_mode,
 edit_buffer
 ) {
@@ -157,6 +345,8 @@ edit_buffer
 
     r = 0;
     dr ::= r + 1;
+    grid_max_x := grid_start_x + (grid_cols * cell_w);
+    if grid_max_x > w - 2 { grid_max_x = w - 2; }
     loop {
         if r >= grid_rows { break; }
 
@@ -169,12 +359,27 @@ edit_buffer
 
         c = 0;
         dc ::= c + 1;
+        last_covered_x = -1;
         loop {
             if c >= grid_cols { break; }
             cell_x = grid_start_x + (c * cell_w) + 1;
-            s := cells[r][c];
-            if (int)s > 0 {
-                put_char(screen, cell_x, grid_start_y + r, s[0]);
+            if last_covered_x < cell_x {
+                s := cell_display_value(cells_text, cells_value, grid_cols, grid_rows, c, r);
+                n := (int)s;
+                if n > 0 {
+                    i = 0;
+                    di ::= i + 1;
+                    loop {
+                        if i >= n { break; }
+                        x := cell_x + i;
+                        if x > grid_max_x { break; }
+                        put_char(screen, x, grid_start_y + r, s[i]);
+                        i = di;
+                    }
+                    end_x := cell_x + n - 1;
+                    if end_x > grid_max_x { end_x = grid_max_x; }
+                    if end_x > last_covered_x { last_covered_x = end_x; }
+                }
             }
             c = dc;
         }
@@ -230,25 +435,28 @@ func main() {
     cursor_y_px ::= grid_start_y + cursor_y;
 
 
-    cells := [grid_rows];
+    cells_text := [grid_rows];
+    cells_value := [grid_rows];
     r = 0;
     dr ::= r + 1;
     loop {
         if r >= grid_rows { break; }
-        cells[r] = [grid_cols];
+        cells_text[r] = [grid_cols];
+        cells_value[r] = [grid_cols];
         c = 0;
         dc ::= c + 1;
         loop {
             if c >= grid_cols { break; }
-            cells[r][c] ::= "";
+            cells_text[r][c] ::= "";
+            cells_value[r][c] = 0;
             c = dc;
         }
         r = dr;
     }
 
     cell_name ::= cell_label(cursor_x, cursor_y);
-    cell_value ::= cells[cursor_y][cursor_x];
-    cell_type ::= "literal";
+    cell_value ::= cell_display_value(cells_text, cells_value, grid_cols, grid_rows, cursor_x, cursor_y);
+    cell_type ::= cell_display_type(cells_text, grid_cols, grid_rows, cursor_x, cursor_y);
 
     status_line ::=
     edit_mode
@@ -274,7 +482,7 @@ func main() {
         if edit_mode == 0 {
             if key == 10 {
                 edit_mode = 1;
-                edit_buffer = cells[cursor_y][cursor_x];
+                edit_buffer = cells_text[cursor_y][cursor_x];
                 edit_cell_x = cursor_x;
                 edit_cell_y = cursor_y;
             }
@@ -284,8 +492,12 @@ func main() {
                 edit_mode = 0;
             }
             else if key == 10 {
-                cells[edit_cell_y][edit_cell_x] = edit_buffer;
+                cells_text[edit_cell_y][edit_cell_x] = edit_buffer;
+                apply_cell_text(cells_text, cells_value, grid_cols, grid_rows, edit_cell_x, edit_cell_y);
                 edit_mode = 0;
+            }
+            else if key == 8 || key == 127 {
+                edit_buffer = str_drop_last(edit_buffer);
             }
             else if key >= 32 && key <= 126 {
                 edit_buffer = str_append_char(edit_buffer, (char)key);
@@ -305,7 +517,8 @@ func main() {
         status_line,
         grid_cols,
         grid_rows,
-        cells,
+        cells_text,
+        cells_value,
         edit_mode,
         edit_buffer
         );
