@@ -1,10 +1,9 @@
 import evaluator.tokenizer;
 import evaluator.parser;
-
+import std.input;
 
 
 func main() {
-    import std.input;
     println "Enter expression:";
     src := input_readline();
 
