@@ -1,6 +1,8 @@
 use super::{NativeFunction, VM};
 use crate::grammar::Type;
 use std::collections::HashSet;
+#[cfg(unix)]
+use std::collections::VecDeque;
 use std::io::{self, Write};
 use std::path::Path;
 use std::sync::{Mutex, OnceLock};

@@ -1,7 +1,7 @@
 # ------------------------------------------------ #
 # Bouncing String via Reactive Framebuffer         #
 # ------------------------------------------------ #
-
+import std.input;
 struct Text {
     str;
     len;
@@ -105,7 +105,14 @@ func main(){
     screen := new_screen(67,13);
 
     framebuffer(screen, text);
+    input_init();
     loop {
+
+        key := input_poll();
+        if key == (int)'q'{
+            break;
+        }
+
         render(screen);
         delay(60000);
 
@@ -136,4 +143,6 @@ func main(){
             text.str = "REACTIVE HELLO"
         }
     }
+    input_shutdown();
+    print "\033[?25h";
 }

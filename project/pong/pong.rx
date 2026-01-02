@@ -145,7 +145,7 @@ func main() {
     loop {
         render(screen);
 
-        delay(10000);
+        delay(40000);
 
         k := input_poll();
         if k != -1 {
