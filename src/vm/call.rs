@@ -7,31 +7,6 @@ use std::collections::HashMap;
 
 impl VM {
     // =========================================================
-    // Instruction entry point
-    // =========================================================
-    pub(crate) fn exec_call(&mut self, name: String, argc: usize) {
-        let args = self.pop_args(argc);
-
-        let f = self.global_env.get(&name).cloned().unwrap_or_else(|| {
-            self.runtime_error(&format!(
-                "call error: `{}` is not defined (attempted to call with {} argument(s))",
-                name, argc
-            ))
-        });
-
-        let ret = match f {
-            Type::Function { .. } => self.call_function(name, f, args),
-            Type::NativeFunction(native_name) => self.call_native(native_name, args),
-            other => self.runtime_error(&format!(
-                "call error: `{}` is not a function (found {:?})",
-                name, other
-            )),
-        };
-
-        self.stack.push(ret);
-    }
-
-    // =========================================================
     // Function execution
     // =========================================================
     pub(crate) fn call_function(&mut self, name: String, f: Type, args: Vec<Type>) -> Type {
@@ -65,7 +40,7 @@ impl VM {
         }
     }
 
-    fn call_native(&mut self, name: String, args: Vec<Type>) -> Type {
+    pub(crate) fn call_native(&mut self, name: String, args: Vec<Type>) -> Type {
         let f = self
             .native_functions
             .get(&name)

@@ -179,7 +179,7 @@ fn native_buf_new(vm: &mut VM, args: Vec<Type>) -> Type {
         ));
     }
 
-    let cap = vm.as_usize_nonneg(args[0].clone(), "internal_buf_new capacity");
+    let cap = vm.as_usize(args[0].clone(), "internal_buf_new capacity");
     let id = vm.buffer_heap.len();
     vm.buffer_heap.push(Vec::with_capacity(cap));
     Type::BufferRef(id)
@@ -326,7 +326,7 @@ fn native_vec_new(vm: &mut VM, args: Vec<Type>) -> Type {
         ));
     }
 
-    let cap = vm.as_usize_nonneg(args[0].clone(), "internal_vec_new capacity");
+    let cap = vm.as_usize(args[0].clone(), "internal_vec_new capacity");
     let id = vm.vec_heap.len();
     vm.vec_heap.push(Vec::with_capacity(cap));
     vm.vec_immutables.push(HashSet::new());
